@@ -15,7 +15,7 @@ public class LogNoSqlConsumer extends Consumer {
 	private final static Logger _log = LoggerFactory.getLogger(LogNoSqlConsumer.class);
 
 	public static final String TYPE = SystemKeys.TYPE_NOSQL;
-	public static final String ID = "logNoSqlConsumer";
+	public static final String ID = "logNoSql";
 
 	private int STATUS;
 

@@ -33,6 +33,7 @@ public class ResourceSerializer extends StdSerializer<ResourceDTO> {
 		jgen.writeStringField("provider", resource.getProvider());
 		jgen.writeStringField("uri", resource.getUri());
 
+		jgen.writeStringField("scopeId", resource.getScopeId());
 		jgen.writeStringField("userId", resource.getUserId());
 
 		//write properties json

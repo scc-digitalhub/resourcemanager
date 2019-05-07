@@ -14,17 +14,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
-import it.smartcommunitylab.resourcemanager.model.Provider;
+import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.util.SqlUtil;
 
 @Component
-public class NullProvider extends Provider {
+public class NullProvider extends ResourceProvider {
 
 	private final static Logger _log = LoggerFactory.getLogger(NullProvider.class);
 
 	public static final String TYPE = SystemKeys.TYPE_SQL;
-	public static final String ID = "nullProvider";
+	public static final String ID = "null";
 
 	private int STATUS;
 

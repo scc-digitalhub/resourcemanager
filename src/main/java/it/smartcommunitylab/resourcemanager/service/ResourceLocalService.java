@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
-import it.smartcommunitylab.resourcemanager.model.Provider;
+import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.model.ResourceEvent;
 import it.smartcommunitylab.resourcemanager.repository.ResourceRepository;
@@ -40,7 +40,7 @@ public class ResourceLocalService {
 		_log.info("create " + type + " resource with " + String.valueOf(providerId) + " by user " + userId);
 
 		// call provider to require creation
-		Provider provider = providerLocalService.getProvider(providerId);
+		ResourceProvider provider = providerLocalService.getProvider(providerId);
 		// check type match
 		if (!provider.getType().equals(type)) {
 			throw new NoSuchProviderException();
@@ -72,7 +72,7 @@ public class ResourceLocalService {
 		res.setPropertiesMap(properties);
 
 		// call provider to require update
-		Provider provider = providerLocalService.getProvider(res.getProvider());
+		ResourceProvider provider = providerLocalService.getProvider(res.getProvider());
 		// sync call - should validate properties
 		provider.updateResource(res);
 
@@ -92,7 +92,7 @@ public class ResourceLocalService {
 		Resource res = p.get();
 
 		// call provider to require removal
-		Provider provider = providerLocalService.getProvider(res.getProvider());
+		ResourceProvider provider = providerLocalService.getProvider(res.getProvider());
 		// sync call
 		provider.deleteResource(res);
 
@@ -203,7 +203,7 @@ public class ResourceLocalService {
 		Resource res = p.get();
 
 		// call provider to require check
-		Provider provider = providerLocalService.getProvider(res.getProvider());
+		ResourceProvider provider = providerLocalService.getProvider(res.getProvider());
 		// sync call
 		provider.checkResource(res);
 

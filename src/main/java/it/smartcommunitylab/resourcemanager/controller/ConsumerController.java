@@ -1,7 +1,6 @@
 package it.smartcommunitylab.resourcemanager.controller;
 
 import java.io.Serializable;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +26,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
-import it.smartcommunitylab.resourcemanager.dto.BuilderDTO;
 import it.smartcommunitylab.resourcemanager.dto.ConsumerDTO;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 import it.smartcommunitylab.resourcemanager.model.Resource;
@@ -36,6 +39,7 @@ import it.smartcommunitylab.resourcemanager.service.ConsumerService;
 import it.smartcommunitylab.resourcemanager.util.ControllerUtil;
 
 @RestController
+@Api(value = "/consumers")
 public class ConsumerController {
 
 	private final static Logger _log = LoggerFactory.getLogger(ConsumerController.class);
@@ -44,33 +48,41 @@ public class ConsumerController {
 	private ConsumerService consumerService;
 
 	/*
-	 * Resource
+	 * Consumer registration w/scope
 	 */
-	@GetMapping({ "/consumers/{id}", "/c/{scope}/consumers/{id}" })
+	@GetMapping(value = "/c/{scope}/consumers/{id}", produces = "application/json")
+	@ApiOperation(value = "Fetch a specific consumer by id")
+	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
 	@ResponseBody
 	public ConsumerDTO get(
-			@PathVariable("id") long id,
+			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+			@ApiParam(value = "Consumer id", required = true) @PathVariable("id") long id,
 			HttpServletRequest request, HttpServletResponse response)
 			throws NoSuchConsumerException {
 
-		String scopeId = ControllerUtil.getScopeId(request);
+		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
 
-		_log.debug("get " + String.valueOf(id) + " by " + userId);
+		_log.debug("get consumer " + String.valueOf(id) + " by " + userId + " for scope " + scopeId);
 
 		Registration reg = consumerService.get(scopeId, userId, id);
 
 		return ConsumerDTO.fromRegistration(reg);
 	}
 
-	@PostMapping({ "/consumers", "/c/{scope}/consumers" })
+	@PostMapping(value = "/c/{scope}/consumers", produces = "application/json")
+	@ApiOperation(value = "Add a new consumer")
+	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
 	@ResponseBody
 	public ConsumerDTO add(
-			@RequestBody ConsumerDTO res,
+			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+			@ApiParam(value = "Consumer json", required = true) @RequestBody ConsumerDTO res,
 			HttpServletRequest request, HttpServletResponse response) throws NoSuchConsumerException {
 
-		String scopeId = ControllerUtil.getScopeId(request);
+		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
+
+		_log.debug("add consumer by " + userId + " for scope " + scopeId);
 
 		// parse fields from post
 		Map<String, Serializable> propertiesMap = Resource.propertiesFromValue(res.getProperties());
@@ -81,36 +93,64 @@ public class ConsumerController {
 
 	}
 
-	@DeleteMapping({ "/consumers/{id}", "/c/{scope}/consumers/{id}" })
+	@DeleteMapping(value = "/c/{scope}/consumers/{id}", produces = "application/json")
+	@ApiOperation(value = "Delete a specific consumer by id")
+	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
 	@ResponseBody
 	public void delete(
-			@PathVariable("id") long id,
+			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+			@ApiParam(value = "Consumer id", required = true) @PathVariable("id") long id,
 			HttpServletRequest request, HttpServletResponse response)
 			throws NoSuchConsumerException {
 
-		String scopeId = ControllerUtil.getScopeId(request);
+		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
+
+		_log.debug("delete consumer " + String.valueOf(id) + " by " + userId + " for scope " + scopeId);
 
 		consumerService.delete(scopeId, userId, id);
 
 	}
 
 	/*
-	 * List
+	 * List w/scope
 	 */
 
-	@GetMapping({ "/consumers", "/c/{scope}/consumers" })
+	@GetMapping(value = "/c/{scope}/consumers", produces = "application/json")
+	@ApiOperation(value = "List consumers with filters")
+	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
 	@ResponseBody
 	public List<ConsumerDTO> list(
+			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+			@ApiParam(value = "Consumer type") @RequestParam("type") Optional<String> type,
+			@ApiParam(value = "Consumer id") @RequestParam("consumer") Optional<String> consumer,
+			@ApiParam(value = "Consumer owner") @RequestParam("user") Optional<String> ownerId,
 			HttpServletRequest request, HttpServletResponse response,
 			Pageable pageable) {
 
-		String scopeId = ControllerUtil.getScopeId(request);
+		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
 
-		long total = consumerService.count(scopeId, userId);
-		List<Registration> registrations = consumerService.list(scopeId, userId, pageable.getPageNumber(),
-				pageable.getPageSize());
+		_log.debug("list consumers by " + userId + " for scope " + scopeId);
+
+		long total = 0;
+		List<Registration> registrations = new ArrayList<>();
+
+		// TODO refactor - ugly
+		if (type.isPresent()) {
+			total = consumerService.countByType(scopeId, userId, type.get());
+			registrations = consumerService.listByType(scopeId, userId, type.get());
+		} else if (consumer.isPresent()) {
+			total = consumerService.countByConsumer(scopeId, userId, consumer.get());
+			registrations = consumerService.listByConsumer(scopeId, userId, consumer.get());
+		} else if (ownerId.isPresent()) {
+			total = consumerService.countByUserId(userId, ownerId.get());
+			registrations = consumerService.listByUserId(userId, ownerId.get());
+		} else {
+			total = consumerService.count(scopeId, userId);
+			registrations = consumerService.list(scopeId, userId, pageable.getPageNumber(), pageable.getPageSize());
+		}
+
 		List<ConsumerDTO> results = registrations.stream().map(r -> ConsumerDTO.fromRegistration(r))
 				.collect(Collectors.toList());
 		// add total count as header
@@ -120,39 +160,76 @@ public class ConsumerController {
 	}
 
 	/*
-	 * Builders
+	 * Resource
+	 */
+	@GetMapping(value = "/consumers/{id}", produces = "application/json")
+	@ApiOperation(value = "Fetch a specific consumer by id")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+	})
+	@ResponseBody
+	public ConsumerDTO get(
+			@ApiParam(value = "Consumer id", required = true) @PathVariable("id") long id,
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchConsumerException {
+
+		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		return get(scopeId, id, request, response);
+	}
+
+	@PostMapping(value = "/consumers", produces = "application/json")
+	@ApiOperation(value = "Add a new consumer")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+	})
+	@ResponseBody
+	public ConsumerDTO add(
+			@ApiParam(value = "Consumer json", required = true) @RequestBody ConsumerDTO consumer,
+			HttpServletRequest request, HttpServletResponse response) throws NoSuchConsumerException {
+		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		return add(scopeId, consumer, request, response);
+
+	}
+
+	@DeleteMapping(value = "/consumers/{id}", produces = "application/json")
+	@ApiOperation(value = "Delete a specific consumer by id")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+	})
+	@ResponseBody
+	public void delete(
+			@ApiParam(value = "Consumer id", required = true) @PathVariable("id") long id,
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchConsumerException {
+
+		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		delete(scopeId, id, request, response);
+
+	}
+
+	/*
+	 * List
 	 */
 
-	@GetMapping({ "/builders", "/c/{scope}/builders" })
-	public List<BuilderDTO> listBuilders(
-			@RequestParam("type") Optional<String> type,
+	@GetMapping(value = "/consumers", produces = "application/json")
+	@ApiOperation(value = "List consumers with filters")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+	})
+	@ResponseBody
+	public List<ConsumerDTO> list(
+			@ApiParam(value = "Consumer type") @RequestParam("type") Optional<String> type,
+			@ApiParam(value = "Consumer id") @RequestParam("consumer") Optional<String> consumer,
+			@ApiParam(value = "Consumer owner") @RequestParam("user") Optional<String> ownerId,
 			HttpServletRequest request, HttpServletResponse response,
 			Pageable pageable) {
 
-		String scopeId = ControllerUtil.getScopeId(request);
-		String userId = ControllerUtil.getUserId(request);
-
-		List<BuilderDTO> results = new ArrayList<>();
-		if (type.isPresent()) {
-			List<String> builders = consumerService.listBuilders(scopeId, userId, type.get());
-			for (String b : builders) {
-				results.add(new BuilderDTO(type.get(), b));
-			}
-
-		} else {
-			Map<String, List<String>> map = consumerService.listBuilders(scopeId, userId);
-			for (String t : map.keySet()) {
-				for (String b : map.get(t)) {
-					results.add(new BuilderDTO(t, b));
-				}
-			}
-
-		}
-
-		// add total count as header
-		response.setHeader("X-Total-Count", String.valueOf(results.size()));
-
-		return results;
+		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		return list(scopeId, type, consumer, ownerId, request, response, pageable);
 	}
 
 	/*

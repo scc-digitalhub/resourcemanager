@@ -1,7 +1,9 @@
 package it.smartcommunitylab.resourcemanager.consumer.log;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,11 @@ public class LogSqlBuilder implements ConsumerBuilder {
 	@Override
 	public String getId() {
 		return LogSqlConsumer.ID;
+	}
+
+	@Override
+	public Set<String> listProperties() {
+		return new HashSet<String>();
 	}
 
 	@Override

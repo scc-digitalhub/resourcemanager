@@ -1,7 +1,10 @@
 package it.smartcommunitylab.resourcemanager.consumer.local;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -17,6 +20,9 @@ public class NullSqlBuilder implements ConsumerBuilder {
 	@Value("${consumers.null.enable}")
 	private boolean enabled;
 
+	@Value("${consumers.null.properties}")
+	private List<String> properties;
+
 	@Override
 	public String getType() {
 		return NullSqlConsumer.TYPE;
@@ -25,6 +31,11 @@ public class NullSqlBuilder implements ConsumerBuilder {
 	@Override
 	public String getId() {
 		return NullSqlConsumer.ID;
+	}
+
+	@Override
+	public Set<String> listProperties() {
+		return new HashSet<String>(properties);
 	}
 
 	@Override

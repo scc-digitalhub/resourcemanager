@@ -32,6 +32,9 @@ public class ResourceDeserializer extends StdDeserializer<ResourceDTO> {
 		if (node.has("id")) {
 			res.id = node.get("id").asLong();
 		}
+		if (node.has("scopeId")) {
+			res.scopeId = node.get("scopeId").asText();
+		}
 		if (node.has("userId")) {
 			res.userId = node.get("userId").asText();
 		}

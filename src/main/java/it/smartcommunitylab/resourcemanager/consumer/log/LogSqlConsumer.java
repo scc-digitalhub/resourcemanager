@@ -15,7 +15,7 @@ public class LogSqlConsumer extends Consumer {
 	private final static Logger _log = LoggerFactory.getLogger(LogSqlConsumer.class);
 
 	public static final String TYPE = SystemKeys.TYPE_SQL;
-	public static final String ID = "logSqlConsumer";
+	public static final String ID = "logSql";
 
 	private int STATUS;
 

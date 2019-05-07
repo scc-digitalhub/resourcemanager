@@ -14,24 +14,24 @@ import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
-import it.smartcommunitylab.resourcemanager.model.Provider;
+import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 
 @Component
 public class ProviderLocalService {
 	private final static Logger _log = LoggerFactory.getLogger(ProviderLocalService.class);
 
 	@Autowired
-	private Map<String, Provider> _providers;
+	private Map<String, ResourceProvider> _providers;
 
-	public Map<String, Provider> availableProviders() {
+	public Map<String, ResourceProvider> availableProviders() {
 		// return only active providers
 		return _providers.entrySet().stream()
 				.filter(entry -> (entry.getValue().getStatus() > -1))
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 	}
 
-	public Map<String, List<Provider>> listProviders() {
-		Map<String, List<Provider>> map = new HashMap<>();
+	public Map<String, List<ResourceProvider>> listProviders() {
+		Map<String, List<ResourceProvider>> map = new HashMap<>();
 
 		// static init for all types
 		map.put(SystemKeys.TYPE_SQL, new ArrayList<>());
@@ -39,7 +39,7 @@ public class ProviderLocalService {
 		map.put(SystemKeys.TYPE_FILE, new ArrayList<>());
 		map.put(SystemKeys.TYPE_OBJECT, new ArrayList<>());
 
-		for (Provider p : _providers.values()) {
+		for (ResourceProvider p : _providers.values()) {
 			if (p.getStatus() > -1) {
 				map.get(p.getType()).add(p);
 			}
@@ -47,7 +47,7 @@ public class ProviderLocalService {
 		return map;
 	}
 
-	public List<Provider> listProviders(String type) {
+	public List<ResourceProvider> listProviders(String type) {
 		// return only active providers
 		return _providers.entrySet().stream()
 				.map(entry -> entry.getValue())
@@ -55,14 +55,22 @@ public class ProviderLocalService {
 				.collect(Collectors.toList());
 	}
 
-	public Provider getProvider(String id) throws NoSuchProviderException {
+	public ResourceProvider getProvider(String id) throws NoSuchProviderException {
+
+		// check if id ends with "Provider"
+		// spring registers beans with "className" as key
+		// code expects provider classes to end with *Provider.java
+		if (!id.endsWith("Provider")) {
+			id = id.concat("Provider");
+		}
+
 		if (!_providers.containsKey(id)) {
 			_log.error("no provider for " + id);
 
 			throw new NoSuchProviderException();
 		}
 
-		Provider provider = _providers.get(id);
+		ResourceProvider provider = _providers.get(id);
 
 		// check if enabled
 		if (provider.getStatus() < 0) {

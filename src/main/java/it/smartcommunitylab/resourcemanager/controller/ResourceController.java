@@ -1,7 +1,6 @@
 package it.smartcommunitylab.resourcemanager.controller;
 
 import java.io.Serializable;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +27,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
 import it.smartcommunitylab.resourcemanager.dto.ResourceDTO;
@@ -36,6 +40,7 @@ import it.smartcommunitylab.resourcemanager.service.ResourceService;
 import it.smartcommunitylab.resourcemanager.util.ControllerUtil;
 
 @RestController
+@Api(value = "/resources")
 public class ResourceController {
 
 	private final static Logger _log = LoggerFactory.getLogger(ResourceController.class);
@@ -44,93 +49,117 @@ public class ResourceController {
 	private ResourceService resourceService;
 
 	/*
-	 * Resource
+	 * Resource w/scope
 	 */
-	@GetMapping({ "/resources/{id}", "/c/{scope}/resources/{id}" })
+	@GetMapping(value = "/c/{scope}/resources/{id}", produces = "application/json")
+	@ApiOperation(value = "Fetch a specific resource by id")
+	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
 	@ResponseBody
 	public ResourceDTO get(
-			@PathVariable("id") long id,
+			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+			@ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
 			HttpServletRequest request, HttpServletResponse response)
 			throws NoSuchResourceException {
 
-		String scopeId = ControllerUtil.getScopeId(request);
+		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
 
-		_log.debug("get " + String.valueOf("id") + " by " + userId);
+		_log.debug("get resource " + String.valueOf(id) + " by " + userId + " for scope " + scopeId);
 
 		Resource resource = resourceService.get(scopeId, userId, id);
 
 		return ResourceDTO.fromResource(resource);
 	}
 
-	@PostMapping({ "/resources", "/c/{scope}/resources" })
+	@PostMapping(value = "/c/{scope}/resources", produces = "application/json")
+	@ApiOperation(value = "Add a new resource")
+	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
 	@ResponseBody
 	public ResourceDTO add(
-			@RequestBody ResourceDTO res,
+			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+			@ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
 			HttpServletRequest request, HttpServletResponse response) throws NoSuchProviderException {
 
-		String scopeId = ControllerUtil.getScopeId(request);
+		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
 
 		// parse fields from post
-		Map<String, Serializable> propertiesMap = Resource.propertiesFromValue(res.getProperties());
+		Map<String, Serializable> propertiesMap = Resource.propertiesFromValue(resource.getProperties());
 
-		Resource resource = resourceService.create(scopeId, userId, res.getType(), res.getProvider(), propertiesMap);
+		_log.debug("add resource by " + userId + " for scope " + scopeId);
 
-		return ResourceDTO.fromResource(resource);
+		Resource result = resourceService.create(scopeId, userId, resource.getType(), resource.getProvider(),
+				propertiesMap);
+
+		return ResourceDTO.fromResource(result);
 
 	}
 
-	@PutMapping({ "/resources/{id}", "/c/{scope}/resources/{id}" })
+	@PutMapping(value = "/c/{scope}/resources/{id}", produces = "application/json")
+	@ApiOperation(value = "Update a specific resource")
+	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
 	@ResponseBody
 	public ResourceDTO update(
-			@PathVariable("id") long id,
-			@RequestBody ResourceDTO res,
+			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+			@ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
+			@ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
 			HttpServletRequest request, HttpServletResponse response)
 			throws NoSuchProviderException, NoSuchResourceException {
 
-		String scopeId = ControllerUtil.getScopeId(request);
+		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
 
 		// parse fields from post
-		Map<String, Serializable> propertiesMap = Resource.propertiesFromValue(res.getProperties());
-		res.id = id;
+		Map<String, Serializable> propertiesMap = Resource.propertiesFromValue(resource.getProperties());
+		resource.id = id;
 
-		Resource resource = resourceService.update(scopeId, userId, id, propertiesMap);
+		_log.debug("update resource " + String.valueOf(id) + " by " + userId + " for scope " + scopeId);
 
-		return ResourceDTO.fromResource(resource);
+		Resource result = resourceService.update(scopeId, userId, id, propertiesMap);
+
+		return ResourceDTO.fromResource(result);
 
 	}
 
-	@DeleteMapping({ "/resources/{id}", "/c/{scope}/resources/{id}" })
+	@DeleteMapping(value = "/c/{scope}/resources/{id}", produces = "application/json")
+	@ApiOperation(value = "Delete a specific resource")
+	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
 	@ResponseBody
 	public void delete(
-			@PathVariable("id") long id,
+			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+			@ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
 			HttpServletRequest request, HttpServletResponse response)
 			throws NoSuchProviderException, NoSuchResourceException {
 
-		String scopeId = ControllerUtil.getScopeId(request);
+		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
+
+		_log.debug("delete resource " + String.valueOf(id) + " by " + userId + " for scope " + scopeId);
 
 		resourceService.delete(scopeId, userId, id);
 
 	}
 
 	/*
-	 * List
+	 * List w/scope
 	 */
 
-	@GetMapping({ "/resources", "/c/{scope}/resources" })
+	@GetMapping(value = "/c/{scope}/resources", produces = "application/json")
+	@ApiOperation(value = "List resources with filters")
+	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
 	@ResponseBody
 	public List<ResourceDTO> list(
-			@RequestParam("type") Optional<String> type,
-			@RequestParam("provider") Optional<String> provider,
-			@RequestParam("user") Optional<String> ownerId,
+			@ApiParam(value = "Resource scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+			@ApiParam(value = "Resource type") @RequestParam("type") Optional<String> type,
+			@ApiParam(value = "Resource provider") @RequestParam("provider") Optional<String> provider,
+			@ApiParam(value = "Resource owner") @RequestParam("user") Optional<String> ownerId,
 			HttpServletRequest request, HttpServletResponse response,
 			Pageable pageable) {
 
-		String scopeId = ControllerUtil.getScopeId(request);
+		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
+
+		_log.debug("list resources by " + userId + " for scope " + scopeId);
 
 		long total = 0;
 		List<Resource> resources = new ArrayList<>();
@@ -155,6 +184,96 @@ public class ResourceController {
 		response.setHeader("X-Total-Count", String.valueOf(total));
 
 		return results;
+	}
+
+	/*
+	 * Resource
+	 */
+	@GetMapping(value = "/resources/{id}", produces = "application/json")
+	@ApiOperation(value = "Fetch a specific resource by id")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+	})
+	@ResponseBody
+	public ResourceDTO get(
+			@ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchResourceException {
+
+		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		return get(scopeId, id, request, response);
+	}
+
+	@PostMapping(value = "/resources", produces = "application/json")
+	@ApiOperation(value = "Add a new resource")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+	})
+	@ResponseBody
+	public ResourceDTO add(
+			@ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
+			HttpServletRequest request, HttpServletResponse response) throws NoSuchProviderException {
+
+		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		return add(scopeId, resource, request, response);
+	}
+
+	@PutMapping(value = "/resources/{id}", produces = "application/json")
+	@ApiOperation(value = "Update a specific resource")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+	})
+	@ResponseBody
+	public ResourceDTO update(
+			@ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
+			@ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchProviderException, NoSuchResourceException {
+
+		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		return update(scopeId, id, resource, request, response);
+	}
+
+	@DeleteMapping(value = "/resources/{id}", produces = "application/json")
+	@ApiOperation(value = "Delete a specific resource")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+	})
+	@ResponseBody
+	public void delete(
+			@ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchProviderException, NoSuchResourceException {
+
+		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		delete(scopeId, id, request, response);
+	}
+
+	/*
+	 * List
+	 */
+
+	@GetMapping(value = "/resources", produces = "application/json")
+	@ApiOperation(value = "List resources with filters")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+	})
+	@ResponseBody
+	public List<ResourceDTO> list(
+			@RequestParam("type") Optional<String> type,
+			@RequestParam("provider") Optional<String> provider,
+			@RequestParam("user") Optional<String> ownerId,
+			HttpServletRequest request, HttpServletResponse response,
+			Pageable pageable) {
+
+		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		return list(scopeId, type, provider, ownerId, request, response, pageable);
+
 	}
 
 	/*

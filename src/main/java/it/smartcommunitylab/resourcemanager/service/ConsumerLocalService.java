@@ -108,36 +108,50 @@ public class ConsumerLocalService {
 	private Map<String, ConsumerBuilder> _builders;
 
 	private Consumer buildConsumer(String id) throws NoSuchConsumerException {
-
-		// lookup builder
-		String builderClass = id.replace("Consumer", "Builder");
-
-		if (!_builders.containsKey(builderClass)) {
-			throw new NoSuchConsumerException();
-		}
-
-		_log.info("build " + id + " via " + builderClass);
-
-		return _builders.get(builderClass).build();
+		// build without parameters
+		return getBuilder(id).build();
 	}
 
 	private Consumer buildConsumer(Registration reg) throws NoSuchConsumerException {
 
 		// lookup builder
 		String id = reg.getConsumer();
+		// build based on registration
+		return getBuilder(id).build(reg);
+	}
+
+	private Consumer buildConsumer(String id, Map<String, Serializable> properties) throws NoSuchConsumerException {
+
+		// build based on properties
+		return getBuilder(id).build(properties);
+	}
+
+	public ConsumerBuilder getBuilder(String id) throws NoSuchConsumerException {
+
+		// check if id ends with "Consumer"
+		// spring registers beans with "className" as key
+		// code expects consumer classes to end with *Consumer.java
+		// builders should be named as [consumerId]Builder.java
+		if (!id.endsWith("Consumer")) {
+			id = id.concat("Consumer");
+		}
 		String builderClass = id.replace("Consumer", "Builder");
 
 		if (!_builders.containsKey(builderClass)) {
 			throw new NoSuchConsumerException();
 		}
 
-		_log.info("build " + id + " via " + builderClass);
-
-		return _builders.get(builderClass).build(reg);
+		return _builders.get(builderClass);
 	}
 
 	public boolean hasBuilder(String id) {
-		// lookup builder
+		// check if id ends with "Consumer"
+		// spring registers beans with "className" as key
+		// code expects consumer classes to end with *Consumer.java
+		// builders should be named as [consumerId]Builder.java
+		if (!id.endsWith("Consumer")) {
+			id = id.concat("Consumer");
+		}
 		String builderClass = id.replace("Consumer", "Builder");
 
 		return _builders.containsKey(builderClass);

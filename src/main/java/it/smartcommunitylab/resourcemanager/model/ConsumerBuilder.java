@@ -2,6 +2,7 @@ package it.smartcommunitylab.resourcemanager.model;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
 
 import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
 
@@ -19,4 +20,8 @@ public interface ConsumerBuilder {
 
 	public Consumer build(Registration reg) throws NoSuchConsumerException;
 
+	/*
+	 * Properties
+	 */
+	public abstract Set<String> listProperties();
 }

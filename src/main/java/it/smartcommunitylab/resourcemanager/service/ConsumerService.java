@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchRegistrationException;
+import it.smartcommunitylab.resourcemanager.model.ConsumerBuilder;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 
 @Component
@@ -82,6 +83,13 @@ public class ConsumerService {
 		//
 		// call local service
 		return consumerService.listBuilders(type);
+	}
+
+	public ConsumerBuilder getBuilder(String scopeId, String userId, String id) throws NoSuchConsumerException {
+		// TODO check auth
+		//
+		// call local service
+		return consumerService.getBuilder(id);
 	}
 
 	/*

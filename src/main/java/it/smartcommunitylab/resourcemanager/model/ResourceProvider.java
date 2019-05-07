@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class Provider {
+public abstract class ResourceProvider {
 
 	/*
 	 * Provider

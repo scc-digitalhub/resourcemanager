@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
-import it.smartcommunitylab.resourcemanager.model.Provider;
+import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 
 @Component
 public class ProviderService {
@@ -18,21 +18,21 @@ public class ProviderService {
 	@Autowired
 	private ProviderLocalService providerService;
 
-	public Map<String, List<Provider>> list(String scopeId, String userId) {
+	public Map<String, List<ResourceProvider>> list(String scopeId, String userId) {
 		// TODO check auth
 		//
 		// call local service
 		return providerService.listProviders();
 	}
 
-	public List<Provider> list(String scopeId, String userId, String type) {
+	public List<ResourceProvider> list(String scopeId, String userId, String type) {
 		// TODO check auth
 		//
 		// call local service
 		return providerService.listProviders(type);
 	}
 
-	public Provider get(String scopeId, String userId, String id) throws NoSuchProviderException {
+	public ResourceProvider get(String scopeId, String userId, String id) throws NoSuchProviderException {
 		// TODO check auth
 		//
 		// call local service
