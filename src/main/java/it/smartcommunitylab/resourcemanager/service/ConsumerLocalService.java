@@ -201,6 +201,13 @@ public class ConsumerLocalService {
 		Consumer c = buildConsumer(reg);
 		_consumers.get(type).add(c);
 
+		// trigger create on new consumer for all existing resources
+		List<Resource> resources = resourceLocalService.listByTypeAndScopeId(type, scopeId);
+
+		for (Resource res : resources) {
+			c.addResource(scopeId, userId, res);
+		}
+
 		return reg;
 	}
 
