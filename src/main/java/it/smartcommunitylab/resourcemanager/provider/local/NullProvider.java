@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
+import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
 import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.util.SqlUtil;
@@ -72,7 +73,8 @@ public class NullProvider extends ResourceProvider {
 	}
 
 	@Override
-	public Resource createResource(String scopeId, String userId, Map<String, Serializable> properties) {
+	public Resource createResource(String scopeId, String userId, Map<String, Serializable> properties)
+			throws ResourceProviderException {
 		Resource res = new Resource();
 		res.setType(TYPE);
 		res.setProvider(ID);
@@ -86,19 +88,19 @@ public class NullProvider extends ResourceProvider {
 	}
 
 	@Override
-	public void updateResource(Resource resource) {
+	public void updateResource(Resource resource) throws ResourceProviderException {
 		// nothing to do
 
 	}
 
 	@Override
-	public void deleteResource(Resource resource) {
+	public void deleteResource(Resource resource) throws ResourceProviderException {
 		// nothing to do
 
 	}
 
 	@Override
-	public void checkResource(Resource resource) {
+	public void checkResource(Resource resource) throws ResourceProviderException {
 		// nothing to do
 
 	}

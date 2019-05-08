@@ -18,7 +18,7 @@ public class NullSqlConsumer extends Consumer {
 	private final static Logger _log = LoggerFactory.getLogger(NullSqlConsumer.class);
 
 	public static final String TYPE = SystemKeys.TYPE_SQL;
-	public static final String ID = "nullSqlConsumer";
+	public static final String ID = "nullSql";
 
 	private int STATUS;
 

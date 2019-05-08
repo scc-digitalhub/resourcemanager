@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
+import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
+
 public abstract class ResourceProvider {
 
 	/*
@@ -18,13 +20,14 @@ public abstract class ResourceProvider {
 	/*
 	 * Resources
 	 */
-	public abstract Resource createResource(String scopeId, String userId, Map<String, Serializable> properties);
+	public abstract Resource createResource(String scopeId, String userId, Map<String, Serializable> properties)
+			throws ResourceProviderException;
 
-	public abstract void updateResource(Resource resource);
+	public abstract void updateResource(Resource resource) throws ResourceProviderException;
 
-	public abstract void deleteResource(Resource resource);
+	public abstract void deleteResource(Resource resource) throws ResourceProviderException;
 
-	public abstract void checkResource(Resource resource);
+	public abstract void checkResource(Resource resource) throws ResourceProviderException;
 
 	/*
 	 * Properties

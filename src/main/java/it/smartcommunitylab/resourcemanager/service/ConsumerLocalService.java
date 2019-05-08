@@ -19,6 +19,7 @@ import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchRegistrationException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
+import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
 import it.smartcommunitylab.resourcemanager.config.ConsumerConfiguration;
 import it.smartcommunitylab.resourcemanager.model.Consumer;
 import it.smartcommunitylab.resourcemanager.model.ConsumerBuilder;
@@ -96,6 +97,8 @@ public class ConsumerLocalService {
 				resourceLocalService.check(r.getId());
 			} catch (NoSuchResourceException | NoSuchProviderException e) {
 				_log.error("error checking resource " + r.getId());
+			} catch (ResourceProviderException e) {
+				_log.error("provider error checking resource " + r.getId());
 			}
 		}
 	}

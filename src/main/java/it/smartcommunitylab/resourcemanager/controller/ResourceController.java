@@ -34,6 +34,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
+import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
 import it.smartcommunitylab.resourcemanager.dto.ResourceDTO;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.service.ResourceService;
@@ -78,7 +79,8 @@ public class ResourceController {
 	public ResourceDTO add(
 			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
 			@ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
-			HttpServletRequest request, HttpServletResponse response) throws NoSuchProviderException {
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchProviderException, ResourceProviderException {
 
 		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
@@ -104,7 +106,7 @@ public class ResourceController {
 			@ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
 			@ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
 			HttpServletRequest request, HttpServletResponse response)
-			throws NoSuchProviderException, NoSuchResourceException {
+			throws NoSuchProviderException, NoSuchResourceException, ResourceProviderException {
 
 		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
@@ -129,7 +131,7 @@ public class ResourceController {
 			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
 			@ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
 			HttpServletRequest request, HttpServletResponse response)
-			throws NoSuchProviderException, NoSuchResourceException {
+			throws NoSuchProviderException, NoSuchResourceException, ResourceProviderException {
 
 		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
@@ -214,7 +216,8 @@ public class ResourceController {
 	@ResponseBody
 	public ResourceDTO add(
 			@ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
-			HttpServletRequest request, HttpServletResponse response) throws NoSuchProviderException {
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchProviderException, ResourceProviderException {
 
 		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
 		return add(scopeId, resource, request, response);
@@ -231,7 +234,7 @@ public class ResourceController {
 			@ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
 			@ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
 			HttpServletRequest request, HttpServletResponse response)
-			throws NoSuchProviderException, NoSuchResourceException {
+			throws NoSuchProviderException, NoSuchResourceException, ResourceProviderException {
 
 		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
 		return update(scopeId, id, resource, request, response);
@@ -247,7 +250,7 @@ public class ResourceController {
 	public void delete(
 			@ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
 			HttpServletRequest request, HttpServletResponse response)
-			throws NoSuchProviderException, NoSuchResourceException {
+			throws NoSuchProviderException, NoSuchResourceException, ResourceProviderException {
 
 		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
 		delete(scopeId, id, request, response);
@@ -294,6 +297,12 @@ public class ResourceController {
 		return ex.getMessage();
 	}
 
+	@ExceptionHandler(ResourceProviderException.class)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ResponseBody
+	public String providerError(ResourceProviderException ex) {
+		return ex.getMessage();
+	}
 	/*
 	 * Helper
 	 */

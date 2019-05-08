@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
+import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
 import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.model.ResourceEvent;
@@ -36,7 +37,7 @@ public class ResourceLocalService {
 	 */
 	public Resource create(String scopeId, String userId, String type, String providerId,
 			Map<String, Serializable> properties)
-			throws NoSuchProviderException {
+			throws NoSuchProviderException, ResourceProviderException {
 		_log.info("create " + type + " resource with " + String.valueOf(providerId) + " by user " + userId);
 
 		// call provider to require creation
@@ -58,7 +59,7 @@ public class ResourceLocalService {
 	}
 
 	public Resource update(long id, Map<String, Serializable> properties)
-			throws NoSuchResourceException, NoSuchProviderException {
+			throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
 		_log.info("update resource " + String.valueOf(id));
 
 		Optional<Resource> p = resourceRepository.findById(id);
@@ -80,7 +81,7 @@ public class ResourceLocalService {
 
 	}
 
-	public void delete(long id) throws NoSuchResourceException, NoSuchProviderException {
+	public void delete(long id) throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
 		_log.info("delete resource " + String.valueOf(id));
 
 		Optional<Resource> p = resourceRepository.findById(id);
@@ -193,7 +194,7 @@ public class ResourceLocalService {
 	@Autowired
 	private ApplicationEventPublisher applicationEventPublisher;
 
-	public void check(long id) throws NoSuchResourceException, NoSuchProviderException {
+	public void check(long id) throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
 		Optional<Resource> p = resourceRepository.findById(id);
 
 		if (!p.isPresent()) {

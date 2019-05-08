@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
+import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 
 @Component
@@ -30,7 +31,7 @@ public class ResourceService {
 	 */
 	public Resource create(String scopeId, String userId, String type, String providerId,
 			Map<String, Serializable> properties)
-			throws NoSuchProviderException {
+			throws NoSuchProviderException, ResourceProviderException {
 		_log.info("create resource with " + String.valueOf(providerId) + " by user " + userId);
 
 		// TODO check auth
@@ -41,7 +42,7 @@ public class ResourceService {
 	}
 
 	public Resource update(String scopeId, String userId, long id, Map<String, Serializable> properties)
-			throws NoSuchResourceException, NoSuchProviderException {
+			throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
 		_log.info("update resource " + String.valueOf(id) + " by user " + userId);
 
 		// TODO check auth
@@ -51,7 +52,8 @@ public class ResourceService {
 
 	}
 
-	public void delete(String scopeId, String userId, long id) throws NoSuchResourceException, NoSuchProviderException {
+	public void delete(String scopeId, String userId, long id)
+			throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
 		_log.info("delete resource " + String.valueOf(id) + " by user " + userId);
 
 		// TODO check auth
@@ -153,7 +155,8 @@ public class ResourceService {
 	 * Check
 	 */
 
-	public void check(String scopeId, String userId, long id) throws NoSuchResourceException, NoSuchProviderException {
+	public void check(String scopeId, String userId, long id)
+			throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
 		_log.info("check resource " + String.valueOf(id) + " by user " + userId);
 
 		// TODO check auth
