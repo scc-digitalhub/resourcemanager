@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -38,6 +39,9 @@ public class ProviderController {
 
 	private final static Logger _log = LoggerFactory.getLogger(ProviderController.class);
 
+	@Value("${scopes.default}")
+	private String defaultScope;
+	
 	@Autowired
 	private ProviderService providerService;
 
@@ -54,7 +58,7 @@ public class ProviderController {
 			HttpServletRequest request, HttpServletResponse response,
 			Pageable pageable) {
 
-		String scopeId = scope.orElse("default");
+		String scopeId = scope.orElse(defaultScope);
 		String userId = ControllerUtil.getUserId(request);
 
 		_log.debug("list providers by " + userId + " for scope " + scopeId);
@@ -95,7 +99,7 @@ public class ProviderController {
 			HttpServletRequest request, HttpServletResponse response)
 			throws NoSuchProviderException {
 
-		String scopeId = scope.orElse("default");
+		String scopeId = scope.orElse(defaultScope);
 		String userId = ControllerUtil.getUserId(request);
 
 		_log.debug("get provider " + id + " by " + userId + " for scope " + scopeId);
@@ -119,7 +123,7 @@ public class ProviderController {
 			HttpServletRequest request, HttpServletResponse response,
 			Pageable pageable) {
 
-		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
 		return list(scopeId, type, request, response, pageable);
 	}
 
@@ -139,7 +143,7 @@ public class ProviderController {
 			HttpServletRequest request, HttpServletResponse response)
 			throws NoSuchProviderException {
 
-		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
 		return get(scopeId, id, request, response);
 	}
 

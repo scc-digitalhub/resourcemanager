@@ -61,6 +61,17 @@ public class RegistrationLocalService {
 		return r.get();
 	}
 
+	public Registration fetch(long id) {
+		// fetch registration
+		Optional<Registration> r = registrationRepository.findById(id);
+
+		if (!r.isPresent()) {
+			return null;
+		}
+
+		return r.get();
+	}
+
 	/*
 	 * Count
 	 */
@@ -76,8 +87,8 @@ public class RegistrationLocalService {
 		return registrationRepository.countByConsumer(provider);
 	}
 
-	public long countByUserId(String userId) {
-		return registrationRepository.countByUserId(userId);
+	public long countByUserIdAndScopeId(String userId, String scopeId) {
+		return registrationRepository.countByUserIdAndScopeId(userId, scopeId);
 	}
 
 	public long countByScopeId(String scopeId) {
@@ -112,8 +123,8 @@ public class RegistrationLocalService {
 		return registrationRepository.findByConsumer(provider);
 	}
 
-	public List<Registration> listByUserId(String userId) {
-		return registrationRepository.findByUserId(userId);
+	public List<Registration> listByUserIdAndScopeId(String userId, String scopeId) {
+		return registrationRepository.findByUserIdAndScopeId(userId, scopeId);
 	}
 
 	public List<Registration> listByScopeId(String scopeId) {

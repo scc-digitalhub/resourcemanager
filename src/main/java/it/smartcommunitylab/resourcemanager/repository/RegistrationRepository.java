@@ -15,7 +15,7 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
 
 	Long countByConsumer(String consumer);
 
-	Long countByUserId(String userId);
+	Long countByUserIdAndScopeId(String userId, String scopeId);
 
 	Long countByScopeId(String scopeId);
 
@@ -29,11 +29,7 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
 
 	Page<Registration> findByType(String type, Pageable pageable);
 
-	List<Registration> findByUserId(String userId);
-
-	List<Registration> findByUserId(String userId, Sort sort);
-
-	Page<Registration> findByUserId(String userId, Pageable pageable);
+	List<Registration> findByUserIdAndScopeId(String userId, String scopeId);
 
 	List<Registration> findByScopeId(String scopeId);
 

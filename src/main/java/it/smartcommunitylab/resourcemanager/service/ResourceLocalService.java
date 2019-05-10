@@ -111,6 +111,16 @@ public class ResourceLocalService {
 		return p.get();
 	}
 
+	public Resource fetch(long id) {
+		Optional<Resource> p = resourceRepository.findById(id);
+
+		if (!p.isPresent()) {
+			return null;
+		}
+
+		return p.get();
+	}
+
 	/*
 	 * Count
 	 */
@@ -130,8 +140,8 @@ public class ResourceLocalService {
 		return resourceRepository.countByScopeId(scopeId);
 	}
 
-	public long countByUserId(String userId) {
-		return resourceRepository.countByUserId(userId);
+	public long countByUserIdAndScopeId(String userId, String scopeId) {
+		return resourceRepository.countByUserIdAndScopeId(userId, scopeId);
 	}
 
 	public long countByTypeAndScopeId(String type, String scopeId) {
@@ -162,8 +172,8 @@ public class ResourceLocalService {
 		return resourceRepository.findByProvider(provider);
 	}
 
-	public List<Resource> listByUserId(String userId) {
-		return resourceRepository.findByUserId(userId);
+	public List<Resource> listByUserIdAndScopeId(String userId, String scopeId) {
+		return resourceRepository.findByUserIdAndScopeId(userId, scopeId);
 	}
 
 	public List<Resource> listByScopeId(String scopeId) {

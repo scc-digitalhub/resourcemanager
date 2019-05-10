@@ -18,7 +18,7 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
 	Long countByScopeId(String scopeId);
 
-	Long countByUserId(String userId);
+	Long countByUserIdAndScopeId(String userId, String scopeId);
 
 	Long countByTypeAndScopeId(String type, String scopeId);
 
@@ -59,4 +59,7 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
 	List<Resource> findByProviderAndScopeId(String provider, String scopeId, Sort sort);
 
 	Page<Resource> findByProviderAndScopeId(String provider, String scopeId, Pageable pageable);
+
+	List<Resource> findByUserIdAndScopeId(String userId, String scopeId);
+
 }

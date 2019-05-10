@@ -26,7 +26,7 @@ public class ControllerUtil {
 	}
 
 	public static String getScopeId(final HttpServletRequest request) {
-		String scopeId = "default";
+		String scopeId = null;
 
 		Map<?, ?> pathVariables = (Map<?, ?>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
 		if (pathVariables.containsKey("scope")) {
