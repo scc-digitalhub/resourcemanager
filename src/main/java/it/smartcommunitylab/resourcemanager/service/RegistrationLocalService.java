@@ -34,6 +34,7 @@ public class RegistrationLocalService {
 
 		// build registration
 		Registration reg = new Registration();
+		reg.setScopeId(scopeId);
 		reg.setUserId(userId);
 		reg.setType(type);
 		reg.setConsumer(consumer);

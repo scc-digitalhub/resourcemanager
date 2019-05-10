@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
+import it.smartcommunitylab.resourcemanager.common.ConsumerException;
 import it.smartcommunitylab.resourcemanager.model.Consumer;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 import it.smartcommunitylab.resourcemanager.model.Resource;
@@ -45,25 +46,25 @@ public class LogSqlConsumer extends Consumer {
 	}
 
 	@Override
-	public void addResource(String scopeId, String userId, Resource resource) {
+	public void addResource(String scopeId, String userId, Resource resource) throws ConsumerException {
 		_log.debug("add resource " + resource.toString());
 
 	}
 
 	@Override
-	public void updateResource(String scopeId, String userId, Resource resource) {
+	public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
 		_log.debug("update resource " + resource.toString());
 
 	}
 
 	@Override
-	public void deleteResource(String scopeId, String userId, Resource resource) {
+	public void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException {
 		_log.debug("delete resource " + resource.toString());
 
 	}
 
 	@Override
-	public void checkResource(String scopeId, String userId, Resource resource) {
+	public void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException {
 		_log.debug("check resource " + resource.toString());
 
 	}

@@ -15,6 +15,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
+import it.smartcommunitylab.resourcemanager.common.ConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchRegistrationException;
@@ -68,6 +69,8 @@ public class ConsumerLocalService {
 					_consumers.get(type).add(c);
 				} catch (NoSuchConsumerException e) {
 					_log.error("no builder for " + id);
+				} catch (ConsumerException e) {
+					_log.error("builder consumer error for " + id + " " + e.getMessage());
 				}
 			}
 		}
@@ -82,6 +85,8 @@ public class ConsumerLocalService {
 				_consumers.get(reg.getType()).add(c);
 			} catch (NoSuchConsumerException e) {
 				_log.error("no builder for registration " + reg.getId());
+			} catch (ConsumerException e) {
+				_log.error("builder consumer error for registration " + reg.getId() + " " + e.getMessage());
 			}
 		}
 
@@ -110,12 +115,12 @@ public class ConsumerLocalService {
 	@Autowired
 	private Map<String, ConsumerBuilder> _builders;
 
-	private Consumer buildConsumer(String id) throws NoSuchConsumerException {
+	private Consumer buildConsumer(String id) throws NoSuchConsumerException, ConsumerException {
 		// build without parameters
 		return getBuilder(id).build();
 	}
 
-	private Consumer buildConsumer(Registration reg) throws NoSuchConsumerException {
+	private Consumer buildConsumer(Registration reg) throws NoSuchConsumerException, ConsumerException {
 
 		// lookup builder
 		String id = reg.getConsumer();
@@ -123,7 +128,8 @@ public class ConsumerLocalService {
 		return getBuilder(id).build(reg);
 	}
 
-	private Consumer buildConsumer(String id, Map<String, Serializable> properties) throws NoSuchConsumerException {
+	private Consumer buildConsumer(String id, Map<String, Serializable> properties)
+			throws NoSuchConsumerException, ConsumerException {
 
 		// build based on properties
 		return getBuilder(id).build(properties);
@@ -187,7 +193,7 @@ public class ConsumerLocalService {
 
 	public Registration add(String scopeId, String userId, String type, String consumer,
 			Map<String, Serializable> properties)
-			throws NoSuchConsumerException {
+			throws NoSuchConsumerException, ConsumerException {
 
 		// check support
 		if (!hasBuilder(consumer)) {
@@ -258,25 +264,32 @@ public class ConsumerLocalService {
 			// notify all active consumers
 			// note: filtering by user is performed by consumers, IF required/implemented
 			for (Consumer c : _consumers.get(type)) {
-				if (c.getStatus() == SystemKeys.STATUS_READY) {
-					_log.info("notify consumer " + c.getId() + " for " + event.getType() + " with payload "
-							+ event.getAction() + ":" + String.valueOf(event.getId()));
+				try {
+					if (c.getStatus() == SystemKeys.STATUS_READY) {
+						_log.info("notify consumer " + c.getId() + " for " + event.getType() + " with payload "
+								+ event.getAction() + ":" + String.valueOf(event.getId()));
 
-					switch (action) {
-					case SystemKeys.ACTION_CREATE:
-						c.addResource(scopeId, userId, res);
-						break;
-					case SystemKeys.ACTION_UPDATE:
-						c.updateResource(scopeId, userId, res);
-						break;
-					case SystemKeys.ACTION_DELETE:
-						c.deleteResource(scopeId, userId, res);
-						break;
-					case SystemKeys.ACTION_CHECK:
-						c.checkResource(scopeId, userId, res);
-						break;
+						switch (action) {
+						case SystemKeys.ACTION_CREATE:
+							c.addResource(scopeId, userId, res);
+							break;
+						case SystemKeys.ACTION_UPDATE:
+							c.updateResource(scopeId, userId, res);
+							break;
+						case SystemKeys.ACTION_DELETE:
+							c.deleteResource(scopeId, userId, res);
+							break;
+						case SystemKeys.ACTION_CHECK:
+							c.checkResource(scopeId, userId, res);
+							break;
+						}
+
 					}
-
+				} catch (ConsumerException cex) {
+					// log and ignore
+					_log.error("notify consumer " + c.getId() + " for " + event.getType()
+							+ " with payload " + event.getAction() + ":" + String.valueOf(event.getId())
+							+ " error " + cex.getMessage());
 				}
 			}
 

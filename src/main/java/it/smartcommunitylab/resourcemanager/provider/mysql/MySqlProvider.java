@@ -22,8 +22,8 @@ import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 import it.smartcommunitylab.resourcemanager.util.SqlUtil;
 
 @Component
-public class MysqlProvider extends ResourceProvider {
-	private final static Logger _log = LoggerFactory.getLogger(MysqlProvider.class);
+public class MySqlProvider extends ResourceProvider {
+	private final static Logger _log = LoggerFactory.getLogger(MySqlProvider.class);
 
 	public static final String TYPE = SystemKeys.TYPE_SQL;
 	public static final String ID = "mysql";

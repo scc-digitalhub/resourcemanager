@@ -1,5 +1,7 @@
 package it.smartcommunitylab.resourcemanager.model;
 
+import it.smartcommunitylab.resourcemanager.common.ConsumerException;
+
 public abstract class Consumer {
 
 	/*
@@ -16,12 +18,12 @@ public abstract class Consumer {
 	/*
 	 * Resources
 	 */
-	public abstract void addResource(String scopeId, String userId, Resource resource);
+	public abstract void addResource(String scopeId, String userId, Resource resource) throws ConsumerException;
 
-	public abstract void checkResource(String scopeId, String userId, Resource resource);
+	public abstract void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException;
 
-	public abstract void updateResource(String scopeId, String userId, Resource resource);
+	public abstract void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException;
 
-	public abstract void deleteResource(String scopeId, String userId, Resource resource);
+	public abstract void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException;
 
 }

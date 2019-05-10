@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
+import it.smartcommunitylab.resourcemanager.common.ConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
 
 public interface ConsumerBuilder {
@@ -14,11 +15,11 @@ public interface ConsumerBuilder {
 
 	public boolean isAvailable();
 
-	public Consumer build() throws NoSuchConsumerException;
+	public Consumer build() throws NoSuchConsumerException, ConsumerException;
 
-	public Consumer build(Map<String, Serializable> properties) throws NoSuchConsumerException;
+	public Consumer build(Map<String, Serializable> properties) throws NoSuchConsumerException, ConsumerException;
 
-	public Consumer build(Registration reg) throws NoSuchConsumerException;
+	public Consumer build(Registration reg) throws NoSuchConsumerException, ConsumerException;
 
 	/*
 	 * Properties

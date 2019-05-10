@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
+import it.smartcommunitylab.resourcemanager.common.ConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchRegistrationException;
 import it.smartcommunitylab.resourcemanager.model.ConsumerBuilder;
@@ -34,7 +35,7 @@ public class ConsumerService {
 
 	public Registration add(String scopeId, String userId, String type, String consumer,
 			Map<String, Serializable> properties)
-			throws NoSuchConsumerException {
+			throws NoSuchConsumerException, ConsumerException {
 		// TODO check auth
 		//
 		// call local service

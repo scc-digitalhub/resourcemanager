@@ -31,6 +31,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import it.smartcommunitylab.resourcemanager.common.ConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
 import it.smartcommunitylab.resourcemanager.dto.ConsumerDTO;
 import it.smartcommunitylab.resourcemanager.model.Registration;
@@ -77,7 +78,8 @@ public class ConsumerController {
 	public ConsumerDTO add(
 			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
 			@ApiParam(value = "Consumer json", required = true) @RequestBody ConsumerDTO res,
-			HttpServletRequest request, HttpServletResponse response) throws NoSuchConsumerException {
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchConsumerException, ConsumerException {
 
 		String scopeId = scope.orElse("default");
 		String userId = ControllerUtil.getUserId(request);
@@ -187,7 +189,8 @@ public class ConsumerController {
 	@ResponseBody
 	public ConsumerDTO add(
 			@ApiParam(value = "Consumer json", required = true) @RequestBody ConsumerDTO consumer,
-			HttpServletRequest request, HttpServletResponse response) throws NoSuchConsumerException {
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchConsumerException, ConsumerException {
 		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
 		return add(scopeId, consumer, request, response);
 
@@ -240,6 +243,13 @@ public class ConsumerController {
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	@ResponseBody
 	public String notFound(NoSuchConsumerException ex) {
+		return ex.getMessage();
+	}
+
+	@ExceptionHandler(ConsumerException.class)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ResponseBody
+	public String consumerError(ConsumerException ex) {
 		return ex.getMessage();
 	}
 
