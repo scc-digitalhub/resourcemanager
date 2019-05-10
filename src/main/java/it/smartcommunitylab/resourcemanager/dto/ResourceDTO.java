@@ -117,11 +117,24 @@ public class ResourceDTO {
 
 		dto.type = res.getType();
 		dto.provider = res.getProvider();
-		dto.uri = res.getUri();
 
-		dto.properties = res.getProperties();
-		if (dto.properties.isEmpty()) {
-			dto.properties = "{}";
+		// clear private fields
+		dto.uri = "";
+		dto.properties = "{}";
+
+		return dto;
+	}
+
+	public static ResourceDTO fromResource(Resource res, boolean includePrivate) {
+		ResourceDTO dto = fromResource(res);
+		if (includePrivate) {
+			dto.uri = res.getUri();
+
+			dto.properties = res.getProperties();
+			if (dto.properties.isEmpty()) {
+				dto.properties = "{}";
+			}
+
 		}
 
 		return dto;

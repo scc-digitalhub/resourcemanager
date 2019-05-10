@@ -105,9 +105,21 @@ public class ConsumerDTO {
 		dto.type = reg.getType();
 		dto.consumer = reg.getConsumer();
 
-		dto.properties = reg.getProperties();
-		if (dto.properties.isEmpty()) {
-			dto.properties = "{}";
+		// clear private fields
+		dto.properties = "{}";
+
+		return dto;
+	}
+
+	public static ConsumerDTO fromRegistration(Registration reg, boolean includePrivate) {
+		ConsumerDTO dto = fromRegistration(reg);
+		if (includePrivate) {
+
+			dto.properties = reg.getProperties();
+			if (dto.properties.isEmpty()) {
+				dto.properties = "{}";
+			}
+
 		}
 
 		return dto;

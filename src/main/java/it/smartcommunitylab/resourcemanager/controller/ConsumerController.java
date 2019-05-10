@@ -72,7 +72,8 @@ public class ConsumerController {
 
 		Registration reg = consumerService.get(scopeId, userId, id);
 
-		return ConsumerDTO.fromRegistration(reg);
+		//include private fields on detail view
+		return ConsumerDTO.fromRegistration(reg, true);
 	}
 
 	@PostMapping(value = "/c/{scope}/consumers", produces = "application/json")
@@ -95,7 +96,8 @@ public class ConsumerController {
 
 		Registration reg = consumerService.add(scopeId, userId, res.getType(), res.getConsumer(), propertiesMap);
 
-		return ConsumerDTO.fromRegistration(reg);
+		//include private fields on create view
+		return ConsumerDTO.fromRegistration(reg, true);
 
 	}
 

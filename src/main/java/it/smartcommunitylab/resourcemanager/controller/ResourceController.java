@@ -73,7 +73,8 @@ public class ResourceController {
 
 		Resource resource = resourceService.get(scopeId, userId, id);
 
-		return ResourceDTO.fromResource(resource);
+		//include private fields on detail view
+		return ResourceDTO.fromResource(resource, true);
 	}
 
 	@PostMapping(value = "/c/{scope}/resources", produces = "application/json")
@@ -97,7 +98,8 @@ public class ResourceController {
 		Resource result = resourceService.create(scopeId, userId, resource.getType(), resource.getProvider(),
 				propertiesMap);
 
-		return ResourceDTO.fromResource(result);
+		//include private fields on create view
+		return ResourceDTO.fromResource(result, true);
 
 	}
 
@@ -123,7 +125,8 @@ public class ResourceController {
 
 		Resource result = resourceService.update(scopeId, userId, id, propertiesMap);
 
-		return ResourceDTO.fromResource(result);
+		//include private fields on update view
+		return ResourceDTO.fromResource(result, true);
 
 	}
 
