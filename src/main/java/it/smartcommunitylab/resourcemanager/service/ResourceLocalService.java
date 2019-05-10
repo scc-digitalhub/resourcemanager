@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,7 @@ import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
 import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
+import it.smartcommunitylab.resourcemanager.crypt.CryptoService;
 import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.model.ResourceEvent;
@@ -26,11 +28,17 @@ import it.smartcommunitylab.resourcemanager.repository.ResourceRepository;
 public class ResourceLocalService {
 	private final static Logger _log = LoggerFactory.getLogger(ResourceLocalService.class);
 
+	@Value("${encrypt.enabled}")
+	private boolean toEncrypt;
+
 	@Autowired
 	private ResourceRepository resourceRepository;
 
 	@Autowired
 	private ProviderLocalService providerLocalService;
+
+	@Autowired
+	CryptoService crypto;
 
 	/*
 	 * Data
@@ -52,6 +60,18 @@ public class ResourceLocalService {
 		// update fields
 		res.setScopeId(scopeId);
 		res.setUserId(userId);
+
+		// encrypt URI
+		if (toEncrypt) {
+			try {
+				String encrypted = crypto.encrypt(res.getUri());
+				res.setUri(encrypted);
+			} catch (Exception ex) {
+				// wipe private field
+				res.setUri("");
+				_log.debug("crypto error " + ex.getMessage());
+			}
+		}
 
 		// persist resource
 		return resourceRepository.saveAndFlush(res);
@@ -76,6 +96,8 @@ public class ResourceLocalService {
 		ResourceProvider provider = providerLocalService.getProvider(res.getProvider());
 		// sync call - should validate properties
 		provider.updateResource(res);
+
+		// TODO crypt support?
 
 		return resourceRepository.save(res);
 
@@ -106,6 +128,18 @@ public class ResourceLocalService {
 
 		if (!p.isPresent()) {
 			throw new NoSuchResourceException();
+		}
+
+		// decrypt URI
+		if (toEncrypt) {
+			try {
+				String decrypted = crypto.decrypt(p.get().getUri());
+				p.get().setUri(decrypted);
+			} catch (Exception ex) {
+				// wipe private field
+				p.get().setUri("");
+				_log.debug("crypto error " + ex.getMessage());
+			}
 		}
 
 		return p.get();
