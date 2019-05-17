@@ -29,13 +29,14 @@ public class ResourceManagerApplication {
 	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
 		return args -> {
 
-			System.out.println("Ready.");
+//			System.out.println("Ready.");
+			printBanner();
 
 //			service.getProviders().forEach((key, p) -> System.out.println((key + ":" + p.getId())));
 //
-			// test
-			Resource res = resourceService.create("default", "mat", SystemKeys.TYPE_SQL, "nullProvider", null);
-			System.out.println("resource " + res.getId() + " uri " + res.getUri());
+//			// test
+//			Resource res = resourceService.create("default", "mat", SystemKeys.TYPE_SQL, "nullProvider", null);
+//			System.out.println("resource " + res.getId() + " uri " + res.getUri());
 //
 //			// parse
 //			String username = SqlUtil.getUsername(res.getUri());
@@ -48,6 +49,17 @@ public class ResourceManagerApplication {
 //			System.out.println("resource " + res.getId() + " database " + SqlUtil.getDatabase(res.getUri()));
 
 		};
+	}
+
+	public void printBanner() {
+		System.out.println("======================================");
+		System.out.println(" ____                _                ");
+		System.out.println("|  _ \\ ___  __ _  __| |_   _          ");
+		System.out.println("| |_) / _ \\/ _` |/ _` | | | |         ");
+		System.out.println("|  _ <  __/ (_| | (_| | |_| |_        ");
+		System.out.println("|_| \\_\\___|\\__,_|\\__,_|\\__, (_)       ");
+		System.out.println(" :resourcemanager      |___/          ");
+		System.out.println("======================================");
 	}
 
 }

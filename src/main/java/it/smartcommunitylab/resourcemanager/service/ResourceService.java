@@ -44,6 +44,19 @@ public class ResourceService {
 
 	}
 
+	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '"
+			+ SystemKeys.PERMISSION_RESOURCE_CREATE + "')")
+	public Resource add(String scopeId, String userId, String type, String providerId,
+			String uri,
+			Map<String, Serializable> properties)
+			throws NoSuchProviderException, ResourceProviderException {
+		_log.info("add resource with " + String.valueOf(providerId) + " by user " + userId);
+
+		// call local service
+		return resourceLocalService.add(scopeId, userId, type, providerId, uri, properties);
+
+	}
+
 	@PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_RESOURCE +
 			"', '" + SystemKeys.PERMISSION_RESOURCE_UPDATE + "')")
 	public Resource update(String scopeId, String userId, long id, Map<String, Serializable> properties)

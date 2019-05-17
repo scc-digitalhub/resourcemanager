@@ -3,7 +3,7 @@ HELP.md
 !.mvn/wrapper/maven-wrapper.jar
 
 application-local.properties
-
+data/
 
 ### STS ###
 .apt_generated

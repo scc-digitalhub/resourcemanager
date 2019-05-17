@@ -26,11 +26,17 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
 	@Value("${scopes.enabled}")
 	private boolean enabled;
 
+	@Value("${scopes.realm}")
+	private boolean realmRoles;
+
 	@Value("${scopes.list}")
 	private List<String> scopes;
 
 	@Value("${scopes.default}")
 	private String defaultScope;
+
+	@Value("${scopes.base}")
+	private String base;
 
 	@PostConstruct
 	public void init() {
@@ -79,8 +85,10 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
 		// fetch realm AND scope roles
 		List<GrantedAuthority> authorities = new ArrayList<>(authentication.getAuthorities());
 		Set<String> roles = new HashSet<>();
-		roles.addAll(getRealmRoles(authorities));
 		roles.addAll(getScopeRoles(scopeId, authorities));
+		if (realmRoles) {
+			roles.addAll(getRealmRoles(authorities));
+		}
 
 		// fetch all permissions related to any assigned role
 		Set<String> permissions = new HashSet<>();
@@ -118,7 +126,7 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
 
 	private List<String> getScopeRoles(String scopeId, List<GrantedAuthority> authorities) {
 		List<String> roles = new ArrayList<>();
-		String prefix = "/" + scopeId + "/";
+		String prefix = base + "/" + scopeId + "/";
 
 		for (GrantedAuthority ga : authorities) {
 			// expected format [scopeId]/[ROLE_*]

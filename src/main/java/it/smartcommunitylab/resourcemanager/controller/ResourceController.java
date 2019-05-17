@@ -73,12 +73,38 @@ public class ResourceController {
 
 		Resource resource = resourceService.get(scopeId, userId, id);
 
-		//include private fields on detail view
+		// include private fields on detail view
 		return ResourceDTO.fromResource(resource, true);
 	}
 
 	@PostMapping(value = "/c/{scope}/resources", produces = "application/json")
-	@ApiOperation(value = "Add a new resource")
+	@ApiOperation(value = "Create a new resource")
+	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+	@ResponseBody
+	public ResourceDTO create(
+			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+			@ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchProviderException, ResourceProviderException {
+
+		String scopeId = scope.orElse(defaultScope);
+		String userId = ControllerUtil.getUserId(request);
+
+		// parse fields from post
+		Map<String, Serializable> propertiesMap = Resource.propertiesFromValue(resource.getProperties());
+
+		_log.debug("create resource by " + userId + " for scope " + scopeId);
+
+		Resource result = resourceService.create(scopeId, userId, resource.getType(), resource.getProvider(),
+				propertiesMap);
+
+		// include private fields on create view
+		return ResourceDTO.fromResource(result, true);
+
+	}
+
+	@PutMapping(value = "/c/{scope}/resources", produces = "application/json")
+	@ApiOperation(value = "Add an existing resource")
 	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
 	@ResponseBody
 	public ResourceDTO add(
@@ -95,10 +121,11 @@ public class ResourceController {
 
 		_log.debug("add resource by " + userId + " for scope " + scopeId);
 
-		Resource result = resourceService.create(scopeId, userId, resource.getType(), resource.getProvider(),
+		Resource result = resourceService.add(scopeId, userId, resource.getType(), resource.getProvider(),
+				resource.getUri(),
 				propertiesMap);
 
-		//include private fields on create view
+		// include private fields on create view
 		return ResourceDTO.fromResource(result, true);
 
 	}
@@ -125,7 +152,7 @@ public class ResourceController {
 
 		Resource result = resourceService.update(scopeId, userId, id, propertiesMap);
 
-		//include private fields on update view
+		// include private fields on update view
 		return ResourceDTO.fromResource(result, true);
 
 	}
@@ -215,7 +242,23 @@ public class ResourceController {
 	}
 
 	@PostMapping(value = "/resources", produces = "application/json")
-	@ApiOperation(value = "Add a new resource")
+	@ApiOperation(value = "Create a new resource")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+	})
+	@ResponseBody
+	public ResourceDTO create(
+			@ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
+			HttpServletRequest request, HttpServletResponse response)
+			throws NoSuchProviderException, ResourceProviderException {
+
+		Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
+		return create(scopeId, resource, request, response);
+	}
+
+	@PutMapping(value = "/resources", produces = "application/json")
+	@ApiOperation(value = "Add an existing resource")
 	@ApiImplicitParams({
 			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
 			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")

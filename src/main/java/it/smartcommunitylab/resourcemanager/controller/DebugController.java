@@ -20,13 +20,13 @@ public class DebugController {
 		return "ResourceController";
 	}
 
-	@GetMapping("/debug/userid")
-	public String username(HttpServletRequest request, HttpServletResponse response) {
-		return ControllerUtil.getUserId(request);
-	}
-
-	@GetMapping("/debug/roles")
-	public List<String> roles(HttpServletRequest request, HttpServletResponse response) {
-		return new ArrayList(SecurityUtil.getUserRoles());
-	}
+//	@GetMapping("/debug/userid")
+//	public String username(HttpServletRequest request, HttpServletResponse response) {
+//		return ControllerUtil.getUserId(request);
+//	}
+//
+//	@GetMapping("/debug/roles")
+//	public List<String> roles(HttpServletRequest request, HttpServletResponse response) {
+//		return new ArrayList(SecurityUtil.getUserRoles());
+//	}
 }

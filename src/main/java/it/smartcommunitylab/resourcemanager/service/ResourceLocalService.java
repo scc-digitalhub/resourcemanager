@@ -78,6 +78,48 @@ public class ResourceLocalService {
 
 	}
 
+	public Resource add(String scopeId, String userId, String type, String providerId,
+			String uri,
+			Map<String, Serializable> properties)
+			throws NoSuchProviderException, ResourceProviderException {
+		_log.info("add " + type + " resource with " + String.valueOf(providerId) + " by user " + userId);
+
+		// call provider to check existence
+		ResourceProvider provider = providerLocalService.getProvider(providerId);
+		// check type match
+		if (!provider.getType().equals(type)) {
+			throw new NoSuchProviderException();
+		}
+
+		// nothing asked to provider, resource should already exists
+		Resource res = new Resource();
+		res.setType(type);
+		res.setProvider(provider.getId());
+		res.setPropertiesMap(properties);
+		// update fields
+		res.setScopeId(scopeId);
+		res.setUserId(userId);
+
+		// set uri as provided
+		res.setUri(uri);
+
+		// encrypt URI
+		if (toEncrypt) {
+			try {
+				String encrypted = crypto.encrypt(res.getUri());
+				res.setUri(encrypted);
+			} catch (Exception ex) {
+				// wipe private field
+				res.setUri("");
+				_log.debug("crypto error " + ex.getMessage());
+			}
+		}
+
+		// persist resource
+		return resourceRepository.saveAndFlush(res);
+
+	}
+
 	public Resource update(long id, Map<String, Serializable> properties)
 			throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
 		_log.info("update resource " + String.valueOf(id));

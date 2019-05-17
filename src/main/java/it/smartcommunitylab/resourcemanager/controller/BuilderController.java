@@ -124,7 +124,7 @@ public class BuilderController {
 			HttpServletRequest request, HttpServletResponse response,
 			Pageable pageable) {
 
-		Optional<String> scopeId = Optional.of(ControllerUtil.getScopeId(request));
+		Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
 		return list(scopeId, type, request, response, pageable);
 	}
 
