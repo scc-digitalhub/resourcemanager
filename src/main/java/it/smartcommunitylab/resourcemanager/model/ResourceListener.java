@@ -29,8 +29,9 @@ public class ResourceListener {
 
 	@PreRemove
 	private void preRemove(final Resource entity) {
-		service.notifyAction(entity.getScopeId(), entity.getUserId(), entity.getType(), entity.getId(),
-				SystemKeys.ACTION_DELETE);
+	    //disabled due to async dispatch
+//		service.notifyAction(entity.getScopeId(), entity.getUserId(), entity.getType(), entity.getId(),
+//				SystemKeys.ACTION_DELETE);
 	}
 
 	/*

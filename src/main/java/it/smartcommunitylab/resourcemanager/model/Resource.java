@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import it.smartcommunitylab.resourcemanager.dto.ResourceDTO;
 import it.smartcommunitylab.resourcemanager.serializer.ResourceDeserializer;
 import it.smartcommunitylab.resourcemanager.serializer.ResourceSerializer;
 
@@ -38,211 +39,263 @@ import static javax.persistence.TemporalType.TIMESTAMP;
 @JsonSerialize(using = ResourceSerializer.class)
 @JsonDeserialize(using = ResourceDeserializer.class)
 public class Resource {
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	private String type;
-	private String provider;
-	private String uri;
+    private String type;
+    private String provider;
+    private String uri;
 
-	private String userId;
-	// example scope=tenant/project/user
-	private String scopeId;
-	private String properties;
+    private String userId;
+    // example scope=tenant/project/user
+    private String scopeId;
+    private String properties;
 
-	/*
-	 * Audit
-	 */
-	@Column(name = "created_date", nullable = false, updatable = false)
-	@CreatedDate
-	@Temporal(TIMESTAMP)
-	private Date createdDate;
+    // flag if managed by resourcemanager
+    private boolean managed;
 
-	@Column(name = "modified_date")
-	@LastModifiedDate
-	@Temporal(TIMESTAMP)
-	private Date modifiedDate;
+    // flag if updates are propagated
+    private boolean subscribed;
 
-	@Column(name = "created_by")
-	@CreatedBy
-	protected String createdBy;
+    /*
+     * Audit
+     */
+    @Column(name = "created_date", nullable = false, updatable = false)
+    @CreatedDate
+    @Temporal(TIMESTAMP)
+    private Date createdDate;
 
-	@Column(name = "modified_by")
-	@LastModifiedBy
-	protected String lastModifiedBy;
+    @Column(name = "modified_date")
+    @LastModifiedDate
+    @Temporal(TIMESTAMP)
+    private Date modifiedDate;
 
-	public long getId() {
-		return id;
-	}
+    @Column(name = "created_by")
+    @CreatedBy
+    protected String createdBy;
 
-	public void setId(long id) {
-		this.id = id;
-	}
+    @Column(name = "modified_by")
+    @LastModifiedBy
+    protected String lastModifiedBy;
 
-	public String getType() {
-		return type;
-	}
+    public Resource() {
+        super();
+        this.managed = true;
+        this.subscribed = true;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public long getId() {
+        return id;
+    }
 
-	public String getProvider() {
-		return provider;
-	}
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public void setProvider(String provider) {
-		this.provider = provider;
-	}
+    public String getType() {
+        return type;
+    }
 
-	public String getUri() {
-		return uri;
-	}
+    public void setType(String type) {
+        this.type = type;
+    }
 
-	public void setUri(String uri) {
-		this.uri = uri;
-	}
+    public String getProvider() {
+        return provider;
+    }
 
-	public String getUserId() {
-		return userId;
-	}
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
 
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
+    public String getUri() {
+        return uri;
+    }
 
-	public String getScopeId() {
-		return scopeId;
-	}
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
 
-	public void setScopeId(String scopeId) {
-		this.scopeId = scopeId;
-	}
+    public String getUserId() {
+        return userId;
+    }
 
-	public String getProperties() {
-		return properties;
-	}
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
-	public void setProperties(String properties) {
-		this.properties = properties;
-	}
+    public String getScopeId() {
+        return scopeId;
+    }
 
-	public Date getCreatedDate() {
-		return createdDate;
-	}
+    public void setScopeId(String scopeId) {
+        this.scopeId = scopeId;
+    }
 
-	public void setCreatedDate(Date createdDate) {
-		this.createdDate = createdDate;
-	}
+    public String getProperties() {
+        return properties;
+    }
 
-	public Date getModifiedDate() {
-		return modifiedDate;
-	}
+    public void setProperties(String properties) {
+        this.properties = properties;
+    }
 
-	public void setModifiedDate(Date modifiedDate) {
-		this.modifiedDate = modifiedDate;
-	}
+    public Date getCreatedDate() {
+        return createdDate;
+    }
 
-	public String getCreatedBy() {
-		return createdBy;
-	}
+    public void setCreatedDate(Date createdDate) {
+        this.createdDate = createdDate;
+    }
 
-	public void setCreatedBy(String createdBy) {
-		this.createdBy = createdBy;
-	}
+    public Date getModifiedDate() {
+        return modifiedDate;
+    }
 
-	public String getLastModifiedBy() {
-		return lastModifiedBy;
-	}
+    public void setModifiedDate(Date modifiedDate) {
+        this.modifiedDate = modifiedDate;
+    }
 
-	public void setLastModifiedBy(String lastModifiedBy) {
-		this.lastModifiedBy = lastModifiedBy;
-	}
+    public String getCreatedBy() {
+        return createdBy;
+    }
 
-	@Override
-	public String toString() {
-		return "Resource [id=" + id + ", type=" + type + ", provider=" + provider + ", uri=" + uri + ", userId="
-				+ userId + ", scopeId=" + scopeId + ", createdDate=" + createdDate + ", modifiedDate=" + modifiedDate
-				+ ", createdBy=" + createdBy + ", lastModifiedBy=" + lastModifiedBy + "]";
-	}
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
 
-	@Transient
-	@JsonIgnore
-	private Map<String, Serializable> map;
+    public String getLastModifiedBy() {
+        return lastModifiedBy;
+    }
 
-	@JsonIgnore
-	public Map<String, Serializable> getPropertiesMap() {
-		if (this.map == null) {
-			// read map from properties
-			map = Resource.propertiesFromValue(properties);
-		}
+    public void setLastModifiedBy(String lastModifiedBy) {
+        this.lastModifiedBy = lastModifiedBy;
+    }
 
-		return map;
-	}
+    public boolean isManaged() {
+        return managed;
+    }
 
-	public void setPropertiesMap(Map<String, Serializable> map) {
-		this.map = map;
-		sync();
-	}
+    public void setManaged(boolean managed) {
+        this.managed = managed;
+    }
 
-	@PrePersist
-	@PreUpdate
-	private void sync() {
-		if (map != null) {
-			// custom build json from map
-			JSONObject json = Resource.jsonFromMap(map);
-			// serialize to string
-			properties = json.toString();
-		} else {
-			properties = "{}";
-		}
-	}
+    public boolean isSubscribed() {
+        return subscribed;
+    }
 
-	public static Map<String, Serializable> propertiesFromValue(String value) {
-		// read map from string as json
-		Map<String, Serializable> map = new HashMap<>();
-		JSONObject json = new JSONObject(value);
-		// build map from json
-		for (String key : json.keySet()) {
-			JSONArray arr = json.optJSONArray(key);
-			if (arr != null) {
-				// value is array of String
-				String[] ss = new String[arr.length()];
-				for (int i = 0; i < arr.length(); i++) {
-					String s = arr.optString(i);
-					ss[i] = s;
-				}
+    public void setSubscribed(boolean subscribed) {
+        this.subscribed = subscribed;
+    }
 
-				map.put(key, ss);
-			} else {
-				// get as String
-				String s = json.optString(key);
-				map.put(key, s);
-			}
-		}
+    @Override
+    public String toString() {
+        return "Resource [id=" + id + ", type=" + type + ", provider=" + provider + ", uri=" + uri + ", userId="
+                + userId + ", scopeId=" + scopeId + ", createdDate=" + createdDate + ", modifiedDate=" + modifiedDate
+                + ", createdBy=" + createdBy + ", lastModifiedBy=" + lastModifiedBy + "]";
+    }
 
-		return map;
-	}
+    @Transient
+    @JsonIgnore
+    private Map<String, Serializable> map;
 
-	public static JSONObject jsonFromMap(Map<String, Serializable> map) {
-		// custom build json from map
-		JSONObject json = new JSONObject();
-		for (String key : map.keySet()) {
-			Serializable value = map.get(key);
-			// support only String or String[]
-			if (value instanceof String) {
-				json.put(key, value);
-			} else if (value instanceof String[]) {
-				JSONArray arr = new JSONArray();
-				for (String s : (String[]) value) {
-					arr.put(s);
-				}
+    @JsonIgnore
+    public Map<String, Serializable> getPropertiesMap() {
+        if (this.map == null) {
+            // read map from properties
+            map = Resource.propertiesFromValue(properties);
+        }
 
-				json.put(key, arr);
-			}
-		}
+        return map;
+    }
 
-		return json;
-	}
+    public void setPropertiesMap(Map<String, Serializable> map) {
+        this.map = map;
+        sync();
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void sync() {
+        if (map != null) {
+            // custom build json from map
+            JSONObject json = Resource.jsonFromMap(map);
+            // serialize to string
+            properties = json.toString();
+        } else {
+            properties = "{}";
+        }
+    }
+
+    public static Map<String, Serializable> propertiesFromValue(String value) {
+        // read map from string as json
+        Map<String, Serializable> map = new HashMap<>();
+        JSONObject json = new JSONObject(value);
+        // build map from json
+        for (String key : json.keySet()) {
+            JSONArray arr = json.optJSONArray(key);
+            if (arr != null) {
+                // value is array of String
+                String[] ss = new String[arr.length()];
+                for (int i = 0; i < arr.length(); i++) {
+                    String s = arr.optString(i);
+                    ss[i] = s;
+                }
+
+                map.put(key, ss);
+            } else {
+                // get as String
+                String s = json.optString(key);
+                map.put(key, s);
+            }
+        }
+
+        return map;
+    }
+
+    public static JSONObject jsonFromMap(Map<String, Serializable> map) {
+        // custom build json from map
+        JSONObject json = new JSONObject();
+        for (String key : map.keySet()) {
+            Serializable value = map.get(key);
+            // support only String or String[]
+            if (value instanceof String) {
+                json.put(key, value);
+            } else if (value instanceof String[]) {
+                JSONArray arr = new JSONArray();
+                for (String s : (String[]) value) {
+                    arr.put(s);
+                }
+
+                json.put(key, arr);
+            }
+        }
+
+        return json;
+    }
+
+    public static Resource clone(Resource source) {
+        Resource res = new Resource();
+        res.id = source.id;
+        res.type = source.type;
+        res.provider = source.provider;
+        res.uri = source.uri;
+        
+        res.userId = source.userId;
+        res.scopeId = source.scopeId;
+        
+        res.properties = source.properties;
+        res.managed = source.managed;
+        res.subscribed = source.subscribed;
+        
+        res.createdDate = source.createdDate;
+        res.modifiedDate = source.modifiedDate;
+        res.createdBy = source.createdBy;
+        res.lastModifiedBy = source.lastModifiedBy;
+        
+        return res;
+    }
+    
+
 }
