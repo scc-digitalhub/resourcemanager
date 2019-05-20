@@ -21,169 +21,196 @@ import it.smartcommunitylab.resourcemanager.SystemKeys;
 
 @Component
 public class ScopePermissionEvaluator implements PermissionEvaluator {
-	private final static Logger _log = LoggerFactory.getLogger(ScopePermissionEvaluator.class);
+    private final static Logger _log = LoggerFactory.getLogger(ScopePermissionEvaluator.class);
 
-	@Value("${scopes.enabled}")
-	private boolean enabled;
+    @Value("${scopes.enabled}")
+    private boolean enabled;
 
-	@Value("${scopes.realm}")
-	private boolean realmRoles;
+    @Value("${scopes.list}")
+    private List<String> scopes;
 
-	@Value("${scopes.list}")
-	private List<String> scopes;
+    @Value("${scopes.default}")
+    private String defaultScope;
 
-	@Value("${scopes.default}")
-	private String defaultScope;
+    @Value("${scopes.roles.mapping.admin}")
+    private String roleAdminMapping;
 
-	@Value("${scopes.base}")
-	private String base;
+    @Value("${scopes.roles.mapping.resourceAdmin}")
+    private String roleResourceAdminMapping;
 
-	@PostConstruct
-	public void init() {
-		_log.debug("scopePermission enabled? " + enabled);
+    @Value("${scopes.roles.mapping.consumerAdmin}")
+    private String roleConsumerAdminMapping;
 
-		if (scopes == null) {
-			scopes = new ArrayList<>();
-		}
+    @Value("${scopes.roles.mapping.user}")
+    private String roleUserMapping;
 
-		// always add default scope if defined
-		if (!defaultScope.isEmpty() && !scopes.contains(defaultScope)) {
-			scopes.add(defaultScope);
-		}
+    @PostConstruct
+    public void init() {
+        _log.debug("scopePermission enabled? " + enabled);
 
-	}
+        if (scopes == null) {
+            scopes = new ArrayList<>();
+        }
 
-	@Override
-	public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-		// no scope object to check
-		return false;
-	}
+        // add placeholder to scopes if empty
+        if (scopes.isEmpty()) {
+            scopes.add("*");
+        }
 
-	@Override
-	public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType,
-			Object permission) {
+        // always add default scope if defined
+        if (!defaultScope.isEmpty() && !scopes.contains(defaultScope)) {
+            scopes.add(defaultScope);
+        }
 
-		String scopeId = targetId.toString();
-		String userId = authentication.getName();
-		String action = permission.toString();
+        // set default mappings
+        if (roleAdminMapping.isEmpty()) {
+            roleAdminMapping = SystemKeys.ROLE_ADMIN;
+        }
+        if (roleResourceAdminMapping.isEmpty()) {
+            roleResourceAdminMapping = SystemKeys.ROLE_RESOURCE_ADMIN;
+        }
+        if (roleConsumerAdminMapping.isEmpty()) {
+            roleConsumerAdminMapping = SystemKeys.ROLE_CONSUMER_ADMIN;
+        }
+        if (roleUserMapping.isEmpty()) {
+            roleUserMapping = SystemKeys.ROLE_USER;
+        }
+    }
 
-		for (GrantedAuthority ga : authentication.getAuthorities()) {
-			_log.debug("user " + userId + " authority " + ga.toString());
-		}
+    @Override
+    public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
+        // no scope object to check
+        return false;
+    }
 
-		boolean isPermitted = true;
+    @Override
+    public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType,
+            Object permission) {
 
-		if (enabled) {
-			// check for scope in permitted
-			isPermitted = scopes.contains(scopeId);
-		}
-		_log.debug("user " + userId + " hasPermission scope " + scopeId + " permitted " + isPermitted);
+        String scopeId = targetId.toString();
+        String userId = authentication.getName();
+        String action = permission.toString();
 
-		// check in Auth
-		boolean hasPermission = false;
+        for (GrantedAuthority ga : authentication.getAuthorities()) {
+            _log.debug("user " + userId + " authority " + ga.toString());
+        }
 
-		// fetch realm AND scope roles
-		List<GrantedAuthority> authorities = new ArrayList<>(authentication.getAuthorities());
-		Set<String> roles = new HashSet<>();
-		roles.addAll(getScopeRoles(scopeId, authorities));
-		if (realmRoles) {
-			roles.addAll(getRealmRoles(authorities));
-		}
+        boolean isPermitted = isScopePermitted(scopeId);
+        _log.debug("user " + userId + " hasPermission scope " + scopeId + " permitted " + isPermitted);
 
-		// fetch all permissions related to any assigned role
-		Set<String> permissions = new HashSet<>();
-		for (String role : roles) {
-			permissions.addAll(roleToPermissions(role));
-		}
+        // check in Auth
+        boolean hasPermission = false;
 
-		_log.debug("user " + userId + " permissions " + permissions.toString());
+        // fetch ONLY scope roles
+        List<GrantedAuthority> authorities = new ArrayList<>(authentication.getAuthorities());
+        Set<String> roles = new HashSet<>();
+        roles.addAll(getScopeRoles(scopeId, authorities));
 
-		hasPermission = permissions.contains(action);
+        // fetch all permissions related to any assigned role
+        Set<String> permissions = new HashSet<>();
+        for (String role : roles) {
+            permissions.addAll(roleToPermissions(role));
+        }
 
-		_log.debug("user " + userId + " hasPermission for scope " + scopeId + ":" + action + " " + hasPermission);
+        _log.debug("user " + userId + " permissions " + permissions.toString());
 
-		return (isPermitted && hasPermission);
-	}
+        hasPermission = permissions.contains(action);
 
-	/*
-	 * Helpers
-	 */
-	private List<String> getRealmRoles(List<GrantedAuthority> authorities) {
-		List<String> roles = new ArrayList<>();
+        _log.debug("user " + userId + " hasPermission for scope " + scopeId + ":" + action + " " + hasPermission);
 
-		for (GrantedAuthority ga : authorities) {
-			// expected format [ROLE_*]
-			String auth = ga.getAuthority();
-			if (auth != null) {
-				if (auth.startsWith("ROLE_")) {
-					roles.add(auth);
-				}
-			}
-		}
+        return (isPermitted && hasPermission);
+    }
 
-		return roles;
-	}
+    /*
+     * Helpers
+     */
+    private boolean isScopePermitted(String scopeId) {
 
-	private List<String> getScopeRoles(String scopeId, List<GrantedAuthority> authorities) {
-		List<String> roles = new ArrayList<>();
-		String prefix = base + "/" + scopeId + "/";
+        if (!defaultScope.isEmpty() && scopeId.equals(defaultScope)) {
+            // default scope always enabled if defined
+            return true;
+        }
 
-		for (GrantedAuthority ga : authorities) {
-			// expected format [scopeId]/[ROLE_*]
-			String auth = ga.getAuthority();
-			if (auth != null) {
-				if (auth.startsWith(prefix + "ROLE_")) {
-					roles.add(auth.replaceFirst(prefix, ""));
-				}
-			}
-		}
+        if (enabled) {
+            if (scopes.contains("*")) {
+                return true;
+            }
+            return scopes.contains(scopeId);
+        }
 
-		return roles;
-	}
+        return false;
+    }
 
-	private Set<String> roleToPermissions(String role) {
-		// statically resolve roles => permission mapping
-		// TODO refactor
-		Set<String> permissions = new HashSet<String>();
+    private List<String> getScopeRoles(String scopeId, List<GrantedAuthority> authorities) {
+        List<String> roles = new ArrayList<>();
 
-		if (role.equals("ROLE_ADMIN")) {
-			permissions.addAll(Arrays.asList(
-					SystemKeys.PERMISSION_RESOURCE_CREATE,
-					SystemKeys.PERMISSION_RESOURCE_UPDATE,
-					SystemKeys.PERMISSION_RESOURCE_DELETE,
-					SystemKeys.PERMISSION_RESOURCE_CHECK,
-					SystemKeys.PERMISSION_RESOURCE_VIEW,
+        for (GrantedAuthority ga : authorities) {
+            // support variable substitution with placeholder <scope>
+            String auth = ga.getAuthority();
+            if (auth != null) {
+                // check against mappings
+                if (auth.equals(roleAdminMapping.replace("<scope>", scopeId))) {
+                    roles.add(SystemKeys.ROLE_ADMIN);
+                }
+                if (auth.equals(roleResourceAdminMapping.replace("<scope>", scopeId))) {
+                    roles.add(SystemKeys.ROLE_RESOURCE_ADMIN);
+                }
+                if (auth.equals(roleConsumerAdminMapping.replace("<scope>", scopeId))) {
+                    roles.add(SystemKeys.ROLE_CONSUMER_ADMIN);
+                }
+                if (auth.equals(roleUserMapping.replace("<scope>", scopeId))) {
+                    roles.add(SystemKeys.ROLE_USER);
+                }
 
-					SystemKeys.PERMISSION_CONSUMER_CREATE,
-					SystemKeys.PERMISSION_CONSUMER_UPDATE,
-					SystemKeys.PERMISSION_CONSUMER_DELETE,
-					SystemKeys.PERMISSION_CONSUMER_VIEW));
-		} else if (role.equals("ROLE_RESOURCE_ADMIN")) {
-			permissions.addAll(Arrays.asList(
-					SystemKeys.PERMISSION_RESOURCE_CREATE,
-					SystemKeys.PERMISSION_RESOURCE_UPDATE,
-					SystemKeys.PERMISSION_RESOURCE_DELETE,
-					SystemKeys.PERMISSION_RESOURCE_CHECK,
-					SystemKeys.PERMISSION_RESOURCE_VIEW,
+            }
+        }
 
-					SystemKeys.PERMISSION_CONSUMER_VIEW));
-		} else if (role.equals("ROLE_CONSUMER_ADMIN")) {
-			permissions.addAll(Arrays.asList(
-					SystemKeys.PERMISSION_RESOURCE_CHECK,
-					SystemKeys.PERMISSION_RESOURCE_VIEW,
+        return roles;
+    }
 
-					SystemKeys.PERMISSION_CONSUMER_CREATE,
-					SystemKeys.PERMISSION_CONSUMER_UPDATE,
-					SystemKeys.PERMISSION_CONSUMER_DELETE,
-					SystemKeys.PERMISSION_CONSUMER_VIEW));
-		} else if (role.equals("ROLE_USER")) {
-			permissions.addAll(Arrays.asList(
-					SystemKeys.PERMISSION_RESOURCE_CHECK,
-					SystemKeys.PERMISSION_RESOURCE_VIEW,
-					SystemKeys.PERMISSION_CONSUMER_VIEW));
-		}
+    private Set<String> roleToPermissions(String role) {
+        // statically resolve roles => permission mapping
+        // TODO refactor
+        Set<String> permissions = new HashSet<String>();
 
-		return permissions;
-	}
+        if (role.equals(SystemKeys.ROLE_ADMIN)) {
+            permissions.addAll(Arrays.asList(
+                    SystemKeys.PERMISSION_RESOURCE_CREATE,
+                    SystemKeys.PERMISSION_RESOURCE_UPDATE,
+                    SystemKeys.PERMISSION_RESOURCE_DELETE,
+                    SystemKeys.PERMISSION_RESOURCE_CHECK,
+                    SystemKeys.PERMISSION_RESOURCE_VIEW,
+
+                    SystemKeys.PERMISSION_CONSUMER_CREATE,
+                    SystemKeys.PERMISSION_CONSUMER_UPDATE,
+                    SystemKeys.PERMISSION_CONSUMER_DELETE,
+                    SystemKeys.PERMISSION_CONSUMER_VIEW));
+        } else if (role.equals(SystemKeys.ROLE_RESOURCE_ADMIN)) {
+            permissions.addAll(Arrays.asList(
+                    SystemKeys.PERMISSION_RESOURCE_CREATE,
+                    SystemKeys.PERMISSION_RESOURCE_UPDATE,
+                    SystemKeys.PERMISSION_RESOURCE_DELETE,
+                    SystemKeys.PERMISSION_RESOURCE_CHECK,
+                    SystemKeys.PERMISSION_RESOURCE_VIEW,
+
+                    SystemKeys.PERMISSION_CONSUMER_VIEW));
+        } else if (role.equals(SystemKeys.ROLE_CONSUMER_ADMIN)) {
+            permissions.addAll(Arrays.asList(
+                    SystemKeys.PERMISSION_RESOURCE_CHECK,
+                    SystemKeys.PERMISSION_RESOURCE_VIEW,
+
+                    SystemKeys.PERMISSION_CONSUMER_CREATE,
+                    SystemKeys.PERMISSION_CONSUMER_UPDATE,
+                    SystemKeys.PERMISSION_CONSUMER_DELETE,
+                    SystemKeys.PERMISSION_CONSUMER_VIEW));
+        } else if (role.equals(SystemKeys.ROLE_USER)) {
+            permissions.addAll(Arrays.asList(
+                    SystemKeys.PERMISSION_RESOURCE_CHECK,
+                    SystemKeys.PERMISSION_RESOURCE_VIEW,
+                    SystemKeys.PERMISSION_CONSUMER_VIEW));
+        }
+
+        return permissions;
+    }
 
 }
