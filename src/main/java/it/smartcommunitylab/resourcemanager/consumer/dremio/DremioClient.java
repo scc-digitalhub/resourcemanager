@@ -135,8 +135,11 @@ public class DremioClient {
             String database,
             String username, String password)
             throws DremioException {
+        // NOT working, returns 409 Conflict
+        // DISABLED: not really useful since connection details won't ever change
         // in dremio apiv2 same as add
-        return addSource(type, name, host, port, database, username, password);
+//        return addSource(type, name, host, port, database, username, password);
+        return name;
 
     }
 

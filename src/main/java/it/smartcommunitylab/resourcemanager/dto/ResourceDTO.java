@@ -41,6 +41,9 @@ public class ResourceDTO {
     @ApiModelProperty(notes = "Resource events subscribed?", example = "true")
     public boolean subscribed;
 
+    @ApiModelProperty(notes = "Resource tags", example = "test")
+    public String[] tags;
+
     public ResourceDTO() {
         id = 0;
         userId = "";
@@ -54,6 +57,8 @@ public class ResourceDTO {
 
         managed = true;
         subscribed = true;
+
+        tags = new String[0];
     }
 
     public long getId() {
@@ -128,6 +133,14 @@ public class ResourceDTO {
         this.subscribed = subscribed;
     }
 
+    public String[] getTags() {
+        return tags;
+    }
+
+    public void setTags(String[] tags) {
+        this.tags = tags;
+    }
+
     @Override
     public String toString() {
         return "ResourceDTO [id=" + id + ", type=" + type + ", provider=" + provider + ", uri=" + uri + ", userId="
@@ -149,6 +162,8 @@ public class ResourceDTO {
 
         dto.managed = res.isManaged();
         dto.subscribed = res.isSubscribed();
+
+        dto.tags = res.getTags().toArray(new String[0]);
 
         return dto;
     }

@@ -11,34 +11,43 @@ import it.smartcommunitylab.resourcemanager.dto.ConsumerDTO;
 
 public class ConsumerSerializer extends StdSerializer<ConsumerDTO> {
 
-	private static final long serialVersionUID = 2765900697671425958L;
+    private static final long serialVersionUID = 2765900697671425958L;
 
-	public ConsumerSerializer() {
-		this(null);
-	}
+    public ConsumerSerializer() {
+        this(null);
+    }
 
-	public ConsumerSerializer(Class<ConsumerDTO> t) {
-		super(t);
-	}
+    public ConsumerSerializer(Class<ConsumerDTO> t) {
+        super(t);
+    }
 
-	@Override
-	public void serialize(
-			ConsumerDTO consumer, JsonGenerator jgen, SerializerProvider provider)
-			throws IOException, JsonProcessingException {
+    @Override
+    public void serialize(
+            ConsumerDTO consumer, JsonGenerator jgen, SerializerProvider provider)
+            throws IOException, JsonProcessingException {
 
-		jgen.writeStartObject();
-		jgen.writeNumberField("id", consumer.getId());
+        jgen.writeStartObject();
+        jgen.writeNumberField("id", consumer.getId());
 
-		jgen.writeStringField("type", consumer.getType());
-		jgen.writeStringField("consumer", consumer.getConsumer());
+        jgen.writeStringField("type", consumer.getType());
+        jgen.writeStringField("consumer", consumer.getConsumer());
 
-		jgen.writeStringField("scopeId", consumer.getScopeId());
-		jgen.writeStringField("userId", consumer.getUserId());
+        jgen.writeStringField("scopeId", consumer.getScopeId());
+        jgen.writeStringField("userId", consumer.getUserId());
 
-		// write properties json
-		jgen.writeFieldName("properties");
-		jgen.writeRawValue(consumer.getProperties());
+        // write properties json
+        jgen.writeFieldName("properties");
+        jgen.writeRawValue(consumer.getProperties());
 
-		jgen.writeEndObject();
-	}
+        // write tags as json array
+        jgen.writeFieldName("tags");
+        jgen.writeStartArray();
+        for (String tag : consumer.tags) {
+            jgen.writeString(tag);
+        }
+        jgen.writeEndArray();
+
+        // close
+        jgen.writeEndObject();
+    }
 }

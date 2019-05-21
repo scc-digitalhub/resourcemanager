@@ -24,178 +24,192 @@ import it.smartcommunitylab.resourcemanager.model.Resource;
 @Component
 public class ResourceService {
 
-	private final static Logger _log = LoggerFactory.getLogger(ResourceService.class);
+    private final static Logger _log = LoggerFactory.getLogger(ResourceService.class);
 
-	@Autowired
-	private ResourceLocalService resourceLocalService;
+    @Autowired
+    private ResourceLocalService resourceLocalService;
 
-	/*
-	 * Data
-	 */
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '"
-			+ SystemKeys.PERMISSION_RESOURCE_CREATE + "')")
-	public Resource create(String scopeId, String userId, String type, String providerId,
-			Map<String, Serializable> properties)
-			throws NoSuchProviderException, ResourceProviderException {
-		_log.info("create resource with " + String.valueOf(providerId) + " by user " + userId);
+    /*
+     * Data
+     */
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '"
+            + SystemKeys.PERMISSION_RESOURCE_CREATE + "')")
+    public Resource create(String scopeId, String userId, String type, String providerId,
+            Map<String, Serializable> properties, List<String> tags)
+            throws NoSuchProviderException, ResourceProviderException {
+        _log.info("create resource with " + String.valueOf(providerId) + " by user " + userId);
 
-		// call local service
-		return resourceLocalService.create(scopeId, userId, type, providerId, properties);
+        // call local service
+        return resourceLocalService.create(scopeId, userId, type, providerId, properties, tags);
 
-	}
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '"
-			+ SystemKeys.PERMISSION_RESOURCE_CREATE + "')")
-	public Resource add(String scopeId, String userId, String type, String providerId,
-			String uri,
-			Map<String, Serializable> properties)
-			throws NoSuchProviderException, ResourceProviderException {
-		_log.info("add resource with " + String.valueOf(providerId) + " by user " + userId);
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '"
+            + SystemKeys.PERMISSION_RESOURCE_CREATE + "')")
+    public Resource add(String scopeId, String userId, String type, String providerId,
+            String uri,
+            Map<String, Serializable> properties, List<String> tags)
+            throws NoSuchProviderException, ResourceProviderException {
+        _log.info("add resource with " + String.valueOf(providerId) + " by user " + userId);
 
-		// call local service
-		return resourceLocalService.add(scopeId, userId, type, providerId, uri, properties);
+        // call local service
+        return resourceLocalService.add(scopeId, userId, type, providerId, uri, properties, tags);
 
-	}
+    }
 
-	@PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_RESOURCE +
-			"', '" + SystemKeys.PERMISSION_RESOURCE_UPDATE + "')")
-	public Resource update(String scopeId, String userId, long id, Map<String, Serializable> properties)
-			throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
-		_log.info("update resource " + String.valueOf(id) + " by user " + userId);
+    @PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_RESOURCE +
+            "', '" + SystemKeys.PERMISSION_RESOURCE_UPDATE + "')")
+    public Resource update(String scopeId, String userId, long id,
+            Map<String, Serializable> properties, List<String> tags)
+            throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
+        _log.info("update resource " + String.valueOf(id) + " by user " + userId);
 
-		// call local service
-		return resourceLocalService.update(id, properties);
+        // call local service
+        return resourceLocalService.update(id, properties, tags);
 
-	}
+    }
 
-	@PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_RESOURCE +
-			"', '" + SystemKeys.PERMISSION_RESOURCE_DELETE + "')")
-	public void delete(String scopeId, String userId, long id)
-			throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
-		_log.info("delete resource " + String.valueOf(id) + " by user " + userId);
+    @PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_RESOURCE +
+            "', '" + SystemKeys.PERMISSION_RESOURCE_DELETE + "')")
+    public void delete(String scopeId, String userId, long id)
+            throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
+        _log.info("delete resource " + String.valueOf(id) + " by user " + userId);
 
-		// call local service
-		resourceLocalService.delete(id);
-	}
+        // call local service
+        resourceLocalService.delete(id);
+    }
 
-	@PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_RESOURCE +
-			"', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public Resource get(String scopeId, String userId, long id) throws NoSuchResourceException {
-		_log.info("get resource " + String.valueOf(id) + " by user " + userId);
+    @PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_RESOURCE +
+            "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public Resource get(String scopeId, String userId, long id) throws NoSuchResourceException {
+        _log.info("get resource " + String.valueOf(id) + " by user " + userId);
 
-		// call local service
-		return resourceLocalService.get(id);
-	}
+        // call local service
+        return resourceLocalService.get(id);
+    }
 
-	/*
-	 * Count
-	 */
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE +
+            "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public boolean exists(String scopeId, String userId, long id) throws NoSuchResourceException {
+        _log.info("exists resource " + String.valueOf(id) + " by user " + userId);
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE +
-			"', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public long count(String scopeId, String userId) {
+        // call local service
+        boolean ret = resourceLocalService.exists(id);
+        if (!ret) {
+            throw new NoSuchResourceException();
+        }
 
-		// call local service with scope
-		return resourceLocalService.countByScopeId(scopeId);
-	}
+        return ret;
+    }
+    /*
+     * Count
+     */
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE
-			+ "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public long countByType(String scopeId, String userId, String type) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE +
+            "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public long count(String scopeId, String userId) {
 
-		// call local service
-		return resourceLocalService.countByTypeAndScopeId(type, scopeId);
-	}
+        // call local service with scope
+        return resourceLocalService.countByScopeId(scopeId);
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE
-			+ "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public long countByProvider(String scopeId, String userId, String provider) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE
+            + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public long countByType(String scopeId, String userId, String type) {
 
-		// call local service
-		return resourceLocalService.countByProviderAndScopeId(provider, scopeId);
-	}
+        // call local service
+        return resourceLocalService.countByTypeAndScopeId(type, scopeId);
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '"
-			+ SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public long countByUserId(String scopeId, String userId, String ownerId) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE
+            + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public long countByProvider(String scopeId, String userId, String provider) {
 
-		// call local service
-		return resourceLocalService.countByUserIdAndScopeId(scopeId, ownerId);
-	}
+        // call local service
+        return resourceLocalService.countByProviderAndScopeId(provider, scopeId);
+    }
 
-	/*
-	 * List
-	 */
+    @PreAuthorize("hasPermission(#scopeId, '"
+            + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public long countByUserId(String scopeId, String userId, String ownerId) {
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	@PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public List<Resource> list(String scopeId, String userId) {
+        // call local service
+        return resourceLocalService.countByUserIdAndScopeId(scopeId, ownerId);
+    }
 
-		// call local service with scope
-		// need to create new MUTABLE list for postFilter usage of collection.clear()
-		// see DefaultMethodSecurityExpressionHandler.java
-		return new ArrayList<>(resourceLocalService.listByScopeId(scopeId));
-	}
+    /*
+     * List
+     */
 
-	public List<Resource> list(String scopeId, String userId, int page, int pageSize) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public List<Resource> list(String scopeId, String userId) {
 
-		// call local service
-		return list(scopeId, userId, page, pageSize, "id", SystemKeys.ORDER_ASC);
-	}
+        // call local service with scope
+        // need to create new MUTABLE list for postFilter usage of collection.clear()
+        // see DefaultMethodSecurityExpressionHandler.java
+        return new ArrayList<>(resourceLocalService.listByScopeId(scopeId));
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	@PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public List<Resource> list(String scopeId, String userId, int page, int pageSize, String orderBy, String order) {
+    public List<Resource> list(String scopeId, String userId, int page, int pageSize) {
 
-		Sort sort = (order.equals(SystemKeys.ORDER_ASC) ? Sort.by(orderBy).ascending() : Sort.by(orderBy).descending());
-		Pageable pageable = PageRequest.of(page, pageSize, sort);
-		// call local service
-		// need to create new MUTABLE list for postFilter usage of collection.clear()
-		// see DefaultMethodSecurityExpressionHandler.java
-		return new ArrayList<>(resourceLocalService.listByScopeId(scopeId, pageable));
-	}
+        // call local service
+        return list(scopeId, userId, page, pageSize, "id", SystemKeys.ORDER_ASC);
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	@PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public List<Resource> listByType(String scopeId, String userId, String type) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public List<Resource> list(String scopeId, String userId, int page, int pageSize, String orderBy, String order) {
 
-		// call local service
-		// need to create new MUTABLE list for postFilter usage of collection.clear()
-		// see DefaultMethodSecurityExpressionHandler.java
-		return new ArrayList<>(resourceLocalService.listByTypeAndScopeId(type, scopeId));
-	}
+        Sort sort = (order.equals(SystemKeys.ORDER_ASC) ? Sort.by(orderBy).ascending() : Sort.by(orderBy).descending());
+        Pageable pageable = PageRequest.of(page, pageSize, sort);
+        // call local service
+        // need to create new MUTABLE list for postFilter usage of collection.clear()
+        // see DefaultMethodSecurityExpressionHandler.java
+        return new ArrayList<>(resourceLocalService.listByScopeId(scopeId, pageable));
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	@PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public List<Resource> listByProvider(String scopeId, String userId, String provider) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public List<Resource> listByType(String scopeId, String userId, String type) {
 
-		// call local service
-		// need to create new MUTABLE list for postFilter usage of collection.clear()
-		// see DefaultMethodSecurityExpressionHandler.java
-		return new ArrayList<>(resourceLocalService.listByProviderAndScopeId(provider, scopeId));
-	}
+        // call local service
+        // need to create new MUTABLE list for postFilter usage of collection.clear()
+        // see DefaultMethodSecurityExpressionHandler.java
+        return new ArrayList<>(resourceLocalService.listByTypeAndScopeId(type, scopeId));
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	@PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public List<Resource> listByUserId(String scopeId, String userId, String ownerId) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public List<Resource> listByProvider(String scopeId, String userId, String provider) {
 
-		// call local service
-		// need to create new MUTABLE list for postFilter usage of collection.clear()
-		// see DefaultMethodSecurityExpressionHandler.java
-		return new ArrayList<>(resourceLocalService.listByUserIdAndScopeId(ownerId, scopeId));
-	}
+        // call local service
+        // need to create new MUTABLE list for postFilter usage of collection.clear()
+        // see DefaultMethodSecurityExpressionHandler.java
+        return new ArrayList<>(resourceLocalService.listByProviderAndScopeId(provider, scopeId));
+    }
 
-	/*
-	 * Check
-	 */
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
-	public void check(String scopeId, String userId, long id)
-			throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
-		_log.info("check resource " + String.valueOf(id) + " by user " + userId);
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public List<Resource> listByUserId(String scopeId, String userId, String ownerId) {
 
-		// call local service
-		resourceLocalService.check(id);
+        // call local service
+        // need to create new MUTABLE list for postFilter usage of collection.clear()
+        // see DefaultMethodSecurityExpressionHandler.java
+        return new ArrayList<>(resourceLocalService.listByUserIdAndScopeId(ownerId, scopeId));
+    }
 
-	}
+    /*
+     * Check
+     */
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    public void check(String scopeId, String userId, long id)
+            throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
+        _log.info("check resource " + String.valueOf(id) + " by user " + userId);
+
+        // call local service
+        resourceLocalService.check(id);
+
+    }
 
 }

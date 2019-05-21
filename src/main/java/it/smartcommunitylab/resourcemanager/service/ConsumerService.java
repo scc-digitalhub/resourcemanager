@@ -24,50 +24,75 @@ import it.smartcommunitylab.resourcemanager.model.Registration;
 
 @Component
 public class ConsumerService {
-	private final static Logger _log = LoggerFactory.getLogger(ConsumerService.class);
+    private final static Logger _log = LoggerFactory.getLogger(ConsumerService.class);
 
-	@Autowired
-	private ConsumerLocalService consumerService;
+    @Autowired
+    private ConsumerLocalService consumerService;
 
-	@Autowired
-	private RegistrationLocalService registrationService;
+    @Autowired
+    private RegistrationLocalService registrationService;
 
-	/*
-	 * Data
-	 */
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '"
-			+ SystemKeys.PERMISSION_CONSUMER_CREATE + "')")
-	public Registration add(String scopeId, String userId, String type, String consumer,
-			Map<String, Serializable> properties)
-			throws NoSuchConsumerException, ConsumerException {
+    /*
+     * Data
+     */
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '"
+            + SystemKeys.PERMISSION_CONSUMER_CREATE + "')")
+    public Registration add(String scopeId, String userId, String type, String consumer,
+            Map<String, Serializable> properties,
+            List<String> tags)
+            throws NoSuchConsumerException, ConsumerException {
 
-		// call local service
-		return consumerService.add(scopeId, userId, type, consumer, properties);
-	}
+        // call local service
+        return consumerService.add(scopeId, userId, type, consumer, properties, tags);
+    }
 
-	@PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_REGISTRATION +
-			"', '" + SystemKeys.PERMISSION_CONSUMER_DELETE + "')")
-	public void delete(String scopeId, String userId, long id) throws NoSuchConsumerException {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '"
+            + SystemKeys.PERMISSION_CONSUMER_UPDATE + "')")
+    public Registration update(String scopeId, String userId, long id,
+            Map<String, Serializable> properties, List<String> tags)
+            throws NoSuchConsumerException, ConsumerException {
 
-		// call local service
-		consumerService.delete(id);
-	}
+        // call local service
+        return consumerService.update(id, properties, tags);
+    }
 
-	@PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_REGISTRATION +
-			"', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public Registration get(String scopeId, String userId, long id) throws NoSuchConsumerException {
+    @PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_REGISTRATION +
+            "', '" + SystemKeys.PERMISSION_CONSUMER_DELETE + "')")
+    public void delete(String scopeId, String userId, long id) throws NoSuchConsumerException {
 
-		try {
-			// call local service
-			return registrationService.get(id);
-		} catch (NoSuchRegistrationException e) {
-			throw new NoSuchConsumerException();
-		}
-	}
+        // call local service
+        consumerService.delete(id);
+    }
 
-	/*
-	 * Builders
-	 */
+    @PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_REGISTRATION +
+            "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public Registration get(String scopeId, String userId, long id) throws NoSuchConsumerException {
+
+        try {
+            // call local service
+            return registrationService.get(id);
+        } catch (NoSuchRegistrationException e) {
+            throw new NoSuchConsumerException();
+        }
+    }
+
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE +
+            "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public boolean exists(String scopeId, String userId, long id) throws NoSuchConsumerException {
+        _log.info("exists registration " + String.valueOf(id) + " by user " + userId);
+
+        // call local service
+        boolean ret = registrationService.exists(id);
+        if (!ret) {
+            throw new NoSuchConsumerException();
+        }
+
+        return ret;
+    }
+
+    /*
+     * Builders
+     */
 
 //	public boolean hasBuilder(String id) {
 //		// TODO check auth
@@ -76,119 +101,119 @@ public class ConsumerService {
 //		return consumerService.hasBuilder(id);
 //	}
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public Map<String, List<String>> listBuilders(String scopeId, String userId) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public Map<String, List<String>> listBuilders(String scopeId, String userId) {
 
-		// call local service
-		return consumerService.listBuilders();
-	}
+        // call local service
+        return consumerService.listBuilders();
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public List<String> listBuilders(String scopeId, String userId, String type) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public List<String> listBuilders(String scopeId, String userId, String type) {
 
-		// call local service
-		return consumerService.listBuilders(type);
-	}
+        // call local service
+        return consumerService.listBuilders(type);
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public ConsumerBuilder getBuilder(String scopeId, String userId, String id) throws NoSuchConsumerException {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public ConsumerBuilder getBuilder(String scopeId, String userId, String id) throws NoSuchConsumerException {
 
-		// call local service
-		return consumerService.getBuilder(id);
-	}
+        // call local service
+        return consumerService.getBuilder(id);
+    }
 
-	/*
-	 * Count
-	 */
+    /*
+     * Count
+     */
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public long count(String scopeId, String userId) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public long count(String scopeId, String userId) {
 
-		// call local service with scope
-		return registrationService.countByScopeId(scopeId);
-	}
+        // call local service with scope
+        return registrationService.countByScopeId(scopeId);
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public long countByType(String scopeId, String userId, String type) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public long countByType(String scopeId, String userId, String type) {
 
-		// call local service
-		return registrationService.countByTypeAndScopeId(type, scopeId);
-	}
+        // call local service
+        return registrationService.countByTypeAndScopeId(type, scopeId);
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public long countByConsumer(String scopeId, String userId, String provider) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public long countByConsumer(String scopeId, String userId, String provider) {
 
-		// call local service
-		return registrationService.countByConsumerAndScopeId(provider, scopeId);
-	}
+        // call local service
+        return registrationService.countByConsumerAndScopeId(provider, scopeId);
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public long countByUserId(String scopeId, String userId, String ownerId) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public long countByUserId(String scopeId, String userId, String ownerId) {
 
-		// call local service
-		return registrationService.countByUserIdAndScopeId(userId, scopeId);
-	}
+        // call local service
+        return registrationService.countByUserIdAndScopeId(userId, scopeId);
+    }
 
-	/*
-	 * List
-	 */
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	@PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public List<Registration> list(String scopeId, String userId) {
+    /*
+     * List
+     */
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public List<Registration> list(String scopeId, String userId) {
 
-		// call local service with scope
-		// need to create new MUTABLE list for postFilter usage of collection.clear()
-		// see DefaultMethodSecurityExpressionHandler.java
-		return new ArrayList<>(registrationService.listByScopeId(scopeId));
-	}
+        // call local service with scope
+        // need to create new MUTABLE list for postFilter usage of collection.clear()
+        // see DefaultMethodSecurityExpressionHandler.java
+        return new ArrayList<>(registrationService.listByScopeId(scopeId));
+    }
 
-	public List<Registration> list(String scopeId, String userId, int page, int pageSize) {
+    public List<Registration> list(String scopeId, String userId, int page, int pageSize) {
 
-		// call local service
-		return list(scopeId, userId, page, pageSize, "id", SystemKeys.ORDER_ASC);
-	}
+        // call local service
+        return list(scopeId, userId, page, pageSize, "id", SystemKeys.ORDER_ASC);
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	@PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public List<Registration> list(String scopeId, String userId, int page, int pageSize, String orderBy,
-			String order) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public List<Registration> list(String scopeId, String userId, int page, int pageSize, String orderBy,
+            String order) {
 
-		Sort sort = (order.equals(SystemKeys.ORDER_ASC) ? Sort.by(orderBy).ascending() : Sort.by(orderBy).descending());
-		Pageable pageable = PageRequest.of(page, pageSize, sort);
-		// call local service
-		// need to create new MUTABLE list for postFilter usage of collection.clear()
-		// see DefaultMethodSecurityExpressionHandler.java
-		return new ArrayList<>(registrationService.listByScopeId(scopeId, pageable));
-	}
+        Sort sort = (order.equals(SystemKeys.ORDER_ASC) ? Sort.by(orderBy).ascending() : Sort.by(orderBy).descending());
+        Pageable pageable = PageRequest.of(page, pageSize, sort);
+        // call local service
+        // need to create new MUTABLE list for postFilter usage of collection.clear()
+        // see DefaultMethodSecurityExpressionHandler.java
+        return new ArrayList<>(registrationService.listByScopeId(scopeId, pageable));
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	@PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public List<Registration> listByType(String scopeId, String userId, String type) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public List<Registration> listByType(String scopeId, String userId, String type) {
 
-		// call local service
-		// need to create new MUTABLE list for postFilter usage of collection.clear()
-		// see DefaultMethodSecurityExpressionHandler.java
-		return new ArrayList<>(registrationService.listByTypeAndScopeId(type, scopeId));
-	}
+        // call local service
+        // need to create new MUTABLE list for postFilter usage of collection.clear()
+        // see DefaultMethodSecurityExpressionHandler.java
+        return new ArrayList<>(registrationService.listByTypeAndScopeId(type, scopeId));
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	@PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public List<Registration> listByConsumer(String scopeId, String userId, String provider) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public List<Registration> listByConsumer(String scopeId, String userId, String provider) {
 
-		// call local service
-		// need to create new MUTABLE list for postFilter usage of collection.clear()
-		// see DefaultMethodSecurityExpressionHandler.java
-		return new ArrayList<>(registrationService.listByConsumerAndScopeId(provider, scopeId));
-	}
+        // call local service
+        // need to create new MUTABLE list for postFilter usage of collection.clear()
+        // see DefaultMethodSecurityExpressionHandler.java
+        return new ArrayList<>(registrationService.listByConsumerAndScopeId(provider, scopeId));
+    }
 
-	@PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	@PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-	public List<Registration> listByUserId(String scopeId, String userId, String ownerId) {
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public List<Registration> listByUserId(String scopeId, String userId, String ownerId) {
 
-		// call local service
-		// need to create new MUTABLE list for postFilter usage of collection.clear()
-		// see DefaultMethodSecurityExpressionHandler.java
-		return new ArrayList<>(registrationService.listByUserIdAndScopeId(userId, scopeId));
-	}
+        // call local service
+        // need to create new MUTABLE list for postFilter usage of collection.clear()
+        // see DefaultMethodSecurityExpressionHandler.java
+        return new ArrayList<>(registrationService.listByUserIdAndScopeId(userId, scopeId));
+    }
 
 }

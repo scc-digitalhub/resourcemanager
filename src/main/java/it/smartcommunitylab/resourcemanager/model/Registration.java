@@ -2,8 +2,10 @@ package it.smartcommunitylab.resourcemanager.model;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -20,166 +22,178 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 public class Registration {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	private String type;
-	private String consumer;
+    private String type;
+    private String consumer;
 
-	private String userId;
-	private String scopeId;
+    private String userId;
+    private String scopeId;
 
-	private String properties;
+    private String properties;
 
-	public long getId() {
-		return id;
-	}
+    // tags - use a converter to persist as single string field
+    @Convert(converter = StringListConverter.class)
+    private List<String> tags;
 
-	public void setId(long id) {
-		this.id = id;
-	}
+    public long getId() {
+        return id;
+    }
 
-	public String getType() {
-		return type;
-	}
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public String getType() {
+        return type;
+    }
 
-	public String getConsumer() {
-		return consumer;
-	}
+    public void setType(String type) {
+        this.type = type;
+    }
 
-	public void setConsumer(String consumer) {
-		this.consumer = consumer;
-	}
+    public String getConsumer() {
+        return consumer;
+    }
 
-	public String getUserId() {
-		return userId;
-	}
+    public void setConsumer(String consumer) {
+        this.consumer = consumer;
+    }
 
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
+    public String getUserId() {
+        return userId;
+    }
 
-	public String getScopeId() {
-		return scopeId;
-	}
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
-	public void setScopeId(String scopeId) {
-		this.scopeId = scopeId;
-	}
+    public String getScopeId() {
+        return scopeId;
+    }
 
-	public String getProperties() {
-		return properties;
-	}
+    public void setScopeId(String scopeId) {
+        this.scopeId = scopeId;
+    }
 
-	public void setProperties(String properties) {
-		this.properties = properties;
-	}
+    public String getProperties() {
+        return properties;
+    }
 
-	@Override
-	public String toString() {
-		return "Registration [id=" + id + ", type=" + type + ", consumer=" + consumer + ", userId=" + userId
-				+ ", scopeId=" + scopeId + "]";
-	}
+    public void setProperties(String properties) {
+        this.properties = properties;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (id ^ (id >>> 32));
-		return result;
-	}
+    public List<String> getTags() {
+        return tags;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Registration other = (Registration) obj;
-		if (id != other.id)
-			return false;
-		return true;
-	}
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
 
-	@Transient
-	@JsonIgnore
-	private Map<String, Serializable> map;
+    @Override
+    public String toString() {
+        return "Registration [id=" + id + ", type=" + type + ", consumer=" + consumer + ", userId=" + userId
+                + ", scopeId=" + scopeId + "]";
+    }
 
-	public Map<String, Serializable> getPropertiesMap() {
-		if (this.map == null) {
-			// read map from properties
-			map = Resource.propertiesFromValue(properties);
-		}
-		return map;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (int) (id ^ (id >>> 32));
+        return result;
+    }
 
-	public void setPropertiesMap(Map<String, Serializable> map) {
-		this.map = map;
-		sync();
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Registration other = (Registration) obj;
+        if (id != other.id)
+            return false;
+        return true;
+    }
 
-	@PrePersist
-	@PreUpdate
-	private void sync() {
-		if (map != null) {
-			// custom build json from map
-			JSONObject json = jsonFromMap(map);
-			// serialize to string
-			properties = json.toString();
-		}
-	}
+    @Transient
+    @JsonIgnore
+    private Map<String, Serializable> map;
 
-	public static Map<String, Serializable> propertiesFromValue(String value) {
-		// read map from string as json
-		Map<String, Serializable> map = new HashMap<>();
-		JSONObject json = new JSONObject(value);
-		// build map from json
-		for (String key : json.keySet()) {
-			JSONArray arr = json.optJSONArray(key);
-			if (arr != null) {
-				// value is array of String
-				String[] ss = new String[arr.length()];
-				for (int i = 0; i < arr.length(); i++) {
-					String s = arr.optString(i);
-					ss[i] = s;
-				}
+    public Map<String, Serializable> getPropertiesMap() {
+        if (this.map == null) {
+            // read map from properties
+            map = Resource.propertiesFromValue(properties);
+        }
+        return map;
+    }
 
-				map.put(key, ss);
-			} else {
-				// get as String
-				String s = json.optString(key);
-				map.put(key, s);
-			}
-		}
+    public void setPropertiesMap(Map<String, Serializable> map) {
+        this.map = map;
+        sync();
+    }
 
-		return map;
-	}
+    @PrePersist
+    @PreUpdate
+    private void sync() {
+        if (map != null) {
+            // custom build json from map
+            JSONObject json = jsonFromMap(map);
+            // serialize to string
+            properties = json.toString();
+        }
+    }
 
-	public static JSONObject jsonFromMap(Map<String, Serializable> map) {
-		// custom build json from map
-		JSONObject json = new JSONObject();
-		for (String key : map.keySet()) {
-			Serializable value = map.get(key);
-			// support only String or String[]
-			if (value instanceof String) {
-				json.put(key, value);
-			} else if (value instanceof String[]) {
-				JSONArray arr = new JSONArray();
-				for (String s : (String[]) value) {
-					arr.put(s);
-				}
+    public static Map<String, Serializable> propertiesFromValue(String value) {
+        // read map from string as json
+        Map<String, Serializable> map = new HashMap<>();
+        JSONObject json = new JSONObject(value);
+        // build map from json
+        for (String key : json.keySet()) {
+            JSONArray arr = json.optJSONArray(key);
+            if (arr != null) {
+                // value is array of String
+                String[] ss = new String[arr.length()];
+                for (int i = 0; i < arr.length(); i++) {
+                    String s = arr.optString(i);
+                    ss[i] = s;
+                }
 
-				json.put(key, arr);
-			}
-		}
+                map.put(key, ss);
+            } else {
+                // get as String
+                String s = json.optString(key);
+                map.put(key, s);
+            }
+        }
 
-		return json;
-	}
+        return map;
+    }
+
+    public static JSONObject jsonFromMap(Map<String, Serializable> map) {
+        // custom build json from map
+        JSONObject json = new JSONObject();
+        for (String key : map.keySet()) {
+            Serializable value = map.get(key);
+            // support only String or String[]
+            if (value instanceof String) {
+                json.put(key, value);
+            } else if (value instanceof String[]) {
+                JSONArray arr = new JSONArray();
+                for (String s : (String[]) value) {
+                    arr.put(s);
+                }
+
+                json.put(key, arr);
+            }
+        }
+
+        return json;
+    }
 }

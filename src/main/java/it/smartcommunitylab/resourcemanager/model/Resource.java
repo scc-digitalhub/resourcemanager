@@ -1,11 +1,14 @@
 package it.smartcommunitylab.resourcemanager.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
@@ -25,19 +28,12 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import it.smartcommunitylab.resourcemanager.dto.ResourceDTO;
-import it.smartcommunitylab.resourcemanager.serializer.ResourceDeserializer;
-import it.smartcommunitylab.resourcemanager.serializer.ResourceSerializer;
-
 import static javax.persistence.TemporalType.TIMESTAMP;
 
 @Entity
 @EntityListeners({ AuditingEntityListener.class, ResourceListener.class })
-@JsonSerialize(using = ResourceSerializer.class)
-@JsonDeserialize(using = ResourceDeserializer.class)
+//@JsonSerialize(using = ResourceSerializer.class)
+//@JsonDeserialize(using = ResourceDeserializer.class)
 public class Resource {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -57,6 +53,10 @@ public class Resource {
 
     // flag if updates are propagated
     private boolean subscribed;
+
+    // tags - use a converter to persist as single string field
+    @Convert(converter = StringListConverter.class)
+    private List<String> tags;
 
     /*
      * Audit
@@ -83,6 +83,7 @@ public class Resource {
         super();
         this.managed = true;
         this.subscribed = true;
+        this.tags = new ArrayList<>();
     }
 
     public long getId() {
@@ -189,6 +190,14 @@ public class Resource {
         this.subscribed = subscribed;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
     @Override
     public String toString() {
         return "Resource [id=" + id + ", type=" + type + ", provider=" + provider + ", uri=" + uri + ", userId="
@@ -281,21 +290,22 @@ public class Resource {
         res.type = source.type;
         res.provider = source.provider;
         res.uri = source.uri;
-        
+
         res.userId = source.userId;
         res.scopeId = source.scopeId;
-        
+
         res.properties = source.properties;
         res.managed = source.managed;
         res.subscribed = source.subscribed;
-        
+
+        res.tags.addAll(source.getTags());
+
         res.createdDate = source.createdDate;
         res.modifiedDate = source.modifiedDate;
         res.createdBy = source.createdBy;
         res.lastModifiedBy = source.lastModifiedBy;
-        
+
         return res;
     }
-    
 
 }

@@ -1,6 +1,8 @@
 package it.smartcommunitylab.resourcemanager.consumer.dremio;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -33,12 +35,18 @@ public class DremioConsumer extends Consumer {
 
     private Registration registration;
 
+    // filters
+    private String scopeId;
+    private List<String> tags;
+
     private DremioClient _client;
 
     public DremioConsumer() {
         endpoint = "";
         username = "";
         password = "";
+        scopeId = "";
+        tags = new ArrayList<>();
     }
 
     public DremioConsumer(Map<String, Serializable> properties) {
@@ -50,6 +58,8 @@ public class DremioConsumer extends Consumer {
         this();
         registration = reg;
         _properties = reg.getPropertiesMap();
+        scopeId = reg.getScopeId();
+        tags = reg.getTags();
     }
 
     // dremio properties
@@ -99,6 +109,8 @@ public class DremioConsumer extends Consumer {
             _client = new DremioClient(endpoint, username, password);
             STATUS = SystemKeys.STATUS_READY;
         }
+        _log.debug("init status is " + String.valueOf(STATUS));
+
     }
 
     @Override
@@ -108,7 +120,7 @@ public class DremioConsumer extends Consumer {
 
     @Override
     public void addResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId())) {
+        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
             _log.debug("add resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -136,7 +148,7 @@ public class DremioConsumer extends Consumer {
 
     @Override
     public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId())) {
+        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
             _log.debug("update resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -164,7 +176,7 @@ public class DremioConsumer extends Consumer {
 
     @Override
     public void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId())) {
+        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
             _log.debug("delete resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -188,7 +200,7 @@ public class DremioConsumer extends Consumer {
 
     @Override
     public void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId())) {
+        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
             _log.debug("check resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -228,9 +240,25 @@ public class DremioConsumer extends Consumer {
         return type;
     }
 
+    public boolean checkTags(List<String> tags) {
+        boolean ret = true;
+        if (!this.tags.isEmpty() || !tags.isEmpty()) {
+            ret = false;
+            // look for at least one match
+            for (String t : tags) {
+                if (this.tags.contains(t)) {
+                    ret = true;
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
     public boolean checkScope(String scope) {
-        if (this.registration != null) {
-            return registration.getScopeId().equals(scope);
+        if (!this.scopeId.isEmpty()) {
+            return scopeId.equals(scope);
         } else {
             // if global scope
             return true;

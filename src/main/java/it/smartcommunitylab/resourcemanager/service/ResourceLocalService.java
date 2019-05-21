@@ -52,7 +52,7 @@ public class ResourceLocalService {
      * Data
      */
     public Resource create(String scopeId, String userId, String type, String providerId,
-            Map<String, Serializable> properties)
+            Map<String, Serializable> properties, List<String> tags)
             throws NoSuchProviderException, ResourceProviderException {
         _log.info("create " + type + " resource with " + String.valueOf(providerId) + " by user " + userId);
 
@@ -68,6 +68,9 @@ public class ResourceLocalService {
         // update fields
         res.setScopeId(scopeId);
         res.setUserId(userId);
+
+        // persist tags
+        res.setTags(tags);
 
         // encrypt URI
         if (toEncrypt) {
@@ -89,7 +92,7 @@ public class ResourceLocalService {
     @Transactional
     public Resource add(String scopeId, String userId, String type, String providerId,
             String uri,
-            Map<String, Serializable> properties)
+            Map<String, Serializable> properties, List<String> tags)
             throws NoSuchProviderException, ResourceProviderException {
         _log.info("add " + type + " resource with " + String.valueOf(providerId) + " by user " + userId);
 
@@ -108,6 +111,9 @@ public class ResourceLocalService {
         // update fields
         res.setScopeId(scopeId);
         res.setUserId(userId);
+
+        // persist tags
+        res.setTags(tags);
 
         // set uri as provided
         res.setUri(uri);
@@ -133,13 +139,14 @@ public class ResourceLocalService {
     }
 
     @Transactional
-    public Resource update(long id, Map<String, Serializable> properties)
+    public Resource update(long id, Map<String, Serializable> properties, List<String> tags)
             throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
         _log.info("update resource " + String.valueOf(id));
 
         Resource res = get(id);
         // update fields
         res.setPropertiesMap(properties);
+        res.setTags(tags);
 
         if (res.isManaged()) {
             // call provider to require update
@@ -230,6 +237,10 @@ public class ResourceLocalService {
         }
 
         return p.get();
+    }
+
+    public boolean exists(long id) {
+        return resourceRepository.existsById(id);
     }
 
     /*

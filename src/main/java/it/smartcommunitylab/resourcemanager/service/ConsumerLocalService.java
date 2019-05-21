@@ -146,6 +146,8 @@ public class ConsumerLocalService {
         }
         String builderClass = id.replace("Consumer", "Builder");
 
+        _log.debug("get builder for " + builderClass);
+
         if (!_builders.containsKey(builderClass)) {
             throw new NoSuchConsumerException();
         }
@@ -192,7 +194,7 @@ public class ConsumerLocalService {
      */
 
     public Registration add(String scopeId, String userId, String type, String consumer,
-            Map<String, Serializable> properties)
+            Map<String, Serializable> properties, List<String> tags)
             throws NoSuchConsumerException, ConsumerException {
 
         // check support
@@ -201,7 +203,7 @@ public class ConsumerLocalService {
         }
 
         // build registration
-        Registration reg = registrationService.add(scopeId, userId, type, consumer, properties);
+        Registration reg = registrationService.add(scopeId, userId, type, consumer, properties, tags);
 
         // build consumer
         Consumer c = buildConsumer(reg);
@@ -221,6 +223,42 @@ public class ConsumerLocalService {
         }
 
         return reg;
+    }
+
+    public Registration update(long id, Map<String, Serializable> properties, List<String> tags)
+            throws NoSuchConsumerException, ConsumerException {
+        try {
+            // fetch registration
+            Registration reg = registrationService.get(id);
+            String type = reg.getType();
+
+            // lookup for consumer
+            // TODO replace with lookup map?
+            Consumer consumer = null;
+            for (Consumer c : _consumers.get(type)) {
+                if (c.getRegistration() == reg) {
+                    consumer = c;
+                    break;
+                }
+            }
+
+            if (consumer != null) {
+                // delete consumer - no cleanup or shutdown
+                _consumers.get(type).remove(consumer);
+            }
+
+            // update registration
+            reg = registrationService.update(id, properties, tags);
+
+            // re-create consumer as new
+            Consumer c = buildConsumer(reg);
+            _consumers.get(type).add(c);
+            // no need to trigger resource creation on update
+
+            return reg;
+        } catch (NoSuchRegistrationException nrex) {
+            throw new NoSuchConsumerException();
+        }
     }
 
     public void delete(long id) throws NoSuchConsumerException {
@@ -263,7 +301,7 @@ public class ConsumerLocalService {
             // fetch resource (unencrypted)
             Resource res = resourceLocalService.get(event.getId());
 
-            //check if resource events are available for consumption
+            // check if resource events are available for consumption
             if (res.isSubscribed()) {
                 String type = event.getType();
                 String action = event.getAction();
