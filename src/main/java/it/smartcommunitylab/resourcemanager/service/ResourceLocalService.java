@@ -20,7 +20,6 @@ import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
 import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
 import it.smartcommunitylab.resourcemanager.crypt.CryptoService;
-import it.smartcommunitylab.resourcemanager.dto.ResourceDTO;
 import it.smartcommunitylab.resourcemanager.event.ResourceEventHandler;
 import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 import it.smartcommunitylab.resourcemanager.model.Resource;
@@ -132,7 +131,7 @@ public class ResourceLocalService {
         return resourceRepository.saveAndFlush(res);
 
     }
-    
+
     @Transactional
     public Resource update(long id, Map<String, Serializable> properties)
             throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
@@ -200,13 +199,13 @@ public class ResourceLocalService {
         }
 
         Resource res = p.get();
-        
+
         // decrypt URI
         if (toEncrypt) {
-            //clone entity to detach from JPA
-            //workaround for setting field *WITHOUT* persisting
+            // clone entity to detach from JPA
+            // workaround for setting field *WITHOUT* persisting
             res = Resource.clone(p.get());
-            
+
             try {
                 _log.trace("get resource uri " + String.valueOf(res.getUri()));
 
@@ -266,7 +265,7 @@ public class ResourceLocalService {
     /*
      * List
      */
-    
+
     public List<Resource> list() {
         return resourceRepository.findAll();
     }
@@ -313,17 +312,12 @@ public class ResourceLocalService {
     /*
      * Check
      */
-    @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
+//    @Autowired
+//    private ApplicationEventPublisher applicationEventPublisher;
 
     public void check(long id) throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
-        Optional<Resource> p = resourceRepository.findById(id);
 
-        if (!p.isPresent()) {
-            throw new NoSuchResourceException();
-        }
-
-        Resource res = p.get();
+        Resource res = get(id);
 
         // call provider to require check
         ResourceProvider provider = providerLocalService.getProvider(res.getProvider());
@@ -331,9 +325,8 @@ public class ResourceLocalService {
         provider.checkResource(res);
 
         // notify all consumers via events
-        ResourceEvent event = new ResourceEvent(this, res.getScopeId(), res.getUserId(), res.getType(), id,
+        eventHandler.notifyAction(res.getScopeId(), res.getUserId(), res.getType(), id,
                 SystemKeys.ACTION_CHECK);
-        applicationEventPublisher.publishEvent(event);
     }
 
 }
