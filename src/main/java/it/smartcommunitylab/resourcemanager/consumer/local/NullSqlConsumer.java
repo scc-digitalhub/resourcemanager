@@ -16,85 +16,90 @@ import it.smartcommunitylab.resourcemanager.model.Resource;
 
 public class NullSqlConsumer extends Consumer {
 
-	private final static Logger _log = LoggerFactory.getLogger(NullSqlConsumer.class);
+    private final static Logger _log = LoggerFactory.getLogger(NullSqlConsumer.class);
 
-	public static final String TYPE = SystemKeys.TYPE_SQL;
-	public static final String ID = "nullSql";
+    public static final String TYPE = SystemKeys.TYPE_SQL;
+    public static final String ID = "nullSql";
 
-	private int STATUS;
+    private int STATUS;
 
-	private Registration registration;
+    private Registration registration;
 
-	public NullSqlConsumer() {
-	}
+    public NullSqlConsumer() {
+    }
 
-	public NullSqlConsumer(Map<String, Serializable> properties) {
-		_properties = properties;
-	}
+    public NullSqlConsumer(Map<String, Serializable> properties) {
+        _properties = properties;
+    }
 
-	// test properties
-	private Map<String, Serializable> _properties;
+    // test properties
+    private Map<String, Serializable> _properties;
 
-	public Map<String, Serializable> getProperties() {
-		return _properties;
-	}
+    public Map<String, Serializable> getProperties() {
+        return _properties;
+    }
 
-	@Override
-	public String getId() {
-		return ID;
-	}
+    @Override
+    public String getId() {
+        return ID;
+    }
 
-	@Override
-	public String getType() {
-		return TYPE;
-	}
+    @Override
+    public String getType() {
+        return TYPE;
+    }
 
-	@Override
-	public Registration getRegistration() {
-		return registration;
-	}
+    @Override
+    public String getUrl() {
+        return "";
+    }
 
-	/*
-	 * Init method - POST constructor since spring injects properties *after
-	 * creation*
-	 */
-	@PostConstruct
-	public void init() {
-		_log.debug("init called");
+    @Override
+    public Registration getRegistration() {
+        return registration;
+    }
 
-		if (_properties == null) {
-			_properties = new HashMap<>();
-		}
+    /*
+     * Init method - POST constructor since spring injects properties *after
+     * creation*
+     */
+    @PostConstruct
+    public void init() {
+        _log.debug("init called");
 
-		STATUS = SystemKeys.STATUS_READY;
-	}
+        if (_properties == null) {
+            _properties = new HashMap<>();
+        }
 
-	@Override
-	public int getStatus() {
-		return STATUS;
-	}
+        STATUS = SystemKeys.STATUS_READY;
+    }
 
-	@Override
-	public void addResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-		_log.debug("add resource " + resource.toString());
+    @Override
+    public int getStatus() {
+        return STATUS;
+    }
 
-	}
+    @Override
+    public void addResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+        _log.debug("add resource " + resource.toString());
 
-	@Override
-	public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-		_log.debug("update resource " + resource.toString());
+    }
 
-	}
+    @Override
+    public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+        _log.debug("update resource " + resource.toString());
 
-	@Override
-	public void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-		_log.debug("delete resource " + resource.toString());
+    }
 
-	}
+    @Override
+    public void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+        _log.debug("delete resource " + resource.toString());
 
-	@Override
-	public void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-		_log.debug("check resource " + resource.toString());
+    }
 
-	}
+    @Override
+    public void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+        _log.debug("check resource " + resource.toString());
+
+    }
 }

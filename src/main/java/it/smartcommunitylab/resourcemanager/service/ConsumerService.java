@@ -19,6 +19,7 @@ import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.common.ConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchRegistrationException;
+import it.smartcommunitylab.resourcemanager.model.Consumer;
 import it.smartcommunitylab.resourcemanager.model.ConsumerBuilder;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 
@@ -76,6 +77,13 @@ public class ConsumerService {
         }
     }
 
+    @PreAuthorize("hasPermission(#id, '" + SystemKeys.ENTITY_REGISTRATION +
+            "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public Consumer lookup(String scopeId, String userId, long id) throws NoSuchConsumerException {
+        // call local service
+        return consumerService.lookup(id);
+    }
+
     @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE +
             "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public boolean exists(String scopeId, String userId, long id) throws NoSuchConsumerException {
@@ -102,14 +110,14 @@ public class ConsumerService {
 //	}
 
     @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-    public Map<String, List<String>> listBuilders(String scopeId, String userId) {
+    public Map<String, List<ConsumerBuilder>> listBuilders(String scopeId, String userId) {
 
         // call local service
         return consumerService.listBuilders();
     }
 
     @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
-    public List<String> listBuilders(String scopeId, String userId, String type) {
+    public List<ConsumerBuilder> listBuilders(String scopeId, String userId, String type) {
 
         // call local service
         return consumerService.listBuilders(type);
@@ -120,6 +128,13 @@ public class ConsumerService {
 
         // call local service
         return consumerService.getBuilder(id);
+    }
+
+    @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    public List<String> listTypes(String scopeId, String userId) {
+
+        // call local service
+        return consumerService.listTypes();
     }
 
     /*

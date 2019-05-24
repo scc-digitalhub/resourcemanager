@@ -3,8 +3,11 @@ package it.smartcommunitylab.resourcemanager.service;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -168,8 +171,8 @@ public class ConsumerLocalService {
         return _builders.containsKey(builderClass);
     }
 
-    public Map<String, List<String>> listBuilders() {
-        Map<String, List<String>> map = new HashMap<>();
+    public Map<String, List<ConsumerBuilder>> listBuilders() {
+        Map<String, List<ConsumerBuilder>> map = new HashMap<>();
         // static init for all types
         map.put(SystemKeys.TYPE_SQL, new ArrayList<>());
         map.put(SystemKeys.TYPE_NOSQL, new ArrayList<>());
@@ -178,15 +181,29 @@ public class ConsumerLocalService {
 
         for (ConsumerBuilder b : _builders.values()) {
             if (b.isAvailable()) {
-                map.get(b.getType()).add(b.getId());
+                map.get(b.getType()).add(b);
             }
         }
 
         return map;
     }
 
-    public List<String> listBuilders(String type) {
-        return listBuilders().get(type);
+    public List<ConsumerBuilder> listBuilders(String type) {
+        return _builders.entrySet().stream()
+                .map(entry -> entry.getValue())
+                .filter(entry -> (entry.isAvailable() && entry.getType().equals(type)))
+                .collect(Collectors.toList());
+    }
+
+    public List<String> listTypes() {
+        // return only non empty types
+        Set<String> types = new HashSet<>();
+        for (ConsumerBuilder b : _builders.values()) {
+            if (b.isAvailable()) {
+                types.add(b.getType());
+            }
+        }
+        return new ArrayList<>(types);
     }
 
     /*
@@ -233,14 +250,7 @@ public class ConsumerLocalService {
             String type = reg.getType();
 
             // lookup for consumer
-            // TODO replace with lookup map?
-            Consumer consumer = null;
-            for (Consumer c : _consumers.get(type)) {
-                if (c.getRegistration() == reg) {
-                    consumer = c;
-                    break;
-                }
-            }
+            Consumer consumer = consumerByRegistrationId(type, reg.getId());
 
             if (consumer != null) {
                 // delete consumer - no cleanup or shutdown
@@ -268,14 +278,7 @@ public class ConsumerLocalService {
             String type = reg.getType();
 
             // lookup for consumer
-            // TODO replace with lookup map?
-            Consumer consumer = null;
-            for (Consumer c : _consumers.get(type)) {
-                if (c.getRegistration() == reg) {
-                    consumer = c;
-                    break;
-                }
-            }
+            Consumer consumer = consumerByRegistrationId(type, reg.getId());
 
             if (consumer != null) {
                 // delete consumer - no cleanup or shutdown
@@ -287,6 +290,42 @@ public class ConsumerLocalService {
         } catch (NoSuchRegistrationException nrex) {
             throw new NoSuchConsumerException();
         }
+    }
+
+    public Consumer lookup(long id) throws NoSuchConsumerException {
+        try {
+            // fetch registration
+            Registration reg = registrationService.get(id);
+            String type = reg.getType();
+
+            // lookup for consumer
+            Consumer consumer = consumerByRegistrationId(type, reg.getId());
+            
+            if (consumer != null) {
+                return consumer;
+            } else {
+                throw new NoSuchConsumerException();
+            }
+        } catch (NoSuchRegistrationException nrex) {
+            throw new NoSuchConsumerException();
+        }
+    }
+
+    private Consumer consumerByRegistrationId(String type, long id) {
+        // lookup for consumer
+        // TODO replace with lookup map?
+        Consumer consumer = null;
+        for (Consumer c : _consumers.get(type)) {
+            if (c.getRegistration() != null) {
+                if (c.getRegistration().getId() == id) {
+                    consumer = c;
+                    break;
+                }
+            }
+        }
+
+        return consumer;
+
     }
 
     /*

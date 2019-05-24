@@ -75,6 +75,14 @@
 			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 			<version>2.1.4.RELEASE</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-jose</artifactId>
+		</dependency>
 
 		<!-- explicit define swagger version to overcome bug in ApiModel example -->
 		<!-- https://github.com/springfox/springfox/issues/2265 -->
@@ -126,7 +134,7 @@
 			<artifactId>postgresql</artifactId>
 			<version>42.2.5</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>

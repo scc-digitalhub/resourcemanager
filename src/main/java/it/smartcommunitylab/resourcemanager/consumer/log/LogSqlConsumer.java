@@ -13,65 +13,70 @@ import it.smartcommunitylab.resourcemanager.model.Resource;
 
 public class LogSqlConsumer extends Consumer {
 
-	private final static Logger _log = LoggerFactory.getLogger(LogSqlConsumer.class);
+    private final static Logger _log = LoggerFactory.getLogger(LogSqlConsumer.class);
 
-	public static final String TYPE = SystemKeys.TYPE_SQL;
-	public static final String ID = "logSql";
+    public static final String TYPE = SystemKeys.TYPE_SQL;
+    public static final String ID = "logSql";
 
-	private int STATUS;
+    private int STATUS;
 
-	@Override
-	public String getId() {
-		return ID;
-	}
+    @Override
+    public String getId() {
+        return ID;
+    }
 
-	@Override
-	public String getType() {
-		return TYPE;
-	}
+    @Override
+    public String getType() {
+        return TYPE;
+    }
 
-	/*
-	 * Init method - POST constructor since spring injects properties *after
-	 * creation*
-	 */
-	@PostConstruct
-	public void init() {
-		_log.debug("init called");
-		STATUS = SystemKeys.STATUS_READY;
-	}
+    @Override
+    public String getUrl() {
+        return "";
+    }
 
-	@Override
-	public int getStatus() {
-		return STATUS;
-	}
+    /*
+     * Init method - POST constructor since spring injects properties *after
+     * creation*
+     */
+    @PostConstruct
+    public void init() {
+        _log.debug("init called");
+        STATUS = SystemKeys.STATUS_READY;
+    }
 
-	@Override
-	public void addResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-		_log.debug("add resource " + resource.toString());
+    @Override
+    public int getStatus() {
+        return STATUS;
+    }
 
-	}
+    @Override
+    public void addResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+        _log.debug("add resource " + resource.toString());
 
-	@Override
-	public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-		_log.debug("update resource " + resource.toString());
+    }
 
-	}
+    @Override
+    public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+        _log.debug("update resource " + resource.toString());
 
-	@Override
-	public void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-		_log.debug("delete resource " + resource.toString());
+    }
 
-	}
+    @Override
+    public void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+        _log.debug("delete resource " + resource.toString());
 
-	@Override
-	public void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-		_log.debug("check resource " + resource.toString());
+    }
 
-	}
+    @Override
+    public void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+        _log.debug("check resource " + resource.toString());
 
-	@Override
-	public Registration getRegistration() {
-		// not supported
-		return null;
-	}
+    }
+
+    @Override
+    public Registration getRegistration() {
+        // not supported
+        return null;
+    }
 }

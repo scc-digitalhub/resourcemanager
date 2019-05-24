@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchRegistrationException;
 import it.smartcommunitylab.resourcemanager.model.Registration;
-import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.repository.RegistrationRepository;
 
 @Component

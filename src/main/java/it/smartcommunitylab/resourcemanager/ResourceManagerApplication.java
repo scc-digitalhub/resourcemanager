@@ -1,25 +1,19 @@
 package it.smartcommunitylab.resourcemanager;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 
-import it.smartcommunitylab.resourcemanager.model.Resource;
-import it.smartcommunitylab.resourcemanager.service.ProviderLocalService;
-import it.smartcommunitylab.resourcemanager.service.ResourceLocalService;
 
-@EnableResourceServer
 @SpringBootApplication
 public class ResourceManagerApplication {
-	@Autowired
-	ProviderLocalService service;
-
-	@Autowired
-	ResourceLocalService resourceService;
+//	@Autowired
+//	ProviderLocalService service;
+//
+//	@Autowired
+//	ResourceLocalService resourceService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(ResourceManagerApplication.class, args);

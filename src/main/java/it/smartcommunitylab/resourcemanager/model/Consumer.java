@@ -10,6 +10,8 @@ public abstract class Consumer {
 	public abstract String getId();
 
 	public abstract String getType();
+	
+	public abstract String getUrl();
 
 	public abstract int getStatus();
 

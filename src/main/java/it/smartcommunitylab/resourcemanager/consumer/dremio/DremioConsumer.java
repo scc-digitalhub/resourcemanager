@@ -80,6 +80,12 @@ public class DremioConsumer extends Consumer {
     }
 
     @Override
+    public String getUrl() {
+        // build access url from endpoint
+        return endpoint;
+    }
+
+    @Override
     public Registration getRegistration() {
         return registration;
     }

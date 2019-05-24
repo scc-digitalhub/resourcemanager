@@ -124,7 +124,12 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
     /*
      * Helpers
      */
-    private boolean isScopePermitted(String scopeId) {
+    public List<String> getScopeRoles(String scopeId, Authentication authentication) {
+        List<GrantedAuthority> authorities = new ArrayList<>(authentication.getAuthorities());
+        return getScopeRoles(scopeId, authorities);
+    }
+
+    public boolean isScopePermitted(String scopeId) {
 
         if (!defaultScope.isEmpty() && scopeId.equals(defaultScope)) {
             // default scope always enabled if defined
@@ -168,7 +173,7 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
         return roles;
     }
 
-    private Set<String> roleToPermissions(String role) {
+    public Set<String> roleToPermissions(String role) {
         // statically resolve roles => permission mapping
         // TODO refactor
         Set<String> permissions = new HashSet<String>();

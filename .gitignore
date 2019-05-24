@@ -4,6 +4,7 @@ HELP.md
 
 application-local.properties
 data/
+src/main/resources/public/
 
 ### STS ###
 .apt_generated

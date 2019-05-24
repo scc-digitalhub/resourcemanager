@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import it.smartcommunitylab.resourcemanager.model.Consumer;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 import it.smartcommunitylab.resourcemanager.serializer.ConsumerDeserializer;
 import it.smartcommunitylab.resourcemanager.serializer.ConsumerSerializer;
@@ -29,6 +30,9 @@ public class ConsumerDTO {
     @ApiModelProperty(notes = "Consumer name", example = "dremio")
     public String consumer;
 
+    @ApiModelProperty(notes = "Consumer access url", example = "http://localhost")
+    public String url;
+
     @ApiModelProperty(notes = "Consumer properties map - class specific", example = "{}")
     public String properties;
 
@@ -45,6 +49,7 @@ public class ConsumerDTO {
         properties = "{}";
         tags = new String[0];
 
+        url = "";
     }
 
     public long getId() {
@@ -139,4 +144,13 @@ public class ConsumerDTO {
 
         return dto;
     }
+
+    public static ConsumerDTO fromConsumer(Consumer consumer, boolean includePrivate) {
+        ConsumerDTO dto = fromRegistration(consumer.getRegistration(), includePrivate);
+        // ask for url
+        dto.url = consumer.getUrl();
+
+        return dto;
+    }
+
 }

@@ -37,6 +37,7 @@ import io.swagger.annotations.ApiParam;
 import it.smartcommunitylab.resourcemanager.common.ConsumerException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchConsumerException;
 import it.smartcommunitylab.resourcemanager.dto.ConsumerDTO;
+import it.smartcommunitylab.resourcemanager.model.Consumer;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.service.ConsumerService;
@@ -57,7 +58,7 @@ public class ConsumerController {
     /*
      * Consumer registration w/scope
      */
-    @GetMapping(value = "/c/{scope}/consumers/{id}", produces = "application/json")
+    @GetMapping(value = "/api/c/{scope}/consumers/{id}", produces = "application/json")
     @ApiOperation(value = "Fetch a specific consumer by id")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
@@ -76,13 +77,13 @@ public class ConsumerController {
         // check permissions *before* checking existence
         consumerService.exists(scopeId, userId, id);
 
-        Registration reg = consumerService.get(scopeId, userId, id);
+        Consumer consumer = consumerService.lookup(scopeId, userId, id);
 
         // include private fields on detail view
-        return ConsumerDTO.fromRegistration(reg, true);
+        return ConsumerDTO.fromConsumer(consumer, true);
     }
 
-    @PostMapping(value = "/c/{scope}/consumers", produces = "application/json")
+    @PostMapping(value = "/api/c/{scope}/consumers", produces = "application/json")
     @ApiOperation(value = "Add a new consumer")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
@@ -108,7 +109,7 @@ public class ConsumerController {
 
     }
 
-    @PutMapping(value = "/c/{scope}/consumers/{id}", produces = "application/json")
+    @PutMapping(value = "/api/c/{scope}/consumers/{id}", produces = "application/json")
     @ApiOperation(value = "Update a consumer")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
@@ -141,11 +142,11 @@ public class ConsumerController {
 
     }
 
-    @DeleteMapping(value = "/c/{scope}/consumers/{id}", produces = "application/json")
+    @DeleteMapping(value = "/api/c/{scope}/consumers/{id}", produces = "application/json")
     @ApiOperation(value = "Delete a specific consumer by id")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
-    public void delete(
+    public ConsumerDTO delete(
             @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
             @ApiParam(value = "Consumer id", required = true) @PathVariable("id") long id,
             HttpServletRequest request, HttpServletResponse response)
@@ -160,15 +161,19 @@ public class ConsumerController {
         // check permissions *before* checking existence
         consumerService.exists(scopeId, userId, id);
 
+        // fetch resource to provide as result on success
+        Consumer consumer = consumerService.lookup(scopeId, userId, id);
+
         consumerService.delete(scopeId, userId, id);
 
+        return ConsumerDTO.fromConsumer(consumer, false);
     }
 
     /*
      * List w/scope
      */
 
-    @GetMapping(value = "/c/{scope}/consumers", produces = "application/json")
+    @GetMapping(value = "/api/c/{scope}/consumers", produces = "application/json")
     @ApiOperation(value = "List consumers with filters")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
@@ -214,7 +219,7 @@ public class ConsumerController {
     /*
      * Resource
      */
-    @GetMapping(value = "/consumers/{id}", produces = "application/json")
+    @GetMapping(value = "/api/consumers/{id}", produces = "application/json")
     @ApiOperation(value = "Fetch a specific consumer by id")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
@@ -230,7 +235,7 @@ public class ConsumerController {
         return get(scopeId, id, request, response);
     }
 
-    @PostMapping(value = "/consumers", produces = "application/json")
+    @PostMapping(value = "/api/consumers", produces = "application/json")
     @ApiOperation(value = "Add a new consumer")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
@@ -246,7 +251,7 @@ public class ConsumerController {
 
     }
 
-    @PutMapping(value = "/consumers/{id}", produces = "application/json")
+    @PutMapping(value = "/api/consumers/{id}", produces = "application/json")
     @ApiOperation(value = "Update a consumer")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
@@ -263,20 +268,20 @@ public class ConsumerController {
 
     }
 
-    @DeleteMapping(value = "/consumers/{id}", produces = "application/json")
+    @DeleteMapping(value = "/api/consumers/{id}", produces = "application/json")
     @ApiOperation(value = "Delete a specific consumer by id")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
             @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
     })
     @ResponseBody
-    public void delete(
+    public ConsumerDTO delete(
             @ApiParam(value = "Consumer id", required = true) @PathVariable("id") long id,
             HttpServletRequest request, HttpServletResponse response)
             throws NoSuchConsumerException {
 
         Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
-        delete(scopeId, id, request, response);
+        return delete(scopeId, id, request, response);
 
     }
 
@@ -284,7 +289,7 @@ public class ConsumerController {
      * List
      */
 
-    @GetMapping(value = "/consumers", produces = "application/json")
+    @GetMapping(value = "/api/consumers", produces = "application/json")
     @ApiOperation(value = "List consumers with filters")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),

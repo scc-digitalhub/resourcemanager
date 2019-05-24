@@ -10,63 +10,75 @@ import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 @ApiModel(value = "Provider")
 public class ProviderDTO {
 
-	@ApiModelProperty(notes = "Provider resource type", example = "sql")
-	public String type;
+    @ApiModelProperty(notes = "Provider id", example = "postgresSql")
+    public String id;
 
-	@ApiModelProperty(notes = "Provider name", example = "postgres")
-	public String provider;
+    @ApiModelProperty(notes = "Provider resource type", example = "sql")
+    public String type;
 
-	@ApiModelProperty(notes = "Provider properties map - class specific", example = "{}")
-	public String[] properties;
+    @ApiModelProperty(notes = "Provider name", example = "postgres")
+    public String provider;
 
-	public ProviderDTO() {
-	}
+    @ApiModelProperty(notes = "Provider properties map - class specific", example = "{}")
+    public String[] properties;
 
-	public ProviderDTO(String type, String provider) {
-		super();
-		this.type = type;
-		this.provider = provider;
-	}
+    public ProviderDTO() {
+    }
 
-	public String getType() {
-		return type;
-	}
+    public ProviderDTO(String type, String provider) {
+        super();
+        this.id = provider;
+        this.type = type;
+        this.provider = provider;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public String getProvider() {
-		return provider;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public void setProvider(String provider) {
-		this.provider = provider;
-	}
+    public String getType() {
+        return type;
+    }
 
-	public String[] getProperties() {
-		return properties;
-	}
+    public void setType(String type) {
+        this.type = type;
+    }
 
-	public void setProperties(String[] properties) {
-		this.properties = properties;
-	}
+    public String getProvider() {
+        return provider;
+    }
 
-	@Override
-	public String toString() {
-		return "ProviderDTO [type=" + type + ", provider=" + provider + ", properties=" + Arrays.toString(properties)
-				+ "]";
-	}
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
 
-	public static ProviderDTO fromProvider(ResourceProvider p) {
+    public String[] getProperties() {
+        return properties;
+    }
 
-		ProviderDTO dto = new ProviderDTO(p.getType(), p.getId());
-		Set<String> prop = p.listProperties();
+    public void setProperties(String[] properties) {
+        this.properties = properties;
+    }
 
-		dto.properties = prop.toArray(new String[0]);
+    @Override
+    public String toString() {
+        return "ProviderDTO [type=" + type + ", provider=" + provider + ", properties=" + Arrays.toString(properties)
+                + "]";
+    }
 
-		return dto;
+    public static ProviderDTO fromProvider(ResourceProvider p) {
 
-	}
+        ProviderDTO dto = new ProviderDTO(p.getType(), p.getId());
+        Set<String> prop = p.listProperties();
+
+        dto.properties = prop.toArray(new String[0]);
+
+        return dto;
+
+    }
 
 }

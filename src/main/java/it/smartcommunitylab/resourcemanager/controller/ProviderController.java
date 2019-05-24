@@ -37,129 +37,173 @@ import it.smartcommunitylab.resourcemanager.util.ControllerUtil;
 @Api(value = "/providers")
 public class ProviderController {
 
-	private final static Logger _log = LoggerFactory.getLogger(ProviderController.class);
+    private final static Logger _log = LoggerFactory.getLogger(ProviderController.class);
 
-	@Value("${scopes.default}")
-	private String defaultScope;
-	
-	@Autowired
-	private ProviderService providerService;
+    @Value("${scopes.default}")
+    private String defaultScope;
 
-	/*
-	 * List w/scope
-	 */
+    @Autowired
+    private ProviderService providerService;
 
-	@GetMapping(value = "/c/{scope}/providers", produces = "application/json")
-	@ApiOperation(value = "List available resource providers")
-	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
-	public List<ProviderDTO> list(
-			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
-			@RequestParam("type") Optional<String> type,
-			HttpServletRequest request, HttpServletResponse response,
-			Pageable pageable) {
+    /*
+     * List w/scope
+     */
 
-		String scopeId = scope.orElse(defaultScope);
-		String userId = ControllerUtil.getUserId(request);
+    @GetMapping(value = "/api/c/{scope}/providers", produces = "application/json")
+    @ApiOperation(value = "List available resource providers")
+    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+    public List<ProviderDTO> list(
+            @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+            @RequestParam("type") Optional<String> type,
+            HttpServletRequest request, HttpServletResponse response,
+            Pageable pageable) {
 
-		_log.debug("list providers by " + userId + " for scope " + scopeId);
+        String scopeId = scope.orElse(defaultScope);
+        String userId = ControllerUtil.getUserId(request);
 
-		List<ProviderDTO> results = new ArrayList<>();
-		if (type.isPresent()) {
-			List<ResourceProvider> providers = providerService.list(scopeId, userId, type.get());
-			for (ResourceProvider p : providers) {
-				results.add(ProviderDTO.fromProvider(p));
-			}
-		} else {
-			Map<String, List<ResourceProvider>> providers = providerService.list(scopeId, userId);
-			for (String t : providers.keySet()) {
-				for (ResourceProvider p : providers.get(t)) {
-					results.add(ProviderDTO.fromProvider(p));
-				}
-			}
+        _log.debug("list providers by " + userId + " for scope " + scopeId);
 
-		}
+        List<ProviderDTO> results = new ArrayList<>();
+        if (type.isPresent()) {
+            List<ResourceProvider> providers = providerService.list(scopeId, userId, type.get());
+            for (ResourceProvider p : providers) {
+                results.add(ProviderDTO.fromProvider(p));
+            }
+        } else {
+            Map<String, List<ResourceProvider>> providers = providerService.list(scopeId, userId);
+            for (String t : providers.keySet()) {
+                for (ResourceProvider p : providers.get(t)) {
+                    results.add(ProviderDTO.fromProvider(p));
+                }
+            }
 
-		// add total count as header
-		response.setHeader("X-Total-Count", String.valueOf(results.size()));
+        }
 
-		return results;
-	}
+        // add total count as header
+        response.setHeader("X-Total-Count", String.valueOf(results.size()));
 
-	/*
-	 * Get w/scope
-	 */
+        return results;
+    }
 
-	@GetMapping(value = "/c/{scope}/providers/{id}", produces = "application/json")
-	@ApiOperation(value = "Fetch a specific resource provider by id")
-	@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
-	@ResponseBody
-	public ProviderDTO get(
-			@ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
-			@PathVariable("id") String id,
-			HttpServletRequest request, HttpServletResponse response)
-			throws NoSuchProviderException {
+    /*
+     * Get w/scope
+     */
 
-		String scopeId = scope.orElse(defaultScope);
-		String userId = ControllerUtil.getUserId(request);
+    @GetMapping(value = "/api/c/{scope}/providers/{id}", produces = "application/json")
+    @ApiOperation(value = "Fetch a specific resource provider by id")
+    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+    @ResponseBody
+    public ProviderDTO get(
+            @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+            @PathVariable("id") String id,
+            HttpServletRequest request, HttpServletResponse response)
+            throws NoSuchProviderException {
 
-		_log.debug("get provider " + id + " by " + userId + " for scope " + scopeId);
+        String scopeId = scope.orElse(defaultScope);
+        String userId = ControllerUtil.getUserId(request);
 
-		ResourceProvider p = providerService.get(scopeId, userId, id);
+        _log.debug("get provider " + id + " by " + userId + " for scope " + scopeId);
 
-		return ProviderDTO.fromProvider(p);
-	}
-	/*
-	 * List
-	 */
+        ResourceProvider p = providerService.get(scopeId, userId, id);
 
-	@GetMapping(value = "/providers", produces = "application/json")
-	@ApiOperation(value = "List available resource providers")
-	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
-			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
-	})
-	public List<ProviderDTO> list(
-			@RequestParam("type") Optional<String> type,
-			HttpServletRequest request, HttpServletResponse response,
-			Pageable pageable) {
+        return ProviderDTO.fromProvider(p);
+    }
 
-		Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
-		return list(scopeId, type, request, response, pageable);
-	}
+    /*
+     * Types w/scope
+     */
 
-	/*
-	 * Get
-	 */
+    @GetMapping(value = "/api/c/{scope}/providers/types", produces = "application/json")
+    @ApiOperation(value = "List available provider types")
+    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+    public List<String> types(
+            @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+            HttpServletRequest request, HttpServletResponse response,
+            Pageable pageable) {
 
-	@GetMapping(value = "/providers/{id}", produces = "application/json")
-	@ApiOperation(value = "Fetch a specific resource provider by id")
-	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
-			@ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
-	})
-	@ResponseBody
-	public ProviderDTO get(
-			@PathVariable("id") String id,
-			HttpServletRequest request, HttpServletResponse response)
-			throws NoSuchProviderException {
+        String scopeId = scope.orElse(defaultScope);
+        String userId = ControllerUtil.getUserId(request);
 
-		Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
-		return get(scopeId, id, request, response);
-	}
+        _log.debug("list types by " + userId + " for scope " + scopeId);
 
-	/*
-	 * Exceptions
-	 */
+        List<String> results = providerService.listTypes(scopeId, userId);
 
-	@ExceptionHandler(NoSuchProviderException.class)
-	@ResponseStatus(HttpStatus.NOT_FOUND)
-	@ResponseBody
-	public String notFound(NoSuchProviderException ex) {
-		return ex.getMessage();
-	}
+        // add total count as header
+        response.setHeader("X-Total-Count", String.valueOf(results.size()));
 
-	/*
-	 * Helper
-	 */
+        return results;
+    }
+
+    /*
+     * List
+     */
+
+    @GetMapping(value = "/api/providers", produces = "application/json")
+    @ApiOperation(value = "List available resource providers")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+            @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+    })
+    public List<ProviderDTO> list(
+            @RequestParam("type") Optional<String> type,
+            HttpServletRequest request, HttpServletResponse response,
+            Pageable pageable) {
+
+        Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
+        return list(scopeId, type, request, response, pageable);
+    }
+
+    /*
+     * Get
+     */
+
+    @GetMapping(value = "/api/providers/{id}", produces = "application/json")
+    @ApiOperation(value = "Fetch a specific resource provider by id")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+            @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+    })
+    @ResponseBody
+    public ProviderDTO get(
+            @PathVariable("id") String id,
+            HttpServletRequest request, HttpServletResponse response)
+            throws NoSuchProviderException {
+
+        Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
+        return get(scopeId, id, request, response);
+    }
+
+    /*
+     * Type
+     */
+
+    @GetMapping(value = "/api/providers/types", produces = "application/json")
+    @ApiOperation(value = "List available provider types")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+            @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+    })
+    public List<String> types(
+            HttpServletRequest request, HttpServletResponse response,
+            Pageable pageable) {
+
+        Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
+        return types(scopeId, request, response, pageable);
+    }
+
+    /*
+     * Exceptions
+     */
+
+    @ExceptionHandler(NoSuchProviderException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
+    public String notFound(NoSuchProviderException ex) {
+        return ex.getMessage();
+    }
+
+    /*
+     * Helper
+     */
 
 }

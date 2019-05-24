@@ -13,29 +13,36 @@ import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 
 @Component
 public class ProviderService {
-	private final static Logger _log = LoggerFactory.getLogger(ProviderService.class);
+    private final static Logger _log = LoggerFactory.getLogger(ProviderService.class);
 
-	@Autowired
-	private ProviderLocalService providerService;
+    @Autowired
+    private ProviderLocalService providerService;
 
-	public Map<String, List<ResourceProvider>> list(String scopeId, String userId) {
-		// TODO check auth
-		//
-		// call local service
-		return providerService.listProviders();
-	}
+    public Map<String, List<ResourceProvider>> list(String scopeId, String userId) {
+        // TODO check auth
+        //
+        // call local service
+        return providerService.listProviders();
+    }
 
-	public List<ResourceProvider> list(String scopeId, String userId, String type) {
-		// TODO check auth
-		//
-		// call local service
-		return providerService.listProviders(type);
-	}
+    public List<ResourceProvider> list(String scopeId, String userId, String type) {
+        // TODO check auth
+        //
+        // call local service
+        return providerService.listProviders(type);
+    }
 
-	public ResourceProvider get(String scopeId, String userId, String id) throws NoSuchProviderException {
-		// TODO check auth
-		//
-		// call local service
-		return providerService.getProvider(id);
-	}
+    public List<String> listTypes(String scopeId, String userId) {
+        // TODO check auth
+        //
+        // call local service
+        return providerService.listTypes();
+    }
+
+    public ResourceProvider get(String scopeId, String userId, String id) throws NoSuchProviderException {
+        // TODO check auth
+        //
+        // call local service
+        return providerService.getProvider(id);
+    }
 }

@@ -57,7 +57,7 @@ public class ResourceController {
     /*
      * Resource w/scope
      */
-    @GetMapping(value = "/c/{scope}/resources/{id}", produces = "application/json")
+    @GetMapping(value = "/api/c/{scope}/resources/{id}", produces = "application/json")
     @ApiOperation(value = "Fetch a specific resource by id")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
@@ -82,7 +82,7 @@ public class ResourceController {
         return ResourceDTO.fromResource(resource, true);
     }
 
-    @PostMapping(value = "/c/{scope}/resources", produces = "application/json")
+    @PostMapping(value = "/api/c/{scope}/resources", produces = "application/json")
     @ApiOperation(value = "Create a new resource")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
@@ -109,7 +109,7 @@ public class ResourceController {
 
     }
 
-    @PutMapping(value = "/c/{scope}/resources", produces = "application/json")
+    @PutMapping(value = "/api/c/{scope}/resources", produces = "application/json")
     @ApiOperation(value = "Add an existing resource")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
@@ -137,7 +137,7 @@ public class ResourceController {
 
     }
 
-    @PutMapping(value = "/c/{scope}/resources/{id}", produces = "application/json")
+    @PutMapping(value = "/api/c/{scope}/resources/{id}", produces = "application/json")
     @ApiOperation(value = "Update a specific resource")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
@@ -170,11 +170,11 @@ public class ResourceController {
 
     }
 
-    @DeleteMapping(value = "/c/{scope}/resources/{id}", produces = "application/json")
+    @DeleteMapping(value = "/api/c/{scope}/resources/{id}", produces = "application/json")
     @ApiOperation(value = "Delete a specific resource")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
-    public void delete(
+    public ResourceDTO delete(
             @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
             @ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
             HttpServletRequest request, HttpServletResponse response)
@@ -188,8 +188,13 @@ public class ResourceController {
         // call exists to trigger 404, otherwise delete() will
         // check permissions *before* checking existence
         resourceService.exists(scopeId, userId, id);
+        
+        //fetch resource to provide as result on success
+        Resource resource = resourceService.get(scopeId, userId, id);
 
         resourceService.delete(scopeId, userId, id);
+        
+        return ResourceDTO.fromResource(resource, false);
 
     }
 
@@ -197,7 +202,7 @@ public class ResourceController {
      * List w/scope
      */
 
-    @GetMapping(value = "/c/{scope}/resources", produces = "application/json")
+    @GetMapping(value = "/api/c/{scope}/resources", produces = "application/json")
     @ApiOperation(value = "List resources with filters")
     @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
     @ResponseBody
@@ -242,7 +247,7 @@ public class ResourceController {
     /*
      * Resource
      */
-    @GetMapping(value = "/resources/{id}", produces = "application/json")
+    @GetMapping(value = "/api/resources/{id}", produces = "application/json")
     @ApiOperation(value = "Fetch a specific resource by id")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
@@ -258,7 +263,7 @@ public class ResourceController {
         return get(scopeId, id, request, response);
     }
 
-    @PostMapping(value = "/resources", produces = "application/json")
+    @PostMapping(value = "/api/resources", produces = "application/json")
     @ApiOperation(value = "Create a new resource")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
@@ -274,7 +279,7 @@ public class ResourceController {
         return create(scopeId, resource, request, response);
     }
 
-    @PutMapping(value = "/resources", produces = "application/json")
+    @PutMapping(value = "/api/resources", produces = "application/json")
     @ApiOperation(value = "Add an existing resource")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
@@ -290,7 +295,7 @@ public class ResourceController {
         return add(scopeId, resource, request, response);
     }
 
-    @PutMapping(value = "/resources/{id}", produces = "application/json")
+    @PutMapping(value = "/api/resources/{id}", produces = "application/json")
     @ApiOperation(value = "Update a specific resource")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
@@ -307,27 +312,27 @@ public class ResourceController {
         return update(scopeId, id, resource, request, response);
     }
 
-    @DeleteMapping(value = "/resources/{id}", produces = "application/json")
+    @DeleteMapping(value = "/api/resources/{id}", produces = "application/json")
     @ApiOperation(value = "Delete a specific resource")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
             @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
     })
     @ResponseBody
-    public void delete(
+    public ResourceDTO delete(
             @ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
             HttpServletRequest request, HttpServletResponse response)
             throws NoSuchProviderException, NoSuchResourceException, ResourceProviderException {
 
         Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
-        delete(scopeId, id, request, response);
+        return delete(scopeId, id, request, response);
     }
 
     /*
      * List
      */
 
-    @GetMapping(value = "/resources", produces = "application/json")
+    @GetMapping(value = "/api/resources", produces = "application/json")
     @ApiOperation(value = "List resources with filters")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
