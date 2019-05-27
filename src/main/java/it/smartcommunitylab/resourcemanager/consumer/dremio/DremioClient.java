@@ -28,6 +28,17 @@ public class DremioClient {
         PASSWORD = password;
     }
 
+    public boolean ping() throws DremioException {
+        // use listSources as test - will validate login
+        try {
+            JSONArray sources = listSources("");
+            return true;
+        } catch (DremioException e) {
+            throw e;
+        }
+
+    }
+
     private JSONObject getSource(String name, String token) throws DremioException {
         try {
             RestTemplate template = template();

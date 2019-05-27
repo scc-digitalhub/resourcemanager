@@ -113,6 +113,15 @@ public class DremioConsumer extends Consumer {
 
         if (!endpoint.isEmpty() && !username.isEmpty() && !password.isEmpty()) {
             _client = new DremioClient(endpoint, username, password);
+            // DISABLED check - TODO implement async check and recovery
+//            // test via ping
+//            try {
+//                _client.ping();
+//            } catch (DremioException e) {
+//                _log.error("ping error:" + e.getMessage());
+//                STATUS = SystemKeys.STATUS_ERROR;
+//            }
+
             STATUS = SystemKeys.STATUS_READY;
         }
         _log.debug("init status is " + String.valueOf(STATUS));
