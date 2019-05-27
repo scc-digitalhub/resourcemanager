@@ -1,5 +1,6 @@
 package it.smartcommunitylab.resourcemanager.controller;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.List;
@@ -96,11 +97,12 @@ public class AuthController {
 
     @GetMapping(value = "/api/auth/callback", produces = "application/json")
     @ApiOperation(value = "Login calback via OAuth")
-    public RedirectView callback(RedirectAttributes attributes,
+    public void callback(RedirectAttributes attributes,
             HttpServletRequest request, HttpServletResponse response) throws LoginException {
 
         String currentURL = request.getRequestURL().toString();
-        String redirectURL = "/#/callback";
+//        String redirectURL = "/#/callback";
+        String redirectURL = currentURL.replace("/api/auth/callback", "/#/callback");
 
         String code = request.getParameter("code");
         String state = request.getParameter("state");
@@ -160,15 +162,20 @@ public class AuthController {
             // fetch userInfo
             // TODO if needed
 
-            attributes.addAttribute("token", accessToken);
+//            attributes.addAttribute("token", accessToken);
+
+            // append token - should be already urlencoded
+            redirectURL = redirectURL.concat("?token=" + accessToken);
 
             _log.info("send redirect to " + redirectURL);
-            _log.info(attributes.asMap().toString());
+            response.sendRedirect(redirectURL);
 
-            return new RedirectView(redirectURL, false);
         } catch (JSONException jex) {
             _log.error("json parsing error " + jex.getMessage());
             throw new LoginException("response error");
+        } catch (IOException iex) {
+            _log.error("io error " + iex.getMessage());
+            throw new LoginException("network error");
         }
     }
 

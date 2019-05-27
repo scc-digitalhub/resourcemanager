@@ -35,6 +35,9 @@ public class ConsumerSerializer extends StdSerializer<ConsumerDTO> {
         jgen.writeStringField("scopeId", consumer.getScopeId());
         jgen.writeStringField("userId", consumer.getUserId());
 
+        jgen.writeStringField("url", consumer.getUrl());
+        jgen.writeStringField("status", consumer.getStatus());
+
         // write properties json
         jgen.writeFieldName("properties");
         jgen.writeRawValue(consumer.getProperties());

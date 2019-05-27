@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.model.Consumer;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 import it.smartcommunitylab.resourcemanager.serializer.ConsumerDeserializer;
@@ -30,6 +31,9 @@ public class ConsumerDTO {
     @ApiModelProperty(notes = "Consumer name", example = "dremio")
     public String consumer;
 
+    @ApiModelProperty(notes = "Consumer status", example = "0")
+    public String status;
+
     @ApiModelProperty(notes = "Consumer access url", example = "http://localhost")
     public String url;
 
@@ -50,6 +54,7 @@ public class ConsumerDTO {
         tags = new String[0];
 
         url = "";
+        status = "";
     }
 
     public long getId() {
@@ -108,6 +113,22 @@ public class ConsumerDTO {
         this.tags = tags;
     }
 
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
         return "ConsumerDTO [id=" + id + ", userId=" + userId + ", type=" + type + ", consumer=" + consumer
@@ -149,6 +170,27 @@ public class ConsumerDTO {
         ConsumerDTO dto = fromRegistration(consumer.getRegistration(), includePrivate);
         // ask for url
         dto.url = consumer.getUrl();
+
+        // translate status
+        String status = "";
+        switch (consumer.getStatus()) {
+        case SystemKeys.STATUS_READY:
+            status = "ready";
+            break;
+        case SystemKeys.STATUS_INIT:
+            status = "init";
+            break;
+        case SystemKeys.STATUS_ERROR:
+            status = "error";
+            break;
+        case SystemKeys.STATUS_DISABLED:
+            status = "disabled";
+            break;
+        default:
+            status = "unknown";
+        }
+
+        dto.status = status;
 
         return dto;
     }
