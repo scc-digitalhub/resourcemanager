@@ -22,87 +22,94 @@ import it.smartcommunitylab.resourcemanager.util.SqlUtil;
 @Component
 public class NullProvider extends ResourceProvider {
 
-	private final static Logger _log = LoggerFactory.getLogger(NullProvider.class);
+    private final static Logger _log = LoggerFactory.getLogger(NullProvider.class);
 
-	public static final String TYPE = SystemKeys.TYPE_SQL;
-	public static final String ID = "null";
+    public static final String TYPE = SystemKeys.TYPE_SQL;
+    public static final String ID = "null";
 
-	private int STATUS;
+    private int STATUS;
 
-	@Value("${providers.null.enable}")
-	private boolean enabled;
+    @Value("${providers.null.enable}")
+    private boolean enabled;
 
-	@Value("${providers.null.properties}")
-	private List<String> properties;
+    @Value("${providers.null.properties}")
+    private List<String> properties;
 
-	@Override
-	public String getId() {
-		return ID;
-	}
+    @Override
+    public String getId() {
+        return ID;
+    }
 
-	@Override
-	public String getType() {
-		return TYPE;
-	}
+    @Override
+    public String getType() {
+        return TYPE;
+    }
 
-	@Override
-	public Set<String> listProperties() {
-		return new HashSet<String>(properties);
-	}
+    @Override
+    public Set<String> listProperties() {
+        return new HashSet<String>(properties);
+    }
 
-	/*
-	 * Init method - POST constructor since spring injects properties *after
-	 * creation*
-	 */
-	@PostConstruct
-	public void init() {
-		_log.info("enabled " + String.valueOf(enabled));
+    /*
+     * Init method - POST constructor since spring injects properties *after
+     * creation*
+     */
+    @PostConstruct
+    public void init() {
+        _log.info("enabled " + String.valueOf(enabled));
 
-		if (enabled) {
-			STATUS = SystemKeys.STATUS_READY;
-		} else {
-			STATUS = SystemKeys.STATUS_DISABLED;
-		}
+        if (enabled) {
+            STATUS = SystemKeys.STATUS_READY;
+        } else {
+            STATUS = SystemKeys.STATUS_DISABLED;
+        }
 
-		_log.info("init status " + String.valueOf(STATUS));
-	}
+        _log.info("init status " + String.valueOf(STATUS));
+    }
 
-	@Override
-	public int getStatus() {
-		return STATUS;
-	}
+    @Override
+    public int getStatus() {
+        return STATUS;
+    }
 
-	@Override
-	public Resource createResource(String scopeId, String userId, Map<String, Serializable> properties)
-			throws ResourceProviderException {
-		Resource res = new Resource();
-		res.setType(TYPE);
-		res.setProvider(ID);
-		res.setPropertiesMap(properties);
+    @Override
+    public Resource createResource(String scopeId, String userId, String name, Map<String, Serializable> properties)
+            throws ResourceProviderException {
+        Resource res = new Resource();
+        res.setType(TYPE);
+        res.setProvider(ID);
+        res.setPropertiesMap(properties);
 
-		// generate uri
-		String uri = SqlUtil.encodeURI("null", "host:981", "dbase", "USER", "PASS");
-		res.setUri(uri);
+        if (name.isEmpty()) {
+            name = "nulldb";
+        }
 
-		return res;
-	}
+        // generate uri
+        String uri = SqlUtil.encodeURI("null", "host:981", name, "USER", "PASS");
 
-	@Override
-	public void updateResource(Resource resource) throws ResourceProviderException {
-		// nothing to do
+        // update res
+        res.setName(name);
+        res.setUri(uri);
 
-	}
+        return res;
+    }
 
-	@Override
-	public void deleteResource(Resource resource) throws ResourceProviderException {
-		// nothing to do
+    @Override
+    public void updateResource(Resource resource) throws ResourceProviderException {
+        // nothing to do
 
-	}
+    }
 
-	@Override
-	public void checkResource(Resource resource) throws ResourceProviderException {
-		// nothing to do
+    @Override
+    public void deleteResource(Resource resource) throws ResourceProviderException {
+        // nothing to do
 
-	}
+    }
+
+    @Override
+    public void checkResource(Resource resource) throws ResourceProviderException {
+        // nothing to do
+
+    }
 
 }

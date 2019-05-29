@@ -16,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
+import it.smartcommunitylab.resourcemanager.common.DuplicateNameException;
+import it.smartcommunitylab.resourcemanager.common.InvalidNameException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
 import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
@@ -34,13 +36,14 @@ public class ResourceService {
      */
     @PreAuthorize("hasPermission(#scopeId, '" + SystemKeys.SCOPE + "', '"
             + SystemKeys.PERMISSION_RESOURCE_CREATE + "')")
-    public Resource create(String scopeId, String userId, String type, String providerId,
+    public Resource create(String scopeId, String userId,
+            String type, String providerId, String name,
             Map<String, Serializable> properties, List<String> tags)
-            throws NoSuchProviderException, ResourceProviderException {
+            throws NoSuchProviderException, ResourceProviderException, InvalidNameException, DuplicateNameException {
         _log.info("create resource with " + String.valueOf(providerId) + " by user " + userId);
 
         // call local service
-        return resourceLocalService.create(scopeId, userId, type, providerId, properties, tags);
+        return resourceLocalService.create(scopeId, userId, type, providerId, name, properties, tags);
 
     }
 

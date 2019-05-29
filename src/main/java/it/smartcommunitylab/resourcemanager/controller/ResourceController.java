@@ -34,6 +34,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import it.smartcommunitylab.resourcemanager.common.DuplicateNameException;
+import it.smartcommunitylab.resourcemanager.common.InvalidNameException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
 import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
@@ -90,7 +92,7 @@ public class ResourceController {
             @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
             @ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
             HttpServletRequest request, HttpServletResponse response)
-            throws NoSuchProviderException, ResourceProviderException {
+            throws NoSuchProviderException, ResourceProviderException, InvalidNameException, DuplicateNameException {
 
         String scopeId = scope.orElse(defaultScope);
         String userId = ControllerUtil.getUserId(request);
@@ -101,7 +103,8 @@ public class ResourceController {
 
         _log.debug("create resource by " + userId + " for scope " + scopeId);
 
-        Resource result = resourceService.create(scopeId, userId, resource.getType(), resource.getProvider(),
+        Resource result = resourceService.create(scopeId, userId,
+                resource.getType(), resource.getProvider(), resource.getName(),
                 propertiesMap, tags);
 
         // include private fields on create view
@@ -188,12 +191,12 @@ public class ResourceController {
         // call exists to trigger 404, otherwise delete() will
         // check permissions *before* checking existence
         resourceService.exists(scopeId, userId, id);
-        
-        //fetch resource to provide as result on success
+
+        // fetch resource to provide as result on success
         Resource resource = resourceService.get(scopeId, userId, id);
 
         resourceService.delete(scopeId, userId, id);
-        
+
         return ResourceDTO.fromResource(resource, false);
 
     }
@@ -273,7 +276,7 @@ public class ResourceController {
     public ResourceDTO create(
             @ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
             HttpServletRequest request, HttpServletResponse response)
-            throws NoSuchProviderException, ResourceProviderException {
+            throws NoSuchProviderException, ResourceProviderException, InvalidNameException, DuplicateNameException {
 
         Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
         return create(scopeId, resource, request, response);
@@ -375,6 +378,21 @@ public class ResourceController {
     public String providerError(ResourceProviderException ex) {
         return ex.getMessage();
     }
+
+    @ExceptionHandler(InvalidNameException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public String nameError(InvalidNameException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(DuplicateNameException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public String duplicateError(DuplicateNameException ex) {
+        return ex.getMessage();
+    }
+
     /*
      * Helper
      */

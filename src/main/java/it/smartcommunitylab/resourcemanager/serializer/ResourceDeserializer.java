@@ -41,6 +41,9 @@ public class ResourceDeserializer extends StdDeserializer<ResourceDTO> {
         if (node.has("provider")) {
             res.provider = node.get("provider").asText();
         }
+        if (node.has("name")) {
+            res.name = node.get("name").asText();
+        }
         if (node.has("uri")) {
             res.uri = node.get("uri").asText();
         }

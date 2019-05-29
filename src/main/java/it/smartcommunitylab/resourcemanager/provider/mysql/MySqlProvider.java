@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
+import it.smartcommunitylab.resourcemanager.common.DuplicateNameException;
+import it.smartcommunitylab.resourcemanager.common.InvalidNameException;
 import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
@@ -23,177 +25,202 @@ import it.smartcommunitylab.resourcemanager.util.SqlUtil;
 
 @Component
 public class MySqlProvider extends ResourceProvider {
-	private final static Logger _log = LoggerFactory.getLogger(MySqlProvider.class);
+    private final static Logger _log = LoggerFactory.getLogger(MySqlProvider.class);
 
-	public static final String TYPE = SystemKeys.TYPE_SQL;
-	public static final String ID = "mysql";
+    public static final String TYPE = SystemKeys.TYPE_SQL;
+    public static final String ID = "mysql";
 
-	private int STATUS;
+    private static final String VALID_CHARS = "[a-zA-Z0-9]+";
 
-	@Value("${providers.mysql.enable}")
-	private boolean enabled;
+    private int STATUS;
 
-	@Value("${providers.mysql.properties}")
-	private List<String> properties;
+    @Value("${providers.mysql.enable}")
+    private boolean enabled;
 
-	// mysql connection
-	@Value("${providers.mysql.host}")
-	private String host;
+    @Value("${providers.mysql.properties}")
+    private List<String> properties;
 
-	@Value("${providers.mysql.port}")
-	private int port;
+    // mysql connection
+    @Value("${providers.mysql.host}")
+    private String host;
 
-	@Value("${providers.mysql.username}")
-	private String username;
+    @Value("${providers.mysql.port}")
+    private int port;
 
-	@Value("${providers.mysql.password}")
-	private String password;
+    @Value("${providers.mysql.username}")
+    private String username;
 
-	private MySqlClient _client;
+    @Value("${providers.mysql.password}")
+    private String password;
 
-	@Override
-	public String getId() {
-		return ID;
-	}
+    private MySqlClient _client;
 
-	@Override
-	public String getType() {
-		return TYPE;
-	}
+    @Override
+    public String getId() {
+        return ID;
+    }
 
-	@Override
-	public Set<String> listProperties() {
-		return new HashSet<String>(properties);
-	}
+    @Override
+    public String getType() {
+        return TYPE;
+    }
 
-	/*
-	 * Init method - POST constructor since spring injects properties *after
-	 * creation*
-	 */
-	@PostConstruct
-	public void init() {
-		_log.info("enabled " + String.valueOf(enabled));
-		STATUS = SystemKeys.STATUS_DISABLED;
+    @Override
+    public Set<String> listProperties() {
+        return new HashSet<String>(properties);
+    }
 
-		if (enabled) {
-			_client = new MySqlClient(host, port, username, password);
-			// check mysql availability
+    /*
+     * Init method - POST constructor since spring injects properties *after
+     * creation*
+     */
+    @PostConstruct
+    public void init() {
+        _log.info("enabled " + String.valueOf(enabled));
+        STATUS = SystemKeys.STATUS_DISABLED;
 
-			if (_client.ping()) {
-				STATUS = SystemKeys.STATUS_READY;
-			} else {
-				STATUS = SystemKeys.STATUS_ERROR;
-			}
+        if (enabled) {
+            _client = new MySqlClient(host, port, username, password);
+            // check mysql availability
 
-		}
+            if (_client.ping()) {
+                STATUS = SystemKeys.STATUS_READY;
+            } else {
+                STATUS = SystemKeys.STATUS_ERROR;
+            }
 
-		_log.info("init status " + String.valueOf(STATUS));
-	}
+        }
 
-	@Override
-	public int getStatus() {
-		return STATUS;
-	}
+        _log.info("init status " + String.valueOf(STATUS));
+    }
 
-	@Override
-	public Resource createResource(String scopeId, String userId, Map<String, Serializable> properties)
-			throws ResourceProviderException {
-		Resource res = new Resource();
-		res.setType(TYPE);
-		res.setProvider(ID);
-		res.setPropertiesMap(properties);
+    @Override
+    public int getStatus() {
+        return STATUS;
+    }
 
-		try {
-			// generate id with limited tries
-			String name = generateId(scopeId, userId);
-			int retry = 0;
-			boolean exists = _client.hasDatabase(name);
-			while (exists && retry < 5) {
-				name = generateId(scopeId, userId);
-				exists = _client.hasDatabase(name);
-				retry++;
-			}
+    @Override
+    public Resource createResource(String scopeId, String userId, String name, Map<String, Serializable> properties)
+            throws ResourceProviderException, InvalidNameException, DuplicateNameException {
+        Resource res = new Resource();
+        res.setType(TYPE);
+        res.setProvider(ID);
+        res.setPropertiesMap(properties);
 
-			if (exists) {
-				throw new ResourceProviderException("error creating database");
-			}
+        try {
+            if (!name.isEmpty()) {
+                // validate name
+                if (!name.matches(VALID_CHARS)) {
+                    throw new InvalidNameException();
+                }
 
-			_log.info("create database " + name + " with scope " + scopeId + " for user " + userId);
+                // build scoped name
+                StringBuilder sb = new StringBuilder();
+                sb.append(scopeId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+                sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+                sb.append(name);
 
-			// create database
-			_client.createDatabase(name);
+                name = sb.toString();
 
-			// create username = dbname
-			String username = name;
-			String password = RandomStringUtils.randomAlphanumeric(10);
+                // check duplicate for scoped name
+                if (_client.hasDatabase(name)) {
+                    throw new DuplicateNameException();
+                }
+            } else {
+                // generate id with limited tries
+                name = generateId(scopeId, userId);
+                int retry = 0;
+                boolean exists = _client.hasDatabase(name);
+                while (exists && retry < 8) {
+                    name = generateId(scopeId, userId);
+                    exists = _client.hasDatabase(name);
+                    retry++;
+                }
 
-			_log.info("create user " + username + " for database " + name);
+                if (exists) {
+                    throw new ResourceProviderException("error creating database");
+                }
+            }
 
-			_client.createUser(name, username, password);
+            _log.info("create database " + name + " with scope " + scopeId + " for user " + userId);
 
-			// generate uri
-			String endpoint = host + ":" + String.valueOf(port);
-			String uri = SqlUtil.encodeURI("mysql", endpoint, name, username, password);
-			res.setUri(uri);
+            // create database
+            _client.createDatabase(name);
 
-			return res;
-		} catch (SQLException sex) {
-			_log.error(sex.getMessage());
-			throw new ResourceProviderException("sql error");
-		}
-	}
+            // create username = dbname
+            String username = name;
+            String password = RandomStringUtils.randomAlphanumeric(10);
 
-	@Override
-	public void updateResource(Resource resource) throws ResourceProviderException {
-		// TODO
+            _log.info("create user " + username + " for database " + name);
 
-	}
+            _client.createUser(name, username, password);
 
-	@Override
-	public void deleteResource(Resource resource) throws ResourceProviderException {
+            // generate uri
+            String endpoint = host + ":" + String.valueOf(port);
+            String uri = SqlUtil.encodeURI("mysql", endpoint, name, username, password);
 
-		_log.info("delete resource " + String.valueOf(resource.getId())
-				+ " with scope " + resource.getScopeId()
-				+ " for user " + resource.getUserId());
+            // update res
+            res.setName(name);
+            res.setUri(uri);
 
-		// extract info from resource
-		String database = SqlUtil.getDatabase(resource.getUri());
-		String username = SqlUtil.getUsername(resource.getUri());
+            return res;
+        } catch (SQLException sex) {
+            _log.error(sex.getMessage());
+            throw new ResourceProviderException("sql error");
+        }
+    }
 
-		try {
-			// delete user first
-			_log.info("drop user " + username + " for database " + database);
-			_client.deleteUser(database, username);
+    @Override
+    public void updateResource(Resource resource) throws ResourceProviderException {
+        // TODO
 
-			// delete database
-			_log.info("drop database " + database);
-			_client.deleteDatabase(database);
-		} catch (SQLException sex) {
-			_log.error(sex.getMessage());
-			throw new ResourceProviderException("sql error");
-		}
-	}
+    }
 
-	@Override
-	public void checkResource(Resource resource) throws ResourceProviderException {
-		// TODO
-	}
+    @Override
+    public void deleteResource(Resource resource) throws ResourceProviderException {
 
-	/*
-	 * Helpers
-	 */
-	private String generateId(String scopeId, String userId) {
-		// build id from context plus random string
-		StringBuilder sb = new StringBuilder();
-		// cleanup scope and userId to alphanum - will strip non ascii
-		// use only _ as separator
-		sb.append(scopeId.replaceAll("[^A-Za-z0-9]", "")).append("_");
-		sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+        _log.info("delete resource " + String.valueOf(resource.getId())
+                + " with scope " + resource.getScopeId()
+                + " for user " + resource.getUserId());
 
-		// random suffix length 5
-		sb.append(RandomStringUtils.randomAlphanumeric(5));
+        // extract info from resource
+        String database = SqlUtil.getDatabase(resource.getUri());
+        String username = SqlUtil.getUsername(resource.getUri());
 
-		// ensure lowercase
-		return sb.toString().toLowerCase();
-	}
+        try {
+            // delete user first
+            _log.info("drop user " + username + " for database " + database);
+            _client.deleteUser(database, username);
+
+            // delete database
+            _log.info("drop database " + database);
+            _client.deleteDatabase(database);
+        } catch (SQLException sex) {
+            _log.error(sex.getMessage());
+            throw new ResourceProviderException("sql error");
+        }
+    }
+
+    @Override
+    public void checkResource(Resource resource) throws ResourceProviderException {
+        // TODO
+    }
+
+    /*
+     * Helpers
+     */
+    private String generateId(String scopeId, String userId) {
+        // build id from context plus random string
+        StringBuilder sb = new StringBuilder();
+        // cleanup scope and userId to alphanum - will strip non ascii
+        // use only _ as separator
+        sb.append(scopeId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+        sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+
+        // random suffix length 5
+        sb.append(RandomStringUtils.randomAlphanumeric(5));
+
+        // ensure lowercase
+        return sb.toString().toLowerCase();
+    }
 }

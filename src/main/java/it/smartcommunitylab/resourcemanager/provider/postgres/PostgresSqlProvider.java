@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
+import it.smartcommunitylab.resourcemanager.common.DuplicateNameException;
+import it.smartcommunitylab.resourcemanager.common.InvalidNameException;
 import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
@@ -23,180 +25,206 @@ import it.smartcommunitylab.resourcemanager.util.SqlUtil;
 
 @Component
 public class PostgresSqlProvider extends ResourceProvider {
-	private final static Logger _log = LoggerFactory.getLogger(PostgresSqlProvider.class);
+    private final static Logger _log = LoggerFactory.getLogger(PostgresSqlProvider.class);
 
-	public static final String TYPE = SystemKeys.TYPE_SQL;
-	public static final String ID = "postgresSql";
+    public static final String TYPE = SystemKeys.TYPE_SQL;
+    public static final String ID = "postgresSql";
 
-	private int STATUS;
+    private static final String VALID_CHARS = "[a-zA-Z0-9]+";
 
-	@Value("${providers.postgressql.enable}")
-	private boolean enabled;
+    private int STATUS;
 
-	@Value("${providers.postgressql.properties}")
-	private List<String> properties;
+    @Value("${providers.postgressql.enable}")
+    private boolean enabled;
 
-	// postgres connection
-	@Value("${providers.postgressql.host}")
-	private String host;
+    @Value("${providers.postgressql.properties}")
+    private List<String> properties;
 
-	@Value("${providers.postgressql.port}")
-	private int port;
+    // postgres connection
+    @Value("${providers.postgressql.host}")
+    private String host;
 
-	@Value("${providers.postgressql.ssl}")
-	private boolean ssl;
+    @Value("${providers.postgressql.port}")
+    private int port;
 
-	@Value("${providers.postgressql.username}")
-	private String username;
+    @Value("${providers.postgressql.ssl}")
+    private boolean ssl;
 
-	@Value("${providers.postgressql.password}")
-	private String password;
+    @Value("${providers.postgressql.username}")
+    private String username;
 
-	private PostgresSqlClient _client;
+    @Value("${providers.postgressql.password}")
+    private String password;
 
-	@Override
-	public String getId() {
-		return ID;
-	}
+    private PostgresSqlClient _client;
 
-	@Override
-	public String getType() {
-		return TYPE;
-	}
+    @Override
+    public String getId() {
+        return ID;
+    }
 
-	@Override
-	public Set<String> listProperties() {
-		return new HashSet<String>(properties);
-	}
+    @Override
+    public String getType() {
+        return TYPE;
+    }
 
-	/*
-	 * Init method - POST constructor since spring injects properties *after
-	 * creation*
-	 */
-	@PostConstruct
-	public void init() {
-		_log.info("enabled " + String.valueOf(enabled));
-		STATUS = SystemKeys.STATUS_DISABLED;
+    @Override
+    public Set<String> listProperties() {
+        return new HashSet<String>(properties);
+    }
 
-		if (enabled) {
-			_client = new PostgresSqlClient(host, port, ssl, username, password);
-			// check postgres availability
+    /*
+     * Init method - POST constructor since spring injects properties *after
+     * creation*
+     */
+    @PostConstruct
+    public void init() {
+        _log.info("enabled " + String.valueOf(enabled));
+        STATUS = SystemKeys.STATUS_DISABLED;
 
-			if (_client.ping()) {
-				STATUS = SystemKeys.STATUS_READY;
-			} else {
-				STATUS = SystemKeys.STATUS_ERROR;
-			}
+        if (enabled) {
+            _client = new PostgresSqlClient(host, port, ssl, username, password);
+            // check postgres availability
 
-		}
+            if (_client.ping()) {
+                STATUS = SystemKeys.STATUS_READY;
+            } else {
+                STATUS = SystemKeys.STATUS_ERROR;
+            }
 
-		_log.info("init status " + String.valueOf(STATUS));
-	}
+        }
 
-	@Override
-	public int getStatus() {
-		return STATUS;
-	}
+        _log.info("init status " + String.valueOf(STATUS));
+    }
 
-	@Override
-	public Resource createResource(String scopeId, String userId, Map<String, Serializable> properties)
-			throws ResourceProviderException {
-		Resource res = new Resource();
-		res.setType(TYPE);
-		res.setProvider(ID);
-		res.setPropertiesMap(properties);
+    @Override
+    public int getStatus() {
+        return STATUS;
+    }
 
-		try {
-			// generate id with limited tries
-			String name = generateId(scopeId, userId);
-			int retry = 0;
-			boolean exists = _client.hasDatabase(name);
-			while (exists && retry < 5) {
-				name = generateId(scopeId, userId);
-				exists = _client.hasDatabase(name);
-				retry++;
-			}
+    @Override
+    public Resource createResource(String scopeId, String userId, String name, Map<String, Serializable> properties)
+            throws ResourceProviderException, InvalidNameException, DuplicateNameException {
 
-			if (exists) {
-				throw new ResourceProviderException("error creating database");
-			}
+        Resource res = new Resource();
+        res.setType(TYPE);
+        res.setProvider(ID);
+        res.setPropertiesMap(properties);
 
-			_log.info("create database " + name + " with scope " + scopeId + " for user " + userId);
+        try {
+            if (!name.isEmpty()) {
+                // validate name
+                if (!name.matches(VALID_CHARS)) {
+                    throw new InvalidNameException();
+                }
 
-			// create database
-			_client.createDatabase(name);
+                // build scoped name
+                StringBuilder sb = new StringBuilder();
+                sb.append(scopeId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+                sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+                sb.append(name);
 
-			// create username = dbname
-			String username = name;
-			String password = RandomStringUtils.randomAlphanumeric(10);
+                name = sb.toString();
 
-			_log.info("create user " + username + " for database " + name);
+                // check duplicate for scoped name
+                if (_client.hasDatabase(name)) {
+                    throw new DuplicateNameException();
+                }
+            } else {
+                // generate id with limited tries
+                name = generateId(scopeId, userId);
+                int retry = 0;
+                boolean exists = _client.hasDatabase(name);
+                while (exists && retry < 8) {
+                    name = generateId(scopeId, userId);
+                    exists = _client.hasDatabase(name);
+                    retry++;
+                }
 
-			_client.createUser(name, username, password);
+                if (exists) {
+                    throw new ResourceProviderException("error creating database");
+                }
+            }
 
-			// generate uri
-			String endpoint = host + ":" + String.valueOf(port);
-			String uri = SqlUtil.encodeURI("postgressql", endpoint, name, username, password);
-			res.setUri(uri);
+            _log.info("create database " + name + " with scope " + scopeId + " for user " + userId);
 
-			return res;
-		} catch (SQLException sex) {
-			_log.error(sex.getMessage());
-			throw new ResourceProviderException("sql error");
-		}
-	}
+            // create database
+            _client.createDatabase(name);
 
-	@Override
-	public void updateResource(Resource resource) throws ResourceProviderException {
-		// TODO
+            // create username = dbname
+            String username = name;
+            String password = RandomStringUtils.randomAlphanumeric(10);
 
-	}
+            _log.info("create user " + username + " for database " + name);
 
-	@Override
-	public void deleteResource(Resource resource) throws ResourceProviderException {
+            _client.createUser(name, username, password);
 
-		_log.info("delete resource " + String.valueOf(resource.getId())
-				+ " with scope " + resource.getScopeId()
-				+ " for user " + resource.getUserId());
+            // generate uri
+            String endpoint = host + ":" + String.valueOf(port);
+            String uri = SqlUtil.encodeURI("postgressql", endpoint, name, username, password);
 
-		// extract info from resource
-		String database = SqlUtil.getDatabase(resource.getUri());
-		String username = SqlUtil.getUsername(resource.getUri());
+            // update res
+            res.setName(name);
+            res.setUri(uri);
 
-		try {
-			// delete user first
-			_log.info("drop user " + username + " for database " + database);
-			_client.deleteUser(database, username);
+            return res;
+        } catch (SQLException sex) {
+            _log.error(sex.getMessage());
+            throw new ResourceProviderException("sql error");
+        }
+    }
 
-			// delete database
-			_log.info("drop database " + database);
-			_client.deleteDatabase(database);
-		} catch (SQLException sex) {
-			_log.error(sex.getMessage());
-			throw new ResourceProviderException("sql error");
-		}
-	}
+    @Override
+    public void updateResource(Resource resource) throws ResourceProviderException {
+        // TODO
 
-	@Override
-	public void checkResource(Resource resource) throws ResourceProviderException {
-		// TODO
-	}
+    }
 
-	/*
-	 * Helpers
-	 */
-	private String generateId(String scopeId, String userId) {
-		// build id from context plus random string
-		StringBuilder sb = new StringBuilder();
-		// cleanup scope and userId to alphanum - will strip non ascii
-		// use only _ as separator otherwise postgres will complain
-		sb.append(scopeId.replaceAll("[^A-Za-z0-9]", "")).append("_");
-		sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+    @Override
+    public void deleteResource(Resource resource) throws ResourceProviderException {
 
-		// random suffix length 5
-		sb.append(RandomStringUtils.randomAlphanumeric(5));
+        _log.info("delete resource " + String.valueOf(resource.getId())
+                + " with scope " + resource.getScopeId()
+                + " for user " + resource.getUserId());
 
-		// ensure lowercase
-		return sb.toString().toLowerCase();
-	}
+        // extract info from resource
+        String database = SqlUtil.getDatabase(resource.getUri());
+        String username = SqlUtil.getUsername(resource.getUri());
+
+        try {
+            // delete user first
+            _log.info("drop user " + username + " for database " + database);
+            _client.deleteUser(database, username);
+
+            // delete database
+            _log.info("drop database " + database);
+            _client.deleteDatabase(database);
+        } catch (SQLException sex) {
+            _log.error(sex.getMessage());
+            throw new ResourceProviderException("sql error");
+        }
+    }
+
+    @Override
+    public void checkResource(Resource resource) throws ResourceProviderException {
+        // TODO
+    }
+
+    /*
+     * Helpers
+     */
+    private String generateId(String scopeId, String userId) {
+        // build id from context plus random string
+        StringBuilder sb = new StringBuilder();
+        // cleanup scope and userId to alphanum - will strip non ascii
+        // use only _ as separator otherwise postgres will complain
+        sb.append(scopeId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+        sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+
+        // random suffix length 5
+        sb.append(RandomStringUtils.randomAlphanumeric(5));
+
+        // ensure lowercase
+        return sb.toString().toLowerCase();
+    }
 }

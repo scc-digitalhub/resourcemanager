@@ -1,5 +1,7 @@
 package it.smartcommunitylab.resourcemanager.dto;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -22,6 +24,9 @@ public class ResourceDTO {
 
     @ApiModelProperty(notes = "Resource provider", example = "postgres")
     public String provider;
+
+    @ApiModelProperty(notes = "Resource name", example = "db1")
+    public String name;
 
     @ApiModelProperty(notes = "Resource access URI - provider specific", example = "psql://user:pass@endpoint:1234/dbname")
     public String uri;
@@ -51,6 +56,7 @@ public class ResourceDTO {
 
         type = "";
         provider = "";
+        name = "";
         uri = "";
 
         properties = "{}";
@@ -83,6 +89,14 @@ public class ResourceDTO {
 
     public void setProvider(String provider) {
         this.provider = provider;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getUri() {
@@ -143,8 +157,9 @@ public class ResourceDTO {
 
     @Override
     public String toString() {
-        return "ResourceDTO [id=" + id + ", type=" + type + ", provider=" + provider + ", uri=" + uri + ", userId="
-                + userId + ", scopeId=" + scopeId + ", properties=" + properties + "]";
+        return "ResourceDTO [id=" + id + ", type=" + type + ", provider=" + provider + ", name=" + name + ", userId="
+                + userId + ", scopeId=" + scopeId + ", managed=" + managed + ", subscribed=" + subscribed + ", tags="
+                + Arrays.toString(tags) + "]";
     }
 
     public static ResourceDTO fromResource(Resource res) {
@@ -155,6 +170,7 @@ public class ResourceDTO {
 
         dto.type = res.getType();
         dto.provider = res.getProvider();
+        dto.name = res.getName();
 
         // clear private fields
         dto.uri = "";

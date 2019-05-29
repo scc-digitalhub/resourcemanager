@@ -41,6 +41,7 @@ public class Resource {
 
     private String type;
     private String provider;
+    private String name;
     private String uri;
 
     private String userId;
@@ -108,6 +109,14 @@ public class Resource {
 
     public void setProvider(String provider) {
         this.provider = provider;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getUri() {
@@ -200,9 +209,11 @@ public class Resource {
 
     @Override
     public String toString() {
-        return "Resource [id=" + id + ", type=" + type + ", provider=" + provider + ", uri=" + uri + ", userId="
-                + userId + ", scopeId=" + scopeId + ", createdDate=" + createdDate + ", modifiedDate=" + modifiedDate
-                + ", createdBy=" + createdBy + ", lastModifiedBy=" + lastModifiedBy + "]";
+        return "Resource [id=" + id + ", type=" + type + ", provider=" + provider + ", name=" + name + ", uri=" + uri
+                + ", userId=" + userId + ", scopeId=" + scopeId + ", properties=" + properties + ", managed=" + managed
+                + ", subscribed=" + subscribed + ", tags=" + tags + ", createdDate=" + createdDate + ", modifiedDate="
+                + modifiedDate + ", createdBy=" + createdBy + ", lastModifiedBy=" + lastModifiedBy + ", map=" + map
+                + "]";
     }
 
     @Transient
@@ -289,6 +300,7 @@ public class Resource {
         res.id = source.id;
         res.type = source.type;
         res.provider = source.provider;
+        res.name = source.name;
         res.uri = source.uri;
 
         res.userId = source.userId;

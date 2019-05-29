@@ -9,13 +9,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
+import it.smartcommunitylab.resourcemanager.common.DuplicateNameException;
+import it.smartcommunitylab.resourcemanager.common.InvalidNameException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
 import it.smartcommunitylab.resourcemanager.common.NoSuchResourceException;
 import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
@@ -51,9 +52,10 @@ public class ResourceLocalService {
     /*
      * Data
      */
-    public Resource create(String scopeId, String userId, String type, String providerId,
+    public Resource create(String scopeId, String userId,
+            String type, String providerId, String name,
             Map<String, Serializable> properties, List<String> tags)
-            throws NoSuchProviderException, ResourceProviderException {
+            throws NoSuchProviderException, ResourceProviderException, InvalidNameException, DuplicateNameException {
         _log.info("create " + type + " resource with " + String.valueOf(providerId) + " by user " + userId);
 
         // call provider to require creation
@@ -63,7 +65,7 @@ public class ResourceLocalService {
             throw new NoSuchProviderException();
         }
         // sync call - should validate properties
-        Resource res = provider.createResource(scopeId, userId, properties);
+        Resource res = provider.createResource(scopeId, userId, name, properties);
 
         // update fields
         res.setScopeId(scopeId);
