@@ -15,6 +15,7 @@ import it.smartcommunitylab.resourcemanager.common.ConsumerException;
 import it.smartcommunitylab.resourcemanager.model.Consumer;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 import it.smartcommunitylab.resourcemanager.model.Resource;
+import it.smartcommunitylab.resourcemanager.provider.cockroachdb.CockroachDBProvider;
 import it.smartcommunitylab.resourcemanager.provider.mysql.MySqlProvider;
 import it.smartcommunitylab.resourcemanager.provider.postgres.PostgresSqlProvider;
 import it.smartcommunitylab.resourcemanager.util.SqlUtil;
@@ -247,6 +248,10 @@ public class DremioConsumer extends Consumer {
         switch (provider) {
         case PostgresSqlProvider.ID:
             type = "POSTGRES";
+            break;
+        case CockroachDBProvider.ID:
+            // cockroachDB supports postgres line protocol
+            type = "postgres";
             break;
         case MySqlProvider.ID:
             type = "MYSQL";
