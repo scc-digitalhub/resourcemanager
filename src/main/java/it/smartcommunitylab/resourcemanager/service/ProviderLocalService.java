@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.common.NoSuchProviderException;
-import it.smartcommunitylab.resourcemanager.model.ConsumerBuilder;
 import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 
 @Component
