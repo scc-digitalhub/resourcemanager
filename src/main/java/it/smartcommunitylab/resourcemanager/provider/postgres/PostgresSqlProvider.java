@@ -35,26 +35,26 @@ public class PostgresSqlProvider extends ResourceProvider {
     private int STATUS;
 
     @Value("${providers.postgressql.enable}")
-    private boolean enabled;
+    private boolean ENABLED;
 
     @Value("${providers.postgressql.properties}")
-    private List<String> properties;
+    private List<String> PROPERTIES;
 
     // postgres connection
     @Value("${providers.postgressql.host}")
-    private String host;
+    private String HOST;
 
     @Value("${providers.postgressql.port}")
-    private int port;
+    private int PORT;
 
     @Value("${providers.postgressql.ssl}")
-    private boolean ssl;
+    private boolean SSL;
 
     @Value("${providers.postgressql.username}")
-    private String username;
+    private String USERNAME;
 
     @Value("${providers.postgressql.password}")
-    private String password;
+    private String PASSWORD;
 
     private PostgresSqlClient _client;
 
@@ -70,7 +70,7 @@ public class PostgresSqlProvider extends ResourceProvider {
 
     @Override
     public Set<String> listProperties() {
-        return new HashSet<String>(properties);
+        return new HashSet<String>(PROPERTIES);
     }
 
     /*
@@ -79,11 +79,11 @@ public class PostgresSqlProvider extends ResourceProvider {
      */
     @PostConstruct
     public void init() {
-        _log.info("enabled " + String.valueOf(enabled));
+        _log.info("enabled " + String.valueOf(ENABLED));
         STATUS = SystemKeys.STATUS_DISABLED;
 
-        if (enabled) {
-            _client = new PostgresSqlClient(host, port, ssl, username, password);
+        if (ENABLED) {
+            _client = new PostgresSqlClient(HOST, PORT, SSL, USERNAME, PASSWORD);
             // check postgres availability
 
             if (_client.ping()) {
@@ -160,7 +160,7 @@ public class PostgresSqlProvider extends ResourceProvider {
             _client.createUser(name, username, password);
 
             // generate uri
-            String endpoint = host + ":" + String.valueOf(port);
+            String endpoint = HOST + ":" + String.valueOf(PORT);
             String uri = SqlUtil.encodeURI("postgressql", endpoint, name, username, password);
 
             // update res
@@ -192,13 +192,17 @@ public class PostgresSqlProvider extends ResourceProvider {
         String username = SqlUtil.getUsername(resource.getUri());
 
         try {
-            // delete user first
-            _log.info("drop user " + username + " for database " + database);
-            _client.deleteUser(database, username);
+            if (!USERNAME.equals(username) && !username.isEmpty()) {
+                // delete user first
+                _log.info("drop user " + username + " for database " + database);
+                _client.deleteUser(database, username);
+            }
 
-            // delete database
-            _log.info("drop database " + database);
-            _client.deleteDatabase(database);
+            if (!database.isEmpty()) {
+                // delete database
+                _log.info("drop database " + database);
+                _client.deleteDatabase(database);
+            }
         } catch (SQLException sex) {
             _log.error(sex.getMessage());
             throw new ResourceProviderException("sql error");

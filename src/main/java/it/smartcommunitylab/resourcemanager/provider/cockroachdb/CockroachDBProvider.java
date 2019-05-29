@@ -35,26 +35,29 @@ public class CockroachDBProvider extends ResourceProvider {
     private int STATUS;
 
     @Value("${providers.cockroachdb.enable}")
-    private boolean enabled;
+    private boolean ENABLED;
 
     @Value("${providers.cockroachdb.properties}")
-    private List<String> properties;
+    private List<String> PROPERTIES;
 
     // CockroachDB connection
     @Value("${providers.cockroachdb.host}")
-    private String host;
+    private String HOST;
 
     @Value("${providers.cockroachdb.port}")
-    private int port;
+    private int PORT;
 
     @Value("${providers.cockroachdb.ssl}")
-    private boolean ssl;
+    private boolean SSL;
 
     @Value("${providers.cockroachdb.username}")
-    private String username;
+    private String USERNAME;
 
     @Value("${providers.cockroachdb.password}")
-    private String password;
+    private String PASSWORD;
+
+    @Value("${providers.cockroachdb.insecure}")
+    private boolean INSECURE;
 
     private CockroachDBClient _client;
 
@@ -70,7 +73,7 @@ public class CockroachDBProvider extends ResourceProvider {
 
     @Override
     public Set<String> listProperties() {
-        return new HashSet<String>(properties);
+        return new HashSet<String>(PROPERTIES);
     }
 
     /*
@@ -79,11 +82,11 @@ public class CockroachDBProvider extends ResourceProvider {
      */
     @PostConstruct
     public void init() {
-        _log.info("enabled " + String.valueOf(enabled));
+        _log.info("enabled " + String.valueOf(ENABLED));
         STATUS = SystemKeys.STATUS_DISABLED;
 
-        if (enabled) {
-            _client = new CockroachDBClient(host, port, ssl, username, password);
+        if (ENABLED) {
+            _client = new CockroachDBClient(HOST, PORT, SSL, USERNAME, PASSWORD);
             // check CockroachDB availability
 
             if (_client.ping()) {
@@ -150,18 +153,24 @@ public class CockroachDBProvider extends ResourceProvider {
             // create database
             _client.createDatabase(name);
 
-            // create username = dbname
-            String username = name;
-            String password = RandomStringUtils.randomAlphanumeric(10);
-
-            _log.info("create user " + username + " for database " + name);
-
-            _client.createUser(name, username, password);
-
             // generate uri
-            String endpoint = host + ":" + String.valueOf(port);
-            String uri = SqlUtil.encodeURI("cockroachdb", endpoint, name, username, password);
-            
+            String endpoint = HOST + ":" + String.valueOf(PORT);
+            String uri = SqlUtil.encodeURI("cockroachdb", endpoint, name);
+
+            // if cluster in insecure mode user creation is disabled!
+            if (!INSECURE) {
+                // create username = dbname
+                String username = name;
+                String password = RandomStringUtils.randomAlphanumeric(10);
+
+                _log.info("create user " + username + " for database " + name);
+
+                _client.createUser(name, username, password);
+
+                // generate uri
+                uri = SqlUtil.encodeURI("cockroachdb", endpoint, name, username, password);
+            }
+
             // update res
             res.setName(name);
             res.setUri(uri);
@@ -191,13 +200,19 @@ public class CockroachDBProvider extends ResourceProvider {
         String username = SqlUtil.getUsername(resource.getUri());
 
         try {
-            // delete user first
-            _log.info("drop user " + username + " for database " + database);
-            _client.deleteUser(database, username);
+            if (!INSECURE) {
+                if (!USERNAME.equals(username) && !username.isEmpty()) {
+                    // delete user first
+                    _log.info("drop user " + username + " for database " + database);
+                    _client.deleteUser(database, username);
+                }
+            }
 
-            // delete database
-            _log.info("drop database " + database);
-            _client.deleteDatabase(database);
+            if (!database.isEmpty()) {
+                // delete database
+                _log.info("drop database " + database);
+                _client.deleteDatabase(database);
+            }
         } catch (SQLException sex) {
             _log.error(sex.getMessage());
             throw new ResourceProviderException("sql error");

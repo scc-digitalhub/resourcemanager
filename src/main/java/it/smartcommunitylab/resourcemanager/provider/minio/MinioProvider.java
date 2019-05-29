@@ -34,35 +34,35 @@ public class MinioProvider extends ResourceProvider {
     private int STATUS;
 
     @Value("${providers.minio.enable}")
-    private boolean enabled;
+    private boolean ENABLED;
 
     @Value("${providers.minio.properties}")
-    private List<String> properties;
+    private List<String> PROPERTIES;
 
     // minio play connection
     @Value("${providers.minio.host}")
-    private String host;
+    private String HOST;
 
     @Value("${providers.minio.port}")
-    private int port;
+    private int PORT;
 
     @Value("${providers.minio.ssl}")
-    private boolean ssl;
+    private boolean SSL;
 
     @Value("${providers.minio.accessKey}")
-    private String accessKey;
+    private String ACCESS_KEY;
 
     @Value("${providers.minio.secretKey}")
-    private String secretKey;
+    private String SECRET_KEY;
 
     @Value("${providers.minio.userAccessKey}")
-    private String userAccessKey;
+    private String USER_ACCESS_KEY;
 
     @Value("${providers.minio.userSecretKey}")
-    private String userSecretKey;
+    private String USER_SECRET_KEY;
 
     @Value("${providers.minio.clearOnDelete}")
-    private boolean clearOnDelete;
+    private boolean CLEAR_ON_DELETE;
 
     private MinioS3Client _client;
 
@@ -78,7 +78,7 @@ public class MinioProvider extends ResourceProvider {
 
     @Override
     public Set<String> listProperties() {
-        return new HashSet<String>(properties);
+        return new HashSet<String>(PROPERTIES);
     }
 
     /*
@@ -87,11 +87,11 @@ public class MinioProvider extends ResourceProvider {
      */
     @PostConstruct
     public void init() {
-        _log.info("enabled " + String.valueOf(enabled));
+        _log.info("enabled " + String.valueOf(ENABLED));
         STATUS = SystemKeys.STATUS_DISABLED;
 
-        if (enabled) {
-            _client = new MinioS3Client(host, port, ssl, accessKey, secretKey);
+        if (ENABLED) {
+            _client = new MinioS3Client(HOST, PORT, SSL, ACCESS_KEY, SECRET_KEY);
             // check minio status
             // TODO implement status check
             // via REST api on client
@@ -165,8 +165,8 @@ public class MinioProvider extends ResourceProvider {
             // set in properties
 
             // generate uri
-            String endpoint = host + ":" + String.valueOf(port);
-            String uri = MinioUtils.encodeURI(endpoint, name, userAccessKey, userSecretKey);
+            String endpoint = HOST + ":" + String.valueOf(PORT);
+            String uri = MinioUtils.encodeURI(endpoint, name, USER_ACCESS_KEY, USER_SECRET_KEY);
 
             // update res
             res.setName(name);
@@ -197,8 +197,8 @@ public class MinioProvider extends ResourceProvider {
 
         try {
             // delete bucket with drop all objects?
-            _log.info("drop bucket " + bucket + " with clear:" + String.valueOf(clearOnDelete));
-            _client.deleteBucket(bucket, clearOnDelete);
+            _log.info("drop bucket " + bucket + " with clear:" + String.valueOf(CLEAR_ON_DELETE));
+            _client.deleteBucket(bucket, CLEAR_ON_DELETE);
 
             // delete user - TODO
             // only if dynamic 1user-per-bucket implemented

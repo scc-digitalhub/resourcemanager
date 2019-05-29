@@ -35,23 +35,23 @@ public class MySqlProvider extends ResourceProvider {
     private int STATUS;
 
     @Value("${providers.mysql.enable}")
-    private boolean enabled;
+    private boolean ENABLED;
 
     @Value("${providers.mysql.properties}")
-    private List<String> properties;
+    private List<String> PROPERTIES;
 
     // mysql connection
     @Value("${providers.mysql.host}")
-    private String host;
+    private String HOST;
 
     @Value("${providers.mysql.port}")
-    private int port;
+    private int PORT;
 
     @Value("${providers.mysql.username}")
-    private String username;
+    private String USERNAME;
 
     @Value("${providers.mysql.password}")
-    private String password;
+    private String PASSWORD;
 
     private MySqlClient _client;
 
@@ -67,7 +67,7 @@ public class MySqlProvider extends ResourceProvider {
 
     @Override
     public Set<String> listProperties() {
-        return new HashSet<String>(properties);
+        return new HashSet<String>(PROPERTIES);
     }
 
     /*
@@ -76,11 +76,11 @@ public class MySqlProvider extends ResourceProvider {
      */
     @PostConstruct
     public void init() {
-        _log.info("enabled " + String.valueOf(enabled));
+        _log.info("enabled " + String.valueOf(ENABLED));
         STATUS = SystemKeys.STATUS_DISABLED;
 
-        if (enabled) {
-            _client = new MySqlClient(host, port, username, password);
+        if (ENABLED) {
+            _client = new MySqlClient(HOST, PORT, USERNAME, PASSWORD);
             // check mysql availability
 
             if (_client.ping()) {
@@ -156,7 +156,7 @@ public class MySqlProvider extends ResourceProvider {
             _client.createUser(name, username, password);
 
             // generate uri
-            String endpoint = host + ":" + String.valueOf(port);
+            String endpoint = HOST + ":" + String.valueOf(PORT);
             String uri = SqlUtil.encodeURI("mysql", endpoint, name, username, password);
 
             // update res
@@ -188,13 +188,17 @@ public class MySqlProvider extends ResourceProvider {
         String username = SqlUtil.getUsername(resource.getUri());
 
         try {
-            // delete user first
-            _log.info("drop user " + username + " for database " + database);
-            _client.deleteUser(database, username);
+            if (!USERNAME.equals(username) && !username.isEmpty()) {
+                // delete user first
+                _log.info("drop user " + username + " for database " + database);
+                _client.deleteUser(database, username);
+            }
 
-            // delete database
-            _log.info("drop database " + database);
-            _client.deleteDatabase(database);
+            if (!database.isEmpty()) {
+                // delete database
+                _log.info("drop database " + database);
+                _client.deleteDatabase(database);
+            }
         } catch (SQLException sex) {
             _log.error(sex.getMessage());
             throw new ResourceProviderException("sql error");
