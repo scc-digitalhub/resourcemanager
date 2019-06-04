@@ -164,7 +164,7 @@ public class DremioConsumer extends Consumer {
 
     @Override
     public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
+        if (checkScope(resource.getScopeId())) {
             _log.debug("update resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -179,9 +179,17 @@ public class DremioConsumer extends Consumer {
                     String database = SqlUtil.getDatabase(uri);
                     String name = type.toLowerCase() + "_" + database;
 
-                    name = _client.updateSource(type, name, host, port, database, uname, passw);
-
-                    _log.debug("updated source " + name);
+                    if (checkTags(resource.getTags())) {
+                        // matches, update client
+                        name = _client.updateSource(type, name, host, port, database, uname, passw);
+                        _log.debug("updated source " + name);
+                    } else {
+                        if (_client.hasSource(name)) {
+                            // remove previously existing resource
+                            _client.deleteSource(name);
+                            _log.debug("deleted source " + name);
+                        }
+                    }
                 }
             } catch (DremioException e) {
                 _log.error("dremio error " + e.getMessage());

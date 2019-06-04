@@ -154,13 +154,13 @@ public class SqlpadConsumer extends Consumer {
 
     @Override
     public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
+        if (checkScope(resource.getScopeId())) {
             _log.debug("update resource " + resource.toString());
             try {
                 // fetch provider driver from supported
                 String driver = getDriver(resource.getProvider());
                 if (!driver.isEmpty()) {
-                    // supported
+                    // supported, fetch details
                     String uri = resource.getUri();
                     String host = SqlUtil.getHost(uri);
                     int port = SqlUtil.getPort(uri);
@@ -169,14 +169,22 @@ public class SqlpadConsumer extends Consumer {
                     String database = SqlUtil.getDatabase(uri);
                     String name = driver + "_" + database;
 
-                    String padId = _client.updateConnection(driver, name, host, port, database, uname, passw);
-
-                    _log.debug("updated pad " + padId);
+                    if (checkTags(resource.getTags())) {
+                        // matches, update client
+                        String padId = _client.updateConnection(driver, name, host, port, database, uname, passw);
+                        _log.debug("updated pad " + padId);
+                    } else {
+                        // remove previously existing resource
+                        // will do nothing if not exists
+                        String padId = _client.deleteConnection(driver, name);
+                        _log.debug("delete pad " + padId);
+                    }
                 }
             } catch (SqlpadException e) {
                 _log.error("sqlpad error " + e.getMessage());
                 throw new ConsumerException(e.getMessage());
             }
+
         }
     }
 
