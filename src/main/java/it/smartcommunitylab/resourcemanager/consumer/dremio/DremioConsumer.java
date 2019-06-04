@@ -152,7 +152,6 @@ public class DremioConsumer extends Consumer {
                     String name = type.toLowerCase() + "_" + database;
 
                     name = _client.addSource(type, name, host, port, database, uname, passw);
-
                     _log.debug("created source " + name);
                 }
             } catch (DremioException e) {
@@ -180,9 +179,16 @@ public class DremioConsumer extends Consumer {
                     String name = type.toLowerCase() + "_" + database;
 
                     if (checkTags(resource.getTags())) {
-                        // matches, update client
-                        name = _client.updateSource(type, name, host, port, database, uname, passw);
-                        _log.debug("updated source " + name);
+                        // matches, update or create via client
+                        if (_client.hasSource(name)) {
+                            // exists, update
+                            name = _client.updateSource(type, name, host, port, database, uname, passw);
+                            _log.debug("updated source " + name);
+                        } else {
+                            // create as new
+                            name = _client.addSource(type, name, host, port, database, uname, passw);
+                            _log.debug("created source " + name);
+                        }
                     } else {
                         if (_client.hasSource(name)) {
                             // remove previously existing resource

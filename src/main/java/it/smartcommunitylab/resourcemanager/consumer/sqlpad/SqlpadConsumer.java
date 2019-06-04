@@ -170,7 +170,8 @@ public class SqlpadConsumer extends Consumer {
                     String name = driver + "_" + database;
 
                     if (checkTags(resource.getTags())) {
-                        // matches, update client
+                        // matches, update or create via client
+                        // will add as new if not existing
                         String padId = _client.updateConnection(driver, name, host, port, database, uname, passw);
                         _log.debug("updated pad " + padId);
                     } else {
