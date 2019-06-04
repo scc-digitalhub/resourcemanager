@@ -233,7 +233,9 @@ public class ConsumerLocalService {
             try {
                 // fetch full resource definition (ie unencrypted)
                 Resource r = resourceLocalService.get(res.getId());
-                c.addResource(scopeId, userId, r);
+//                c.addResource(scopeId, userId, r);
+                // use UPDATE to create IF MISSING
+                c.updateResource(scopeId, userId, r);
             } catch (Exception ex) {
                 _log.error("error registering resource " + res.getId() + ": " + ex.getMessage());
             }
@@ -263,7 +265,21 @@ public class ConsumerLocalService {
             // re-create consumer as new
             Consumer c = buildConsumer(reg);
             _consumers.get(type).add(c);
-            // no need to trigger resource creation on update
+
+            // trigger update on consumer for all existing resources
+            // TODO rework
+            List<Resource> resources = resourceLocalService.listByTypeAndScopeId(type, reg.getScopeId());
+
+            for (Resource res : resources) {
+                try {
+                    // fetch full resource definition (ie unencrypted)
+                    Resource r = resourceLocalService.get(res.getId());
+                    // use UPDATE to create IF MISSING
+                    c.updateResource(reg.getScopeId(), reg.getUserId(), r);
+                } catch (Exception ex) {
+                    _log.error("error registering resource " + res.getId() + ": " + ex.getMessage());
+                }
+            }
 
             return reg;
         } catch (NoSuchRegistrationException nrex) {
@@ -300,7 +316,7 @@ public class ConsumerLocalService {
 
             // lookup for consumer
             Consumer consumer = consumerByRegistrationId(type, reg.getId());
-            
+
             if (consumer != null) {
                 return consumer;
             } else {
