@@ -68,6 +68,9 @@ public class AuthController {
     @Value("${scopes.default}")
     private String defaultScope;
 
+    @Value("${application.url}")
+    private String applicationURL;
+
     @Autowired
     private ScopePermissionEvaluator permissionEvaluator;
 
@@ -83,14 +86,18 @@ public class AuthController {
         String currentURL = request.getRequestURL().toString();
         String callbackURL = currentURL.replace("/auth/login", "/auth/callback");
 
+        if (!applicationURL.isEmpty()) {
+            callbackURL = applicationURL.concat("/api/auth/callback");
+        }
+
         // build authorization parameters
         attributes.addAttribute("response_type", "code");
         attributes.addAttribute("client_id", clientId);
         attributes.addAttribute("scope", oauthScopes);
         attributes.addAttribute("redirect_uri", callbackURL);
 
-        _log.info("send redirect to " + authorizationURL);
-        _log.info(attributes.asMap().toString());
+        _log.debug("send redirect to oauth at " + authorizationURL);
+        _log.debug(attributes.asMap().toString());
 
         return new RedirectView(authorizationURL, false);
     }
@@ -104,6 +111,10 @@ public class AuthController {
 //        String redirectURL = "/#/callback";
         String redirectURL = currentURL.replace("/api/auth/callback", "/#/callback");
 
+        if (!applicationURL.isEmpty()) {
+            redirectURL = applicationURL.concat("/#/callback");
+        }
+
         String code = request.getParameter("code");
         String state = request.getParameter("state");
 
@@ -111,7 +122,8 @@ public class AuthController {
             throw new LoginException("invalid code");
         }
 
-        _log.debug("oauth authorization code " + code);
+        _log.debug("oauth callback");
+        _log.trace("oauth authorization code " + code);
 
         RestTemplate template = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -132,8 +144,8 @@ public class AuthController {
 //        map.add("client_secret", clientSecret);
         map.add("redirect_uri", currentURL);
 
-        _log.debug("call token url at " + tokenURL);
-        _log.info(map.toString());
+        _log.trace("call token url at " + tokenURL);
+        _log.trace(map.toString());
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<MultiValueMap<String, String>>(map, headers);
 
@@ -148,11 +160,14 @@ public class AuthController {
             // parse as json
             JSONObject json = new JSONObject(result.getBody());
 
-            _log.debug(json.toString());
+            _log.trace(json.toString());
 
             // extract tokens
             String accessToken = json.optString("access_token", "");
             String refreshToken = json.optString("refresh_token", "");
+
+            _log.trace("access token " + accessToken);
+            _log.trace("refresh token " + refreshToken);
 
             if (accessToken.isEmpty()) {
                 _log.error("empty access token");
@@ -167,7 +182,7 @@ public class AuthController {
             // append token - should be already urlencoded
             redirectURL = redirectURL.concat("?token=" + accessToken);
 
-            _log.info("send redirect to " + redirectURL);
+            _log.debug("send redirect to " + redirectURL);
             response.sendRedirect(redirectURL);
 
         } catch (JSONException jex) {
