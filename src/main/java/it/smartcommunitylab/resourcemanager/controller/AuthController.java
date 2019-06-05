@@ -40,6 +40,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.model.UserSession;
 import it.smartcommunitylab.resourcemanager.security.ScopePermissionEvaluator;
 import it.smartcommunitylab.resourcemanager.util.ControllerUtil;
@@ -70,6 +71,9 @@ public class AuthController {
 
     @Value("${application.url}")
     private String applicationURL;
+
+    @Value("${permissions.enabled}")
+    private boolean permissionsEnabled;
 
     @Autowired
     private ScopePermissionEvaluator permissionEvaluator;
@@ -213,11 +217,16 @@ public class AuthController {
         }
 
         String userId = ControllerUtil.getUserId(request);
-
-        List<String> roles = permissionEvaluator.getScopeRoles(defaultScope, auth);
         Set<String> permissions = new HashSet<>();
-        for (String role : roles) {
-            permissions.addAll(permissionEvaluator.roleToPermissions(role));
+        List<String> roles = permissionEvaluator.getScopeRoles(defaultScope, auth);
+
+        if (permissionsEnabled) {
+            for (String role : roles) {
+                permissions.addAll(permissionEvaluator.roleToPermissions(role));
+            }
+        } else {
+            roles.add(SystemKeys.ROLE_ADMIN);
+            permissions.addAll(permissionEvaluator.roleToPermissions(SystemKeys.ROLE_ADMIN));
         }
 
         UserSession session = new UserSession();
