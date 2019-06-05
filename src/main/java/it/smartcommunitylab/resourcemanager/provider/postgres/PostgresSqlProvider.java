@@ -22,6 +22,7 @@ import it.smartcommunitylab.resourcemanager.common.ResourceProviderException;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 import it.smartcommunitylab.resourcemanager.util.SqlUtil;
+import it.smartcommunitylab.resourcemanager.util.StringUtils;
 
 @Component
 public class PostgresSqlProvider extends ResourceProvider {
@@ -222,11 +223,11 @@ public class PostgresSqlProvider extends ResourceProvider {
         StringBuilder sb = new StringBuilder();
         // cleanup scope and userId to alphanum - will strip non ascii
         // use only _ as separator otherwise postgres will complain
-        sb.append(scopeId.replaceAll("[^A-Za-z0-9]", "")).append("_");
-        sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
-
-        // random suffix length 5
-        sb.append(RandomStringUtils.randomAlphanumeric(5));
+        sb.append(StringUtils.shorten(scopeId.replaceAll("[^A-Za-z0-9]", ""), 10).toLowerCase()).append("_");
+        sb.append(StringUtils.shorten(userId.replaceAll("[^A-Za-z0-9]", ""), 12).toLowerCase()).append("_");
+        
+        // random suffix length 6
+        sb.append(RandomStringUtils.randomAlphanumeric(6));
 
         // ensure lowercase
         return sb.toString().toLowerCase();
