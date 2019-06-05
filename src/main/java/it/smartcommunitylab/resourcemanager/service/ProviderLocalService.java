@@ -25,12 +25,12 @@ public class ProviderLocalService {
     @Autowired
     private Map<String, ResourceProvider> _providers;
 
-    public Map<String, ResourceProvider> availableProviders() {
-        // return only active providers
-        return _providers.entrySet().stream()
-                .filter(entry -> (entry.getValue().getStatus() > -1))
-                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-    }
+//    public Map<String, ResourceProvider> availableProviders() {
+//        // return only active providers
+//        return _providers.entrySet().stream()
+//                .filter(entry -> (entry.getValue().getStatus() > -1))
+//                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+//    }
 
     public Map<String, List<ResourceProvider>> listProviders() {
         Map<String, List<ResourceProvider>> map = new HashMap<>();
@@ -77,13 +77,29 @@ public class ProviderLocalService {
             id = id.concat("Provider");
         }
 
-        if (!_providers.containsKey(id)) {
-            _log.error("no provider for " + id);
+//        if (!_providers.containsKey(id)) {
+//            _log.error("no provider for " + id);
+//
+//            throw new NoSuchProviderException();
+//        }
 
-            throw new NoSuchProviderException();
+        ResourceProvider provider = null;
+        if (_providers.containsKey(id)) {
+            provider = _providers.get(id);
+        } else {
+            // iterate to match
+            for (String p : _providers.keySet()) {
+                if (p.compareToIgnoreCase(id) == 0) {
+                    provider = _providers.get(p);
+                    break;
+                }
+            }
         }
 
-        ResourceProvider provider = _providers.get(id);
+        if (provider == null) {
+            _log.error("no provider for " + id);
+            throw new NoSuchProviderException();
+        }
 
         // check if enabled
         if (provider.getStatus() < 0) {
