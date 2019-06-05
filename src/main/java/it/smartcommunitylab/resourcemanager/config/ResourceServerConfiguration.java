@@ -13,23 +13,29 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Res
 @EnableWebSecurity
 public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter {
 
-	@Value("${security.oauth2.resource.id}")
-	private String RESOURCE_ID;
+    @Value("${security.oauth2.resource.id}")
+    private String RESOURCE_ID;
 
-	@Override
-	public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
-		resources.resourceId(RESOURCE_ID);
-	}
+    @Value("${auth.enabled}")
+    private boolean authenticate;
 
-	@Override
-	public void configure(HttpSecurity http) throws Exception {
-		http
-				.authorizeRequests()
-				.antMatchers("/resources/**", "/consumers/**", "/builders/**", "/providers/**")
-				.authenticated();
-//				.permitAll();
-//				.and()
-//				.oauth2Login();
-	}
+    @Override
+    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
+        resources.resourceId(RESOURCE_ID);
+    }
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        if (authenticate) {
+            http
+                    .authorizeRequests()
+                    .antMatchers("/api/auth/**").permitAll()
+                    .antMatchers("/api/**")
+                    .authenticated();
+
+        } else {
+            http.authorizeRequests().anyRequest().permitAll();
+        }
+    }
 
 }

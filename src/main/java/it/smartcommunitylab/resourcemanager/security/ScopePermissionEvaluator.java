@@ -62,6 +62,8 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
             scopes.add(defaultScope);
         }
 
+        _log.debug("scopes: " + scopes.toString());
+
         // set default mappings
         if (roleAdminMapping.isEmpty()) {
             roleAdminMapping = SystemKeys.ROLE_ADMIN;
@@ -75,6 +77,12 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
         if (roleUserMapping.isEmpty()) {
             roleUserMapping = SystemKeys.ROLE_USER;
         }
+
+        _log.debug("role mapping " + SystemKeys.ROLE_ADMIN + " to " + roleAdminMapping);
+        _log.debug("role mapping " + SystemKeys.ROLE_RESOURCE_ADMIN + " to " + roleResourceAdminMapping);
+        _log.debug("role mapping " + SystemKeys.ROLE_CONSUMER_ADMIN + " to " + roleConsumerAdminMapping);
+        _log.debug("role mapping " + SystemKeys.ROLE_USER + " to " + roleUserMapping);
+
     }
 
     @Override
