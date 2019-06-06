@@ -112,10 +112,12 @@ public class AuthController {
             HttpServletRequest request, HttpServletResponse response) throws LoginException {
 
         String currentURL = request.getRequestURL().toString();
+        String redirectURI = currentURL;
 //        String redirectURL = "/#/callback";
         String redirectURL = currentURL.replace("/api/auth/callback", "/#/callback");
 
         if (!applicationURL.isEmpty()) {
+            redirectURI = applicationURL.concat("/api/auth/callback");
             redirectURL = applicationURL.concat("/#/callback");
         }
 
@@ -146,7 +148,7 @@ public class AuthController {
         map.add("code", code);
 //        map.add("client_id", clientId);
 //        map.add("client_secret", clientSecret);
-        map.add("redirect_uri", currentURL);
+        map.add("redirect_uri", redirectURI);
 
         _log.trace("call token url at " + tokenURL);
         _log.trace(map.toString());

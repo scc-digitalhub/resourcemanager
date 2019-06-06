@@ -111,6 +111,9 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
 
         // fetch ONLY scope roles
         List<GrantedAuthority> authorities = new ArrayList<>(authentication.getAuthorities());
+        _log.debug("user " + userId + " authorities " + authorities.toString());
+
+        
         Set<String> roles = new HashSet<>();
         roles.addAll(getScopeRoles(scopeId, authorities));
 
