@@ -5,6 +5,8 @@ import java.util.Arrays;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -15,6 +17,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 public class DremioClient {
+    private final static Logger _log = LoggerFactory.getLogger(DremioClient.class);
+
     private String ENDPOINT;
     private String USERNAME;
     private String PASSWORD;
@@ -120,6 +124,8 @@ public class DremioClient {
 
             RestTemplate template = template();
             HttpHeaders headers = connect("");
+            
+            _log.trace("add source json "+json.toString());
 
             HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
 
@@ -194,6 +200,11 @@ public class DremioClient {
 //            return getMySqlConfiguration(host, port, database, username, password);
         }
 
+        if (type.equals("S3")) {
+            // requires forken dremio to disable per bucket region lookup
+            return getS3Configuration(host, port, database, username, password);
+        }
+
         return null;
 
     }
@@ -225,6 +236,39 @@ public class DremioClient {
         json.put("hostname", host);
         json.put("port", Integer.toString(port));
         json.put("databaseName", database);
+
+        return json;
+
+    }
+
+    private JSONObject getS3Configuration(
+            String host, int port,
+            String bucket,
+            String accessKey, String secretKey) {
+        JSONObject json = new JSONObject();
+
+        json.put("credentialType", "ACCESS_KEY");
+        json.put("accessKey", accessKey);
+        json.put("accessSecret", secretKey);
+        json.put("secure", false);
+        json.put("externalBucketList", new JSONArray());
+        json.put("enableAsync", true);
+        json.put("allowCreateDrop", false);
+        json.put("rootPath", "/" + bucket);
+        
+        //custom properties for hadoop.s3a
+        JSONArray properties = new JSONArray();
+        JSONObject endpoint = new JSONObject();
+        endpoint.put("name", "fs.s3a.endpoint");
+        endpoint.put("value", "http://"+host+":"+Integer.toString(port));
+        properties.put(endpoint);
+        
+        JSONObject pathStyle = new JSONObject();
+        pathStyle.put("name", "fs.s3a.path.style.access");
+        pathStyle.put("value", true);
+        properties.put(pathStyle);       
+        
+        json.put("propertyList", properties);
 
         return json;
 

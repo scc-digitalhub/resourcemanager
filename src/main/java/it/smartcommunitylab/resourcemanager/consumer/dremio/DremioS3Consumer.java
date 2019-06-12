@@ -22,12 +22,12 @@ import it.smartcommunitylab.resourcemanager.provider.mysql.MySqlProvider;
 import it.smartcommunitylab.resourcemanager.provider.postgres.PostgresSqlProvider;
 import it.smartcommunitylab.resourcemanager.util.SqlUtil;
 
-public class DremioConsumer extends Consumer {
+public class DremioS3Consumer extends Consumer {
 
-    private final static Logger _log = LoggerFactory.getLogger(DremioConsumer.class);
+    private final static Logger _log = LoggerFactory.getLogger(DremioS3Consumer.class);
 
-    public static final String TYPE = SystemKeys.TYPE_SQL;
-    public static final String ID = "dremio";
+    public static final String TYPE = SystemKeys.TYPE_OBJECT;
+    public static final String ID = "dremios3";
 
     // sqlpad connection
     private String endpoint;
@@ -44,7 +44,7 @@ public class DremioConsumer extends Consumer {
 
     private DremioClient _client;
 
-    public DremioConsumer() {
+    public DremioS3Consumer() {
         endpoint = "";
         username = "";
         password = "";
@@ -52,12 +52,12 @@ public class DremioConsumer extends Consumer {
         tags = new ArrayList<>();
     }
 
-    public DremioConsumer(Map<String, Serializable> properties) {
+    public DremioS3Consumer(Map<String, Serializable> properties) {
         this();
         _properties = properties;
     }
 
-    public DremioConsumer(Registration reg) {
+    public DremioS3Consumer(Registration reg) {
         this();
         registration = reg;
         _properties = reg.getPropertiesMap();
@@ -265,15 +265,8 @@ public class DremioConsumer extends Consumer {
     public String getType(String provider) {
         String type = "";
         switch (provider) {
-        case PostgresSqlProvider.ID:
-            type = "POSTGRES";
-            break;
-        case CockroachDBProvider.ID:
-            // cockroachDB supports postgres line protocol
-            type = "POSTGRES";
-            break;
-        case MySqlProvider.ID:
-            type = "MYSQL";
+        case MinioProvider.ID:
+            type = "S3";
             break;
         }
         return type;
@@ -307,23 +300,24 @@ public class DremioConsumer extends Consumer {
     public String extractURI(String provider, String uri, String property) {
         String value = "";
 
-        // assume sql
-        switch (property) {
-        case "host":
-            value = SqlUtil.getHost(uri);
-            break;
-        case "port":
-            value = Integer.toString(SqlUtil.getPort(uri));
-            break;
-        case "username":
-            value = SqlUtil.getUsername(uri);
-            break;
-        case "password":
-            value = SqlUtil.getPassword(uri);
-            break;
-        case "database":
-            value = SqlUtil.getDatabase(uri);
-            break;
+        if (provider.equals(MinioProvider.ID)) {
+            switch (property) {
+            case "host":
+                value = MinioUtils.getHost(uri);
+                break;
+            case "port":
+                value = Integer.toString(MinioUtils.getPort(uri));
+                break;
+            case "username":
+                value = MinioUtils.getAccessKey(uri);
+                break;
+            case "password":
+                value = MinioUtils.getSecretKey(uri);
+                break;
+            case "database":
+                value = MinioUtils.getBucket(uri);
+                break;
+            }
         }
 
         return value;

@@ -3,6 +3,7 @@ package it.smartcommunitylab.resourcemanager.provider.minio;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class MinioUtils {
             MultiValueMap<String, String> parameters = UriComponentsBuilder.fromUriString(url).build().getQueryParams();
             List<String> values = parameters.get("accessKey");
             if (values != null && !values.isEmpty()) {
-                return values.get(0);
+                return URLDecoder.decode(values.get(0), "UTF-8");
             } else {
                 return "";
             }
@@ -71,7 +72,7 @@ public class MinioUtils {
             MultiValueMap<String, String> parameters = UriComponentsBuilder.fromUriString(url).build().getQueryParams();
             List<String> values = parameters.get("secretKey");
             if (values != null && !values.isEmpty()) {
-                return values.get(0);
+                return URLDecoder.decode(values.get(0), "UTF-8");
             } else {
                 return "";
             }

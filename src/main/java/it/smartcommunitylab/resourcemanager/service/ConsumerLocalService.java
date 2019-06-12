@@ -30,6 +30,7 @@ import it.smartcommunitylab.resourcemanager.model.ConsumerBuilder;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.model.ResourceEvent;
+import it.smartcommunitylab.resourcemanager.model.ResourceProvider;
 
 @Component
 public class ConsumerLocalService {
@@ -151,11 +152,32 @@ public class ConsumerLocalService {
 
         _log.debug("get builder for " + builderClass);
 
-        if (!_builders.containsKey(builderClass)) {
+//        if (!_builders.containsKey(builderClass)) {
+//            throw new NoSuchConsumerException();
+//        }
+//
+//        return _builders.get(builderClass);
+
+        ConsumerBuilder builder = null;
+        if (_builders.containsKey(builderClass)) {
+            builder = _builders.get(builderClass);
+        } else {
+            // iterate to match
+            for (String b : _builders.keySet()) {
+                if (b.compareToIgnoreCase(builderClass) == 0) {
+                    builder = _builders.get(b);
+                    break;
+                }
+            }
+        }
+
+        if (builder == null) {
+            _log.error("no builder for " + builderClass);
+            _log.debug("available builders: " + _builders.keySet().toString());
             throw new NoSuchConsumerException();
         }
 
-        return _builders.get(builderClass);
+        return builder;
     }
 
     public boolean hasBuilder(String id) {
@@ -163,12 +185,20 @@ public class ConsumerLocalService {
         // spring registers beans with "className" as key
         // code expects consumer classes to end with *Consumer.java
         // builders should be named as [consumerId]Builder.java
-        if (!id.endsWith("Consumer")) {
-            id = id.concat("Consumer");
-        }
-        String builderClass = id.replace("Consumer", "Builder");
+//        if (!id.endsWith("Consumer")) {
+//            id = id.concat("Consumer");
+//        }
+//        String builderClass = id.replace("Consumer", "Builder");
+//
+//        return _builders.containsKey(builderClass);
 
-        return _builders.containsKey(builderClass);
+        try {
+            ConsumerBuilder b = getBuilder(id);
+            return true;
+        } catch (NoSuchConsumerException e) {
+            return false;
+        }
+
     }
 
     public Map<String, List<ConsumerBuilder>> listBuilders() {
