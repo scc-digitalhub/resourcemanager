@@ -15,21 +15,17 @@ import it.smartcommunitylab.resourcemanager.common.ConsumerException;
 import it.smartcommunitylab.resourcemanager.model.Consumer;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 import it.smartcommunitylab.resourcemanager.model.Resource;
-import it.smartcommunitylab.resourcemanager.provider.cockroachdb.CockroachDBProvider;
-import it.smartcommunitylab.resourcemanager.provider.minio.MinioProvider;
-import it.smartcommunitylab.resourcemanager.provider.minio.MinioUtils;
-import it.smartcommunitylab.resourcemanager.provider.mysql.MySqlProvider;
-import it.smartcommunitylab.resourcemanager.provider.postgres.PostgresSqlProvider;
+import it.smartcommunitylab.resourcemanager.provider.mongodb.MongoDBProvider;
 import it.smartcommunitylab.resourcemanager.util.SqlUtil;
 
-public class DremioConsumer extends Consumer {
+public class DremioNoSqlConsumer extends Consumer {
 
-    private final static Logger _log = LoggerFactory.getLogger(DremioConsumer.class);
+    private final static Logger _log = LoggerFactory.getLogger(DremioNoSqlConsumer.class);
 
-    public static final String TYPE = SystemKeys.TYPE_SQL;
-    public static final String ID = "dremio";
+    public static final String TYPE = SystemKeys.TYPE_NOSQL;
+    public static final String ID = "dremionosql";
 
-    // sqlpad connection
+    // dremio connection
     private String endpoint;
     private String username;
     private String password;
@@ -44,7 +40,7 @@ public class DremioConsumer extends Consumer {
 
     private DremioClient _client;
 
-    public DremioConsumer() {
+    public DremioNoSqlConsumer() {
         endpoint = "";
         username = "";
         password = "";
@@ -52,12 +48,12 @@ public class DremioConsumer extends Consumer {
         tags = new ArrayList<>();
     }
 
-    public DremioConsumer(Map<String, Serializable> properties) {
+    public DremioNoSqlConsumer(Map<String, Serializable> properties) {
         this();
         _properties = properties;
     }
 
-    public DremioConsumer(Registration reg) {
+    public DremioNoSqlConsumer(Registration reg) {
         this();
         registration = reg;
         _properties = reg.getPropertiesMap();
@@ -265,15 +261,8 @@ public class DremioConsumer extends Consumer {
     public String getType(String provider) {
         String type = "";
         switch (provider) {
-        case PostgresSqlProvider.ID:
-            type = "POSTGRES";
-            break;
-        case CockroachDBProvider.ID:
-            // cockroachDB supports postgres line protocol
-            type = "POSTGRES";
-            break;
-        case MySqlProvider.ID:
-            type = "MYSQL";
+        case MongoDBProvider.ID:
+            type = "MONGO";
             break;
         }
         return type;
@@ -307,7 +296,7 @@ public class DremioConsumer extends Consumer {
     public String extractURI(String provider, String uri, String property) {
         String value = "";
 
-        // assume sql
+        // assume sql-like
         switch (property) {
         case "host":
             value = SqlUtil.getHost(uri);

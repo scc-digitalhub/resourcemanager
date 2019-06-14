@@ -15,7 +15,7 @@ import it.smartcommunitylab.resourcemanager.model.ConsumerBuilder;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 
 @Component
-public class DremioBuilder implements ConsumerBuilder {
+public class DremioNoSqlBuilder implements ConsumerBuilder {
 
     @Value("${consumers.dremio.enable}")
     private boolean enabled;
@@ -25,12 +25,12 @@ public class DremioBuilder implements ConsumerBuilder {
 
     @Override
     public String getType() {
-        return DremioConsumer.TYPE;
+        return DremioNoSqlConsumer.TYPE;
     }
 
     @Override
     public String getId() {
-        return DremioConsumer.ID;
+        return DremioNoSqlConsumer.ID;
     }
 
     @Override
@@ -52,7 +52,7 @@ public class DremioBuilder implements ConsumerBuilder {
     @Override
     public Consumer build(Map<String, Serializable> properties) throws NoSuchConsumerException {
         // properties supported
-        DremioConsumer consumer = new DremioConsumer(properties);
+        DremioNoSqlConsumer consumer = new DremioNoSqlConsumer(properties);
         // explicitly call init() since @postconstruct won't work here
         consumer.init();
 
@@ -62,7 +62,7 @@ public class DremioBuilder implements ConsumerBuilder {
     @Override
     public Consumer build(Registration reg) throws NoSuchConsumerException {
         // properties supported
-        DremioConsumer consumer = new DremioConsumer(reg);
+        DremioNoSqlConsumer consumer = new DremioNoSqlConsumer(reg);
         // explicitly call init() since @postconstruct won't work here
         consumer.init();
 

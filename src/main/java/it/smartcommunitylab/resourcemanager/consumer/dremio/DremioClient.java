@@ -124,8 +124,8 @@ public class DremioClient {
 
             RestTemplate template = template();
             HttpHeaders headers = connect("");
-            
-            _log.trace("add source json "+json.toString());
+
+            _log.trace("add source json " + json.toString());
 
             HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
 
@@ -164,12 +164,16 @@ public class DremioClient {
         try {
             RestTemplate template = template();
             HttpHeaders headers = connect("");
+            JSONObject json = new JSONObject();
+            HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
 
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+            // build path with version=0
+            // TODO check if version changes
+            String path = name + "?version=0";
 
             // fetch response as String because it should be empty
             ResponseEntity<String> response = template.exchange(
-                    ENDPOINT + API + "source/" + name, HttpMethod.DELETE, entity,
+                    ENDPOINT + API + "source/" + path, HttpMethod.DELETE, entity,
                     String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
@@ -178,6 +182,7 @@ public class DremioClient {
                 throw new DremioException("response error code " + response.getStatusCode());
             }
         } catch (RestClientException rex) {
+//            rex.printStackTrace();
             throw new DremioException("rest error " + rex.getMessage());
         }
     }
@@ -201,8 +206,12 @@ public class DremioClient {
         }
 
         if (type.equals("S3")) {
-            // requires forken dremio to disable per bucket region lookup
+            // requires forked dremio to disable per bucket region lookup
             return getS3Configuration(host, port, database, username, password);
+        }
+
+        if (type.equals("MONGO")) {
+            return getMongoConfiguration(host, port, database, username, password);
         }
 
         return null;
@@ -255,20 +264,44 @@ public class DremioClient {
         json.put("enableAsync", true);
         json.put("allowCreateDrop", false);
         json.put("rootPath", "/" + bucket);
-        
-        //custom properties for hadoop.s3a
+
+        // custom properties for hadoop.s3a
         JSONArray properties = new JSONArray();
         JSONObject endpoint = new JSONObject();
         endpoint.put("name", "fs.s3a.endpoint");
-        endpoint.put("value", "http://"+host+":"+Integer.toString(port));
+        endpoint.put("value", "http://" + host + ":" + Integer.toString(port));
         properties.put(endpoint);
-        
+
         JSONObject pathStyle = new JSONObject();
         pathStyle.put("name", "fs.s3a.path.style.access");
         pathStyle.put("value", true);
-        properties.put(pathStyle);       
-        
+        properties.put(pathStyle);
+
         json.put("propertyList", properties);
+
+        return json;
+
+    }
+
+    private JSONObject getMongoConfiguration(
+            String host, int port,
+            String database,
+            String username, String password) {
+        JSONObject json = new JSONObject();
+
+        json.put("authenticationType", "MASTER");
+        json.put("username", username);
+        json.put("password", password);
+        json.put("authDatabase", database);
+
+        // host list for single master
+        JSONArray hosts = new JSONArray();
+        JSONObject endpoint = new JSONObject();
+        endpoint.put("hostname", host);
+        endpoint.put("port", port);
+        hosts.put(endpoint);
+
+        json.put("hostList", hosts);
 
         return json;
 
