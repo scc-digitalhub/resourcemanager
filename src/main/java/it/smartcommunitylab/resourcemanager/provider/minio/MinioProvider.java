@@ -55,11 +55,11 @@ public class MinioProvider extends ResourceProvider {
     @Value("${providers.minio.secretKey}")
     private String SECRET_KEY;
 
-    @Value("${providers.minio.userAccessKey}")
-    private String USER_ACCESS_KEY;
-
-    @Value("${providers.minio.userSecretKey}")
-    private String USER_SECRET_KEY;
+//    @Value("${providers.minio.userAccessKey}")
+//    private String USER_ACCESS_KEY;
+//
+//    @Value("${providers.minio.userSecretKey}")
+//    private String USER_SECRET_KEY;
 
     @Value("${providers.minio.clearOnDelete}")
     private boolean CLEAR_ON_DELETE;
@@ -157,16 +157,26 @@ public class MinioProvider extends ResourceProvider {
 
             _log.info("create bucket " + name + " with scope " + scopeId + " for user " + userId);
 
-            // create database
+            // create bucket
             _client.createBucket(name);
 
-            // create user - TODO
-            // unsupported now, use fixed user credentials
-            // set in properties
+            // create rw policy for bucket
+            _client.createPolicy(name, MinioS3Client.POLICY_RW);
+
+            // create user
+            // TODO check listUsers to avoid duplicates
+            String userAccessKey = RandomStringUtils.randomAlphanumeric(15) + "-"
+                    + RandomStringUtils.randomAlphanumeric(4);
+
+            String userSecretKey = RandomStringUtils.randomAlphanumeric(12) + "-"
+                    + RandomStringUtils.randomAlphanumeric(5) + "-"
+                    + RandomStringUtils.randomAlphanumeric(8);
+
+            _client.createUser(name, userAccessKey, userSecretKey, MinioS3Client.POLICY_RW);
 
             // generate uri
             String endpoint = HOST + ":" + String.valueOf(PORT);
-            String uri = MinioUtils.encodeURI(endpoint, name, USER_ACCESS_KEY, USER_SECRET_KEY);
+            String uri = MinioUtils.encodeURI(endpoint, name, userAccessKey, userSecretKey);
 
             // update res
             res.setName(name);
@@ -194,15 +204,33 @@ public class MinioProvider extends ResourceProvider {
 
         // extract info from resource
         String bucket = MinioUtils.getBucket(resource.getUri());
+        String userAccessKey = MinioUtils.getAccessKey(resource.getUri());
+//        String userSecretKey = MinioUtils.getSecretKey(resource.getUri());
 
         try {
+
+            // delete user
+            try {
+                _client.removeUser(userAccessKey);
+            } catch (MinioException mex) {
+                _log.error("remove user " + userAccessKey + " error " + mex.getMessage());
+            }
+            // drop policies
+            try {
+                _client.removePolicy(bucket, MinioS3Client.POLICY_RW);
+            } catch (MinioException mex) {
+                _log.error("remove policy " + MinioS3Client.POLICY_RW + " error " + mex.getMessage());
+            }
+
+            try {
+                _client.removePolicy(bucket, MinioS3Client.POLICY_RO);
+            } catch (MinioException mex) {
+                _log.error("remove policy " + MinioS3Client.POLICY_RO + " error " + mex.getMessage());
+            }
+
             // delete bucket with drop all objects?
             _log.info("drop bucket " + bucket + " with clear:" + String.valueOf(CLEAR_ON_DELETE));
             _client.deleteBucket(bucket, CLEAR_ON_DELETE);
-
-            // delete user - TODO
-            // only if dynamic 1user-per-bucket implemented
-            // disabled now with fixed user credentials
 
         } catch (MinioException mex) {
             _log.error(mex.getMessage());
