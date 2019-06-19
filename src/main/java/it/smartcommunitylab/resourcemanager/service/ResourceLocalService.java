@@ -99,7 +99,8 @@ public class ResourceLocalService {
         _log.info("add " + type + " resource with " + String.valueOf(providerId) + " by user " + userId);
 
         // call provider to check existence
-        ResourceProvider provider = providerLocalService.getProvider(providerId);
+        // does NOT need to be active
+        ResourceProvider provider = providerLocalService.fetchProvider(providerId);
         // check type match
         if (!provider.getType().equals(type)) {
             throw new NoSuchProviderException();

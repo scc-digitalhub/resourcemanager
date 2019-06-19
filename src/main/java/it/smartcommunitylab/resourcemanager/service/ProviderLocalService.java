@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -40,6 +39,7 @@ public class ProviderLocalService {
         map.put(SystemKeys.TYPE_NOSQL, new ArrayList<>());
         map.put(SystemKeys.TYPE_FILE, new ArrayList<>());
         map.put(SystemKeys.TYPE_OBJECT, new ArrayList<>());
+        map.put(SystemKeys.TYPE_ODBC, new ArrayList<>());
 
         for (ResourceProvider p : _providers.values()) {
             if (p.getStatus() > -1) {
@@ -53,7 +53,7 @@ public class ProviderLocalService {
         // return only active providers
         return _providers.entrySet().stream()
                 .map(entry -> entry.getValue())
-                .filter(entry -> (entry.getStatus() > -1 && entry.getType().equals(type)))
+                .filter(entry -> (entry.getStatus() == SystemKeys.STATUS_READY && entry.getType().equals(type)))
                 .collect(Collectors.toList());
     }
 
@@ -61,7 +61,7 @@ public class ProviderLocalService {
         // return only non empty types
         Set<String> types = new HashSet<>();
         for (ResourceProvider p : _providers.values()) {
-            if (p.getStatus() > -1) {
+            if (p.getStatus() == SystemKeys.STATUS_READY) {
                 types.add(p.getType());
             }
         }
@@ -69,6 +69,21 @@ public class ProviderLocalService {
     }
 
     public ResourceProvider getProvider(String id) throws NoSuchProviderException {
+
+        // fetch
+        ResourceProvider provider = fetchProvider(id);
+
+        // check if ready
+        if (provider.getStatus() != SystemKeys.STATUS_READY) {
+            _log.error("provider for " + id + " is not available");
+
+            throw new NoSuchProviderException();
+        }
+
+        return provider;
+    }
+
+    public ResourceProvider fetchProvider(String id) throws NoSuchProviderException {
 
         // check if id ends with "Provider"
         // spring registers beans with "className" as key
@@ -102,7 +117,7 @@ public class ProviderLocalService {
         }
 
         // check if enabled
-        if (provider.getStatus() < 0) {
+        if (provider.getStatus() == SystemKeys.STATUS_DISABLED) {
             _log.error("provider for " + id + " is not available");
 
             throw new NoSuchProviderException();

@@ -60,6 +60,7 @@ public class ConsumerLocalService {
         _consumers.put(SystemKeys.TYPE_NOSQL, new ArrayList<>());
         _consumers.put(SystemKeys.TYPE_FILE, new ArrayList<>());
         _consumers.put(SystemKeys.TYPE_OBJECT, new ArrayList<>());
+        _consumers.put(SystemKeys.TYPE_ODBC, new ArrayList<>());
 
         // scan static consumers from config
         // TODO refactor
@@ -208,6 +209,7 @@ public class ConsumerLocalService {
         map.put(SystemKeys.TYPE_NOSQL, new ArrayList<>());
         map.put(SystemKeys.TYPE_FILE, new ArrayList<>());
         map.put(SystemKeys.TYPE_OBJECT, new ArrayList<>());
+        map.put(SystemKeys.TYPE_ODBC, new ArrayList<>());
 
         for (ConsumerBuilder b : _builders.values()) {
             if (b.isAvailable()) {
