@@ -165,12 +165,11 @@ public class MinioProvider extends ResourceProvider {
 
             // create user
             // TODO check listUsers to avoid duplicates
-            String userAccessKey = RandomStringUtils.randomAlphanumeric(15) + "-"
-                    + RandomStringUtils.randomAlphanumeric(4);
+            String userAccessKey = RandomStringUtils.randomAlphanumeric(20).toUpperCase();
 
-            String userSecretKey = RandomStringUtils.randomAlphanumeric(12) + "-"
-                    + RandomStringUtils.randomAlphanumeric(5) + "-"
-                    + RandomStringUtils.randomAlphanumeric(8);
+            String userSecretKey = RandomStringUtils.randomAlphanumeric(20)
+                    + RandomStringUtils.randomAlphanumeric(12) //+ "+"
+                    + RandomStringUtils.randomAlphanumeric(4);
 
             _client.createUser(name, userAccessKey, userSecretKey, MinioS3Client.POLICY_RW);
 

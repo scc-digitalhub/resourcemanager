@@ -1,6 +1,7 @@
 package it.smartcommunitylab.resourcemanager.provider.minio;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -34,6 +35,8 @@ import io.minio.messages.Upload;
 import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioCrypter;
 import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioCrypto;
 import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioCryptoException;
+import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioDecrypter;
+import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioPackage;
 import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioSha256;
 import uk.co.lucasweb.aws.v4.signer.HttpRequest;
 import uk.co.lucasweb.aws.v4.signer.Signer;
@@ -187,6 +190,22 @@ public class MinioS3Client {
 
             JSONObject aws = new JSONObject("{'AWS': ['*']}");
             JSONArray statements = new JSONArray();
+
+            // root policy
+            JSONObject rootStatement = new JSONObject();
+            rootStatement.put("Effect", "Allow");
+            rootStatement.put("Principal", aws);
+
+            JSONArray rootActions = new JSONArray();
+            rootActions.put("s3:ListAllMyBuckets");
+            rootActions.put("s3:HeadBucket");
+            rootStatement.put("Action", rootActions);
+
+            JSONArray rootResource = new JSONArray();
+            rootResource.put("arn:aws:s3:::*");
+            rootStatement.put("Resource", rootResource);
+
+            statements.put(rootStatement);
 
             // bucket policy
             JSONObject bucketStatement = new JSONObject();
@@ -360,6 +379,24 @@ public class MinioS3Client {
             // encrypt payload
             MinioCrypter crypter = MinioCrypto.getCrypter(SECRET_KEY, userInfo.toString());
             byte[] content = crypter.crypt();
+
+            MinioPackage pkg = crypter.inspect();
+            _log.trace("package version " + String.valueOf(pkg.header().getVersion()));
+            _log.trace("package cipher " + String.valueOf(pkg.header().getCipher()));
+            _log.trace("package nonce " + Arrays.toString(pkg.header().getNonce()));
+            _log.trace("package length " + String.valueOf(pkg.header().getLength()));
+            _log.trace("string length " + String.valueOf(userInfo.toString().getBytes().length));
+
+            MinioDecrypter decrypter = MinioCrypto.getDecrypter(SECRET_KEY, content);
+
+            pkg = decrypter.inspect();
+            String plainText = decrypter.decrypt();
+            _log.trace("decrypt plainText " + plainText);
+
+            decrypter.clear();
+
+            // clear
+            crypter.clear();
 
             // prepare signature
             DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");

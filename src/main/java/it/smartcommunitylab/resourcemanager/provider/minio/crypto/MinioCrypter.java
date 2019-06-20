@@ -80,10 +80,15 @@ public class MinioCrypter {
         return bytes;
     }
 
-    public byte[] generateNonce() throws MinioCryptoException {
+    public byte[] generateNonce(boolean isFinal) throws MinioCryptoException {
         SecureRandom random = new SecureRandom();
         byte bytes[] = new byte[NONCE_SIZE];
         random.nextBytes(bytes);
+
+        if (isFinal) {
+            // apply transformation otherwise won't match in decoding
+            bytes[0] |= 0x80;
+        }
 
         return bytes;
     }
@@ -104,7 +109,8 @@ public class MinioCrypter {
     public byte[] crypt() throws MinioCryptoException {
         if (data == null) {
             // build nonce
-            byte[] nonce = generateNonce();
+            // always final since all messages are under segmentation threshold
+            byte[] nonce = generateNonce(true);
 
             // check cipher
             if (CIPHER == 0x00) {
