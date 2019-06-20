@@ -19,6 +19,7 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Temporal;
 import javax.persistence.Transient;
 
+import org.hibernate.validator.constraints.Length;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.data.annotation.CreatedBy;
@@ -42,6 +43,9 @@ public class Resource {
     private String type;
     private String provider;
     private String name;
+    
+    @Length(max = 500)
+    @Column
     private String uri;
 
     private String userId;
