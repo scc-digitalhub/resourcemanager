@@ -1,6 +1,8 @@
 package it.smartcommunitylab.resourcemanager.provider.dremio;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -161,10 +163,16 @@ public class DremioODBCProvider extends ResourceProvider {
                 List<Resource> list = resourceLocalService.listByProvider(ID);
                 List<Resource> resources = new ArrayList<>();
                 for (Resource r : list) {
-                    // need to explicitely fetch to decrypt URI
-                    Resource res = resourceLocalService.get(r.getId());
-                    keys.add(OdbcUtil.getDatabase(res.getUri()));
-                    resources.add(res);
+                    try {
+                        // need to explicitely fetch to decrypt URI
+                        Resource res = resourceLocalService.get(r.getId());
+                        // fetch KEY
+                        keys.add(OdbcUtil.getValues(res.getUri()).get("KEY"));
+                        resources.add(res);
+                    } catch (Exception e) {
+                        // skip
+                        _log.error("resource " + String.valueOf(r.getId()) + " error " + e.getMessage());
+                    }
                 }
 
                 _log.debug("reflectDatasets has found " + String.valueOf(keys.size()) + " resources in DB");
@@ -189,9 +197,12 @@ public class DremioODBCProvider extends ResourceProvider {
                                 path[j] = fullPath.getString(j);
                             }
 
-                            // build key
-                            // TODO validate and properly encode/escape
-                            String key = String.join(".", path);
+                            String space = path[0];
+                            String table = "[" + space + "].[" + path[1] + "]";
+
+                            // use self link as key
+                            String key = dataset.getJSONObject("links").optString("self", "");
+                            key = URLEncoder.encode(key, "UTF-8");
 
                             _log.debug("virtual dataset key set as " + key);
 
@@ -202,7 +213,7 @@ public class DremioODBCProvider extends ResourceProvider {
                             if (!keys.contains(key)) {
                                 // add
                                 _log.debug("add virtual dataset " + key);
-                                Resource res = addResource(key);
+                                Resource res = addResource(space, table, key);
                                 _log.debug("added resource " + res.getId());
 
                                 keys.add(key);
@@ -222,7 +233,7 @@ public class DremioODBCProvider extends ResourceProvider {
 
                     // remove missing datasets
                     for (Resource res : resources) {
-                        String key = OdbcUtil.getDatabase(res.getUri());
+                        String key = OdbcUtil.getValues(res.getUri()).get("KEY");
                         _log.debug("check resource with key " + key);
 
                         // has to exists in virtual keys
@@ -246,14 +257,22 @@ public class DremioODBCProvider extends ResourceProvider {
      * Helpers
      */
 
-    public Resource addResource(String name) throws NoSuchProviderException, ResourceProviderException {
+    public Resource addResource(String space, String table, String datasetId)
+            throws NoSuchProviderException, ResourceProviderException, UnsupportedEncodingException {
         // prepare data
         Map<String, Serializable> properties = new HashMap<>();
         List<String> tags = new ArrayList<>();
-        String endpoint = HOST + ":31010";
+
+        // save id as KEY
+        String connectionProperties = "KEY=" + datasetId;
 
         // pack uri
-        String uri = OdbcUtil.encodeURI("dremioodbc", endpoint, name, ODBC_USERNAME, ODBC_PASSWORD);
+        String uri = OdbcUtil.encodeURI(
+                "dremioodbc", "Dremio Connector",
+                HOST, 31010,
+                ODBC_USERNAME, ODBC_PASSWORD,
+                "DREMIO", space, table,
+                connectionProperties);
 
         // use our id as username
         // TODO replace

@@ -1,143 +1,148 @@
 package it.smartcommunitylab.resourcemanager.util;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
 public class OdbcUtil {
 
     public static String encodeURI(
-            String provider, String endpoint, String database,
-            String username, String password) {
+            String provider, String driver,
+            String host, int port,
+            String username, String password,
+            String database, String schema, String table,
+            String properties) throws UnsupportedEncodingException {
 
-        // pack connection details into URL
-        // mimic RFC 1738
-        // <provider>://<user>:<password>@<host>:<port>/<resource>
+        // validate inputs
+        validate(provider);
+        validate(driver);
+        validate(username);
+        validate(password);
+        validate(database);
+        validate(table);
+
+        // pack connection details into String
+        // <provider>::DRIVER=<driver>;...
         StringBuilder sb = new StringBuilder();
-        sb.append(provider).append("://");
-        try {
-            sb.append(URLEncoder.encode(username, "UTF-8"));
-            sb.append(":");
-            sb.append(URLEncoder.encode(password, "UTF-8"));
-            sb.append("@");
-            // endpoint should be host:port from caller
-            sb.append(endpoint);
-            sb.append("/");
-            sb.append(URLEncoder.encode(database, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-        }
+        sb.append(provider).append("::");
+
+        sb.append("DRIVER={").append(driver).append("};");
+        sb.append("HOST=").append(host).append(";");
+        sb.append("PORT=").append(Integer.toString(port)).append(";");
+        // also build single server string
+        sb.append("SERVER=").append(host).append(",").append(Integer.toString(port)).append(";");
+        sb.append("DATABASE={").append(database).append("};");
+        sb.append("SCHEMA={").append(schema).append("};");
+        sb.append("TABLE={").append(table).append("};");
+
+        sb.append(properties);
 
         return sb.toString();
     }
 
-    public static String encodeURI(
-            String provider, String endpoint, String database) {
-
-        // pack connection details into URL
-        // mimic RFC 1738
-        // <provider>://<host>:<port>/<resource>
-        StringBuilder sb = new StringBuilder();
-        sb.append(provider).append("://");
-        try {
-            // endpoint should be host:port from caller
-            sb.append(endpoint);
-            sb.append("/");
-            sb.append(URLEncoder.encode(database, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-        }
-
-        return sb.toString();
-    }
-
-    public static String getUsername(String uri) {
-        try {
-            URI u = new URI(uri);
-            String userInfo = u.getUserInfo();
-            String userName = "";
-            if (userInfo == null) {
-                return userName;
-            }
-
-            if (userInfo.contains(":")) {
-                userName = userInfo.split(":")[0];
-            } else {
-                userName = userInfo;
-            }
-
-            return URLDecoder.decode(userName, "UTF-8");
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    public static String getPassword(String uri) {
-        try {
-            URI u = new URI(uri);
-            String userInfo = u.getUserInfo();
-            String password = "";
-            if (userInfo == null) {
-                return password;
-            }
-
-            if (userInfo.contains(":")) {
-                password = userInfo.split(":")[1];
-            } else {
-                password = "";
-            }
-
-            return URLDecoder.decode(password, "UTF-8");
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    public static String getProvider(String uri) {
-        try {
-            URI u = new URI(uri);
-            return u.getScheme();
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    public static String getEndpoint(String uri) {
-        try {
-            URI u = new URI(uri);
-            return u.getAuthority();
-        } catch (Exception e) {
+    public static String getDriver(String uri) {
+        Map<String, String> values = getValues(uri);
+        if (values.containsKey("DRIVER")) {
+            return values.get("DRIVER").replaceAll("[{}]+", "");
+        } else {
             return "";
         }
     }
 
     public static String getHost(String uri) {
-        try {
-            URI u = new URI(uri);
-            return u.getHost();
-        } catch (Exception e) {
+        Map<String, String> values = getValues(uri);
+        if (values.containsKey("HOST")) {
+            return values.get("HOST");
+        } else {
             return "";
         }
     }
 
     public static int getPort(String uri) {
-        try {
-            URI u = new URI(uri);
-            return u.getPort();
-        } catch (Exception e) {
+        Map<String, String> values = getValues(uri);
+        if (values.containsKey("PORT")) {
+            return Integer.parseInt(values.get("PORT"));
+        } else {
             return -1;
         }
     }
 
-    public static String getDatabase(String uri) {
-        try {
-            URI u = new URI(uri);
-            String path = u.getPath();
-            if (path.startsWith("/")) {
-                path = path.substring(1);
-            }
-            return URLDecoder.decode(path, "UTF-8");
-        } catch (Exception e) {
+    public static String getUsername(String uri) {
+        Map<String, String> values = getValues(uri);
+        if (values.containsKey("USER")) {
+            return values.get("USER");
+        } else {
             return "";
+        }
+    }
+
+    public static String getPassword(String uri) {
+        Map<String, String> values = getValues(uri);
+        if (values.containsKey("PASS")) {
+            return values.get("PASS");
+        } else {
+            return "";
+        }
+    }
+
+    public static String getDatabase(String uri) {
+        Map<String, String> values = getValues(uri);
+        if (values.containsKey("DATABASE")) {
+            return values.get("DATABASE").replaceAll("[{}]+", "");
+        } else {
+            return "";
+        }
+    }
+
+    public static String getSchema(String uri) {
+        Map<String, String> values = getValues(uri);
+        if (values.containsKey("SCHEMA")) {
+            return values.get("SCHEMA").replaceAll("[{}]+", "");
+        } else {
+            return "";
+        }
+    }
+
+    public static String getTable(String uri) {
+        Map<String, String> values = getValues(uri);
+        if (values.containsKey("TABLE")) {
+            return values.get("TABLE").replaceAll("[{}]+", "");
+        } else {
+            return "";
+        }
+    }
+
+    public static String getProvider(String uri) {
+        return uri.substring(0, uri.indexOf("::"));
+    }
+
+    /*
+     * Helpers
+     */
+    public static final String VALID_CHARS = "[a-zA-Z0-9 _@\\[\\]\\.]+";
+
+    public static Map<String, String> getValues(String uri) {
+        Map<String, String> values = new HashMap<>();
+
+        String data = uri.substring(uri.indexOf("::") + 2);
+        String[] arr = data.split(";");
+        for (String s : arr) {
+            try {
+                String[] kv = s.split("=");
+                if (kv.length == 2) {
+                    values.put(kv[0], kv[1]);
+                }
+            } catch (Exception e) {
+                // skip
+            }
+        }
+
+        return values;
+    }
+
+    private static void validate(String input) throws UnsupportedEncodingException {
+        if (!input.matches(VALID_CHARS)) {
+            throw new UnsupportedEncodingException();
         }
     }
 }
