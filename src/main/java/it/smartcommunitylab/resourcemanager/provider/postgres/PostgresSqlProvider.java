@@ -162,7 +162,7 @@ public class PostgresSqlProvider extends ResourceProvider {
 
             // generate uri
             String endpoint = HOST + ":" + String.valueOf(PORT);
-            String uri = SqlUtil.encodeURI("postgressql", endpoint, name, username, password);
+            String uri = SqlUtil.encodeURI("postgres", endpoint, name, username, password);
 
             // update res
             res.setName(name);
