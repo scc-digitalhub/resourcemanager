@@ -3,6 +3,8 @@ package it.smartcommunitylab.resourcemanager.consumer.dss;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
+import javax.servlet.http.HttpUtils;
+
 import org.apache.commons.codec.binary.Base64;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,43 +40,62 @@ public class DSSRestClient {
     }
 
     public JSONArray listDataSources() throws DSSException {
+        // DISABLED, dss rest bridge return pagination without any
+        // info about total count or pages count
+        throw new DSSException("unsupported on DSS rest");
+//        try {
+//            JSONArray datasets = null;
+//
+//            RestTemplate template = new RestTemplate();
+//            HttpHeaders headers = headers(USERNAME, PASSWORD);
+//
+//            HttpEntity<String> entity = new HttpEntity<>(headers);
+//
+//            // fetch response as String because it may not match the json schema
+//            ResponseEntity<String> response = template.exchange(ENDPOINT + API + TENANT + "/listDataService",
+//                    HttpMethod.GET,
+//                    entity, String.class);
+//            if (response.getStatusCode() == HttpStatus.OK) {
+//                // fetch JSON array
+//                datasets = new JSONArray(response.getBody());
+//            } else {
+//                throw new DSSException("response error code " + response.getStatusCode());
+//            }
+//
+//            return datasets;
+//        } catch (RestClientException rex) {
+//            throw new DSSException("rest error " + rex.getMessage());
+//        }
+    }
+
+    public boolean hasSource(String name) throws DSSException {
+        boolean exists = false;
+
         try {
-            JSONArray datasets = null;
 
             RestTemplate template = new RestTemplate();
             HttpHeaders headers = headers(USERNAME, PASSWORD);
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
+            // serviceid == name in DSS rest, mappend wrong
+            String path = "/getDataService?serviceid=" + name;
+
             // fetch response as String because it may not match the json schema
-            ResponseEntity<String> response = template.exchange(ENDPOINT + API + TENANT + "/listDataSource",
+            ResponseEntity<String> response = template.exchange(ENDPOINT + API + TENANT + path,
                     HttpMethod.GET,
                     entity, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
-                // fetch JSON array
-                datasets = new JSONArray(response.getBody());
-            } else {
-                throw new DSSException("response error code " + response.getStatusCode());
-            }
-
-            return datasets;
-        } catch (RestClientException rex) {
-            throw new DSSException("rest error " + rex.getMessage());
-        }
-    }
-
-    public boolean hasSource(String name) throws DSSException {
-        boolean exists = false;
-
-        JSONArray sources = listDataSources();
-        for (int i = 0; i < sources.length(); i++) {
-            JSONObject source = sources.getJSONObject(i);
-            if (name.equals(source.optString("name", ""))) {
+                // assume OK means it exists, discard value..
                 exists = true;
-                break;
+            } else {
+                exists = false;
             }
-        }
 
+        } catch (RestClientException rex) {
+            // DSS will response with an error instead of 404..
+            exists = false;
+        }
         return exists;
     }
 
@@ -87,15 +108,24 @@ public class DSSRestClient {
             throws DSSException {
         try {
             JSONObject json = new JSONObject();
-            json.put("name", name);
-            json.put("type", type);
+            JSONObject data = new JSONObject();
 
-            JSONObject config = getMetaInfo(type, host, port, database, username, password);
-            if (config == null) {
-                throw new DSSException("error generating client configuration");
+            data.put("name", name);
+            data.put("description", type + ": " + name);
+
+            JSONObject configs = new JSONObject();
+            configs.put("id", name);
+            configs.put("exposeAsODataService", true);
+            configs.put("publicODataService", false);
+
+            JSONArray properties = getProperties(type, host, port, database, username, password);
+            if (properties == null) {
+                throw new DSSException("error generating data source configuration");
             }
 
-            json.put("config", config);
+            configs.put("properties", properties);
+            data.put("configs", configs);
+            json.put("data", data);
 
             RestTemplate template = new RestTemplate();
             HttpHeaders headers = headers(USERNAME, PASSWORD);
@@ -105,7 +135,7 @@ public class DSSRestClient {
             HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
 
             // fetch response as String because it may not match the json schema
-            ResponseEntity<String> response = template.exchange(ENDPOINT + API + TENANT + "/addDataSource/" + name,
+            ResponseEntity<String> response = template.exchange(ENDPOINT + API + TENANT + "/saveDataService",
                     HttpMethod.POST,
                     entity, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
@@ -128,7 +158,8 @@ public class DSSRestClient {
             String database,
             String username, String password)
             throws DSSException {
-        // TODO
+        // TODO: verify if update is even possible given
+        // the lack of access to data sources config in DSS rest
         return name;
 
     }
@@ -141,11 +172,11 @@ public class DSSRestClient {
             JSONObject json = new JSONObject();
             HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
 
-            String path = ""; // TODO fetch id from DSS
+            String path = "/dataService/" + name;
 
             // fetch response as String because it should be empty
             ResponseEntity<String> response = template.exchange(
-                    ENDPOINT + API + TENANT + "/deleteDataSource/" + path, HttpMethod.DELETE, entity,
+                    ENDPOINT + API + TENANT + path, HttpMethod.DELETE, entity,
                     String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
@@ -178,7 +209,7 @@ public class DSSRestClient {
         return headers;
     }
 
-    private JSONObject getMetaInfo(String type,
+    private JSONArray getProperties(String type,
             String host, int port,
             String database,
             String username, String password) {
@@ -199,35 +230,79 @@ public class DSSRestClient {
 
     }
 
-    private JSONObject getPostgresConfiguration(
+    private JSONArray getPostgresConfiguration(
             String host, int port,
             String database,
             String username, String password) {
-        JSONObject json = new JSONObject();
-        // TODO
+
+        String connection = "jdbc:postgresql://" + host + ":" + Integer.toString(port) + "/" + database;
+
+        JSONArray json = new JSONArray();
+
+        JSONObject driver = new JSONObject();
+        driver.put("name", "driverClassName");
+        driver.put("value", "org.postgresql.Driver");
+        json.put(driver);
+
+        JSONObject url = new JSONObject();
+        url.put("name", "url");
+        url.put("value", connection);
+        json.put(url);
+
+        JSONObject user = new JSONObject();
+        user.put("name", "username");
+        user.put("value", username);
+        json.put(user);
+
+        JSONObject pass = new JSONObject();
+        pass.put("name", "password");
+        pass.put("value", password);
+        json.put(pass);
 
         return json;
 
     }
 
-    private JSONObject getMySqlConfiguration(
+    private JSONArray getMySqlConfiguration(
             String host, int port,
             String database,
             String username, String password) {
-        JSONObject json = new JSONObject();
-        // TODO
+        String connection = "jdbc:mysql://" + host + ":" + Integer.toString(port) + "/" + database;
+
+        JSONArray json = new JSONArray();
+
+        JSONObject driver = new JSONObject();
+        driver.put("name", "driverClassName");
+        driver.put("value", "com.mysql.jdbc.Driver");
+        json.put(driver);
+
+        JSONObject url = new JSONObject();
+        url.put("name", "url");
+        url.put("value", connection);
+        json.put(url);
+
+        JSONObject user = new JSONObject();
+        user.put("name", "username");
+        user.put("value", username);
+        json.put(user);
+
+        JSONObject pass = new JSONObject();
+        pass.put("name", "password");
+        pass.put("value", password);
+        json.put(pass);
 
         return json;
 
     }
 
-    private JSONObject getMongoConfiguration(
+    private JSONArray getMongoConfiguration(
             String host, int port,
             String database,
             String username, String password) {
-        JSONObject json = new JSONObject();
-        // TODO
 
+        JSONArray json = new JSONArray();
+
+        // not supported in DSS
         return json;
 
     }

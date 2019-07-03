@@ -14,7 +14,7 @@ import it.smartcommunitylab.resourcemanager.model.Consumer;
 import it.smartcommunitylab.resourcemanager.model.ConsumerBuilder;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 
-@Component
+//@Component
 public class DSSNoSqlBuilder implements ConsumerBuilder {
 
     @Value("${consumers.dss.enable}")
