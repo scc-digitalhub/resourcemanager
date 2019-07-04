@@ -1,6 +1,8 @@
 package it.smartcommunitylab.resourcemanager.util;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,9 +33,13 @@ public class OdbcUtil {
         sb.append("PORT=").append(Integer.toString(port)).append(";");
         // also build single server string
         sb.append("SERVER=").append(host).append(",").append(Integer.toString(port)).append(";");
+
+        sb.append("USER={").append(URLEncoder.encode(username, "UTF-8")).append("};");
+        sb.append("PASS={").append(URLEncoder.encode(password, "UTF-8")).append("};");
+
         sb.append("DATABASE={").append(database).append("};");
-        sb.append("SCHEMA={").append(schema).append("};");
-        sb.append("TABLE={").append(table).append("};");
+        sb.append("SCHEMA={").append(URLEncoder.encode(schema, "UTF-8")).append("};");
+        sb.append("TABLE={").append(URLEncoder.encode(table, "UTF-8")).append("};");
 
         sb.append(properties);
 
@@ -70,7 +76,11 @@ public class OdbcUtil {
     public static String getUsername(String uri) {
         Map<String, String> values = getValues(uri);
         if (values.containsKey("USER")) {
-            return values.get("USER");
+            try {
+                return URLDecoder.decode(values.get("USER"), "UTF-8").replaceAll("[{}]+", "");
+            } catch (UnsupportedEncodingException e) {
+                return "";
+            }
         } else {
             return "";
         }
@@ -79,7 +89,11 @@ public class OdbcUtil {
     public static String getPassword(String uri) {
         Map<String, String> values = getValues(uri);
         if (values.containsKey("PASS")) {
-            return values.get("PASS");
+            try {
+                return URLDecoder.decode(values.get("PASS"), "UTF-8").replaceAll("[{}]+", "");
+            } catch (UnsupportedEncodingException e) {
+                return "";
+            }
         } else {
             return "";
         }
@@ -97,7 +111,11 @@ public class OdbcUtil {
     public static String getSchema(String uri) {
         Map<String, String> values = getValues(uri);
         if (values.containsKey("SCHEMA")) {
-            return values.get("SCHEMA").replaceAll("[{}]+", "");
+            try {
+                return URLDecoder.decode(values.get("SCHEMA"), "UTF-8").replaceAll("[{}]+", "");
+            } catch (UnsupportedEncodingException e) {
+                return "";
+            }
         } else {
             return "";
         }
@@ -106,7 +124,11 @@ public class OdbcUtil {
     public static String getTable(String uri) {
         Map<String, String> values = getValues(uri);
         if (values.containsKey("TABLE")) {
-            return values.get("TABLE").replaceAll("[{}]+", "");
+            try {
+                return URLDecoder.decode(values.get("TABLE"), "UTF-8").replaceAll("[{}]+", "");
+            } catch (UnsupportedEncodingException e) {
+                return "";
+            }
         } else {
             return "";
         }
@@ -119,7 +141,7 @@ public class OdbcUtil {
     /*
      * Helpers
      */
-    public static final String VALID_CHARS = "[a-zA-Z0-9 _@\\[\\]\\.]+";
+    public static final String VALID_CHARS = "[a-zA-Z0-9 -_@\\[\\]\\.]+";
 
     public static Map<String, String> getValues(String uri) {
         Map<String, String> values = new HashMap<>();

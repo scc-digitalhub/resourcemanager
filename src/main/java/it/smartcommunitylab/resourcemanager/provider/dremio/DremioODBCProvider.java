@@ -41,7 +41,7 @@ public class DremioODBCProvider extends ResourceProvider {
     public static final String ID = "dremioodbc";
 
     private static final String VALID_CHARS = "[a-zA-Z0-9]+";
-    private static final String VIRTUAL_IDENTIFIER = "VIRTUAL_DATASET";
+//    private static final String VIRTUAL_IDENTIFIER = "VIRTUAL_DATASET";
 
     @Value("${providers.dremio.enable}")
     private boolean ENABLED;
@@ -186,9 +186,10 @@ public class DremioODBCProvider extends ResourceProvider {
                     JSONObject dataset = datasets.getJSONObject(i);
 
                     try {
-                        // read only virtual
-                        if (VIRTUAL_IDENTIFIER.equals(dataset.optString("datasetType", ""))) {
-                            _log.debug("found virtual dataset");
+                        // read only supported
+                        String type = dataset.optString("datasetType", "");
+                        if (isTypeSupported(type)) {
+                            _log.debug("found dataset type " + type);
 
                             JSONArray fullPath = dataset.getJSONArray("fullPath");
                             String[] path = new String[fullPath.length()];
@@ -197,14 +198,26 @@ public class DremioODBCProvider extends ResourceProvider {
                                 path[j] = fullPath.getString(j);
                             }
 
-                            String space = path[0];
-                            String table = "[" + space + "].[" + path[1] + "]";
+                            // last element is the dataset, store space + folders as schema
+//                            String space = path[0];
+//                            String table = "[" + space + "].[" + path[1] + "]";
+                            String table = path[path.length - 1];
+                            StringBuilder sb = new StringBuilder();
+                            for (int j = 0; j < path.length - 1; j++) {
+                                sb.append(".").append(path[j]);
+                            }
+                            String schema = sb.toString();
+                            if (schema.startsWith(".")) {
+                                schema = schema.substring(1);
+                            }
 
                             // use self link as key
                             String key = dataset.getJSONObject("links").optString("self", "");
                             key = URLEncoder.encode(key, "UTF-8");
 
-                            _log.debug("virtual dataset key set as " + key);
+                            _log.debug("dataset key set as " + key);
+                            _log.trace("dataset schema " + schema);
+                            _log.trace("dataset table " + table);
 
                             // save ref
                             virtual.add(key);
@@ -213,7 +226,7 @@ public class DremioODBCProvider extends ResourceProvider {
                             if (!keys.contains(key)) {
                                 // add
                                 _log.debug("add virtual dataset " + key);
-                                Resource res = addResource(space, table, key);
+                                Resource res = addResource(schema, table, key);
                                 _log.debug("added resource " + res.getId());
 
                                 keys.add(key);
@@ -257,7 +270,7 @@ public class DremioODBCProvider extends ResourceProvider {
      * Helpers
      */
 
-    public Resource addResource(String space, String table, String datasetId)
+    public Resource addResource(String schema, String table, String datasetId)
             throws NoSuchProviderException, ResourceProviderException, UnsupportedEncodingException {
         // prepare data
         Map<String, Serializable> properties = new HashMap<>();
@@ -271,7 +284,7 @@ public class DremioODBCProvider extends ResourceProvider {
                 "dremioodbc", "Dremio Connector",
                 HOST, 31010,
                 ODBC_USERNAME, ODBC_PASSWORD,
-                "DREMIO", space, table,
+                "DREMIO", schema, table,
                 connectionProperties);
 
         // use our id as username
@@ -280,6 +293,19 @@ public class DremioODBCProvider extends ResourceProvider {
         // register an unmanaged resource
         return resourceLocalService.add(scopeId, userId, TYPE, ID, uri, properties, tags);
 
+    }
+
+    private boolean isTypeSupported(String type) {
+        boolean is = false;
+        switch (type) {
+        case "PHYSICAL_DATASET_SOURCE_FILE":
+        case "PHYSICAL_DATASET_HOME_FILE":
+        case "VIRTUAL_DATASET":
+            is = true;
+            break;
+        }
+
+        return is;
     }
 
 }
