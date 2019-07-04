@@ -113,17 +113,14 @@ public class DSSRestClient {
             data.put("name", name);
             data.put("description", type + ": " + name);
 
-            JSONObject configs = new JSONObject();
-            configs.put("id", name);
-            configs.put("exposeAsODataService", true);
-            configs.put("publicODataService", false);
+            JSONArray configs = new JSONArray();
 
-            JSONArray properties = getProperties(type, host, port, database, username, password);
-            if (properties == null) {
+            JSONObject config = getConfig(type, name, host, port, database, username, password);
+            if (config == null) {
                 throw new DSSException("error generating data source configuration");
             }
 
-            configs.put("properties", properties);
+            configs.put(config);
             data.put("configs", configs);
             json.put("data", data);
 
@@ -209,100 +206,201 @@ public class DSSRestClient {
         return headers;
     }
 
-    private JSONArray getProperties(String type,
+    private JSONObject getConfig(
+            String type,
+            String name,
             String host, int port,
             String database,
             String username, String password) {
 
         if (type.equals("POSTGRES")) {
-            return getPostgresConfiguration(host, port, database, username, password);
+            return getPostgresConfiguration(name, host, port, database, username, password);
         }
 
         if (type.equals("MYSQL")) {
-            return getMySqlConfiguration(host, port, database, username, password);
+            return getMySqlConfiguration(name, host, port, database, username, password);
         }
 
-        if (type.equals("MONGO")) {
-            return getMongoConfiguration(host, port, database, username, password);
+        if (type.equals("MONGODB")) {
+            return getMongoConfiguration(name, host, port, database, username, password);
+        }
+        if (type.equals("DREMIO")) {
+            return getDremioConfiguration(name, host, port, database, username, password);
         }
 
         return null;
 
     }
 
-    private JSONArray getPostgresConfiguration(
+    private JSONObject getPostgresConfiguration(
+            String name,
             String host, int port,
             String database,
             String username, String password) {
 
         String connection = "jdbc:postgresql://" + host + ":" + Integer.toString(port) + "/" + database;
 
-        JSONArray json = new JSONArray();
+        JSONObject json = new JSONObject();
+
+        json.put("id", name);
+        json.put("dataSourceType", "RDBMS");
+        json.put("exposeAsODataService", false);
+        json.put("publicODataService", false);
+
+        JSONArray properties = new JSONArray();
 
         JSONObject driver = new JSONObject();
         driver.put("name", "driverClassName");
         driver.put("value", "org.postgresql.Driver");
-        json.put(driver);
+        properties.put(driver);
 
         JSONObject url = new JSONObject();
         url.put("name", "url");
         url.put("value", connection);
-        json.put(url);
+        properties.put(url);
 
         JSONObject user = new JSONObject();
         user.put("name", "username");
         user.put("value", username);
-        json.put(user);
+        properties.put(user);
 
         JSONObject pass = new JSONObject();
         pass.put("name", "password");
         pass.put("value", password);
-        json.put(pass);
+        properties.put(pass);
+
+        json.put("properties", properties);
 
         return json;
 
     }
 
-    private JSONArray getMySqlConfiguration(
+    private JSONObject getMySqlConfiguration(
+            String name,
             String host, int port,
             String database,
             String username, String password) {
+
         String connection = "jdbc:mysql://" + host + ":" + Integer.toString(port) + "/" + database;
 
-        JSONArray json = new JSONArray();
+        JSONObject json = new JSONObject();
+
+        json.put("id", name);
+        json.put("dataSourceType", "RDBMS");
+        json.put("exposeAsODataService", false);
+        json.put("publicODataService", false);
+
+        JSONArray properties = new JSONArray();
 
         JSONObject driver = new JSONObject();
         driver.put("name", "driverClassName");
         driver.put("value", "com.mysql.jdbc.Driver");
-        json.put(driver);
+        properties.put(driver);
 
         JSONObject url = new JSONObject();
         url.put("name", "url");
         url.put("value", connection);
-        json.put(url);
+        properties.put(url);
 
         JSONObject user = new JSONObject();
         user.put("name", "username");
         user.put("value", username);
-        json.put(user);
+        properties.put(user);
 
         JSONObject pass = new JSONObject();
         pass.put("name", "password");
         pass.put("value", password);
-        json.put(pass);
+        properties.put(pass);
+
+        json.put("properties", properties);
 
         return json;
 
     }
 
-    private JSONArray getMongoConfiguration(
+    private JSONObject getMongoConfiguration(
+            String name,
             String host, int port,
             String database,
             String username, String password) {
 
-        JSONArray json = new JSONArray();
+        String server = host + ":" + Integer.toString(port);
 
-        // not supported in DSS
+        JSONObject json = new JSONObject();
+
+        json.put("id", name);
+        json.put("dataSourceType", "MongoDB");
+        json.put("exposeAsODataService", false);
+        json.put("publicODataService", false);
+
+        JSONArray properties = new JSONArray();
+
+        JSONObject servers = new JSONObject();
+        servers.put("name", "mongoDB_servers");
+        servers.put("value", server);
+        properties.put(servers);
+
+        JSONObject db = new JSONObject();
+        db.put("name", "mongoDB_database");
+        db.put("value", database);
+        properties.put(db);
+
+        JSONObject user = new JSONObject();
+        user.put("name", "username");
+        user.put("value", username);
+        properties.put(user);
+
+        JSONObject pass = new JSONObject();
+        pass.put("name", "password");
+        pass.put("value", password);
+        properties.put(pass);
+
+        json.put("properties", properties);
+
+        return json;
+
+    }
+
+    private JSONObject getDremioConfiguration(
+            String name,
+            String host, int port,
+            String database,
+            String username, String password) {
+
+        String schema = database.replaceFirst("DREMIO/", "");
+        String connection = "jdbc:dremio:direct=" + host + ":" + Integer.toString(port) + ";schema=" + schema;
+
+        JSONObject json = new JSONObject();
+
+        json.put("id", name);
+        json.put("dataSourceType", "RDBMS");
+        json.put("exposeAsODataService", false);
+        json.put("publicODataService", false);
+
+        JSONArray properties = new JSONArray();
+
+        JSONObject driver = new JSONObject();
+        driver.put("name", "driverClassName");
+        driver.put("value", "com.dremio.jdbc.Driver");
+        properties.put(driver);
+
+        JSONObject url = new JSONObject();
+        url.put("name", "url");
+        url.put("value", connection);
+        properties.put(url);
+
+        JSONObject user = new JSONObject();
+        user.put("name", "username");
+        user.put("value", username);
+        properties.put(user);
+
+        JSONObject pass = new JSONObject();
+        pass.put("name", "password");
+        pass.put("value", password);
+        properties.put(pass);
+
+        json.put("properties", properties);
+
         return json;
 
     }

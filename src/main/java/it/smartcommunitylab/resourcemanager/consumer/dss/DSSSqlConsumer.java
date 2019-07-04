@@ -142,13 +142,12 @@ public class DSSSqlConsumer extends Consumer {
                 String type = getType(resource.getProvider());
                 if (!type.isEmpty()) {
                     // supported
-                    String provider = resource.getProvider();
                     String uri = resource.getUri();
-                    String host = extractURI(provider, uri, "host");
-                    int port = Integer.parseInt(extractURI(provider, uri, "port"));
-                    String uname = extractURI(provider, uri, "username");
-                    String passw = extractURI(provider, uri, "password");
-                    String database = extractURI(provider, uri, "database");
+                    String host = SqlUtil.getHost(uri);
+                    int port = SqlUtil.getPort(uri);
+                    String uname = SqlUtil.getUsername(uri);
+                    String passw = SqlUtil.getPassword(uri);
+                    String database = SqlUtil.getDatabase(uri);
                     String name = type.toLowerCase() + "_" + database;
 
                     name = _client.addSource(type, name, host, port, database, uname, passw);
@@ -170,13 +169,12 @@ public class DSSSqlConsumer extends Consumer {
                 String type = getType(resource.getProvider());
                 if (!type.isEmpty()) {
                     // supported
-                    String provider = resource.getProvider();
                     String uri = resource.getUri();
-                    String host = extractURI(provider, uri, "host");
-                    int port = Integer.parseInt(extractURI(provider, uri, "port"));
-                    String uname = extractURI(provider, uri, "username");
-                    String passw = extractURI(provider, uri, "password");
-                    String database = extractURI(provider, uri, "database");
+                    String host = SqlUtil.getHost(uri);
+                    int port = SqlUtil.getPort(uri);
+                    String uname = SqlUtil.getUsername(uri);
+                    String passw = SqlUtil.getPassword(uri);
+                    String database = SqlUtil.getDatabase(uri);
                     String name = type.toLowerCase() + "_" + database;
 
                     if (checkTags(resource.getTags())) {
@@ -214,9 +212,8 @@ public class DSSSqlConsumer extends Consumer {
                 String type = getType(resource.getProvider());
                 if (!type.isEmpty()) {
                     // supported
-                    String provider = resource.getProvider();
                     String uri = resource.getUri();
-                    String database = extractURI(provider, uri, "database");
+                    String database = SqlUtil.getDatabase(uri);
                     String name = type.toLowerCase() + "_" + database;
 
                     _client.deleteSource(name);
@@ -301,28 +298,4 @@ public class DSSSqlConsumer extends Consumer {
         }
     }
 
-    public String extractURI(String provider, String uri, String property) {
-        String value = "";
-
-        // assume sql
-        switch (property) {
-        case "host":
-            value = SqlUtil.getHost(uri);
-            break;
-        case "port":
-            value = Integer.toString(SqlUtil.getPort(uri));
-            break;
-        case "username":
-            value = SqlUtil.getUsername(uri);
-            break;
-        case "password":
-            value = SqlUtil.getPassword(uri);
-            break;
-        case "database":
-            value = SqlUtil.getDatabase(uri);
-            break;
-        }
-
-        return value;
-    }
 }

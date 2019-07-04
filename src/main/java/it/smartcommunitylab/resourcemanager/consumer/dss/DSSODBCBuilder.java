@@ -15,7 +15,7 @@ import it.smartcommunitylab.resourcemanager.model.ConsumerBuilder;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 
 @Component
-public class DSSNoSqlBuilder implements ConsumerBuilder {
+public class DSSODBCBuilder implements ConsumerBuilder {
 
     @Value("${consumers.dss.enable}")
     private boolean enabled;
@@ -25,12 +25,12 @@ public class DSSNoSqlBuilder implements ConsumerBuilder {
 
     @Override
     public String getType() {
-        return DSSNoSqlConsumer.TYPE;
+        return DSSODBCConsumer.TYPE;
     }
 
     @Override
     public String getId() {
-        return DSSNoSqlConsumer.ID;
+        return DSSODBCConsumer.ID;
     }
 
     @Override
@@ -52,7 +52,7 @@ public class DSSNoSqlBuilder implements ConsumerBuilder {
     @Override
     public Consumer build(Map<String, Serializable> properties) throws NoSuchConsumerException {
         // properties supported
-        DSSNoSqlConsumer consumer = new DSSNoSqlConsumer(properties);
+        DSSODBCConsumer consumer = new DSSODBCConsumer(properties);
         // explicitly call init() since @postconstruct won't work here
         consumer.init();
 
@@ -62,7 +62,7 @@ public class DSSNoSqlBuilder implements ConsumerBuilder {
     @Override
     public Consumer build(Registration reg) throws NoSuchConsumerException {
         // properties supported
-        DSSNoSqlConsumer consumer = new DSSNoSqlConsumer(reg);
+        DSSODBCConsumer consumer = new DSSODBCConsumer(reg);
         // explicitly call init() since @postconstruct won't work here
         consumer.init();
 

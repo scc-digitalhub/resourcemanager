@@ -15,15 +15,16 @@ import it.smartcommunitylab.resourcemanager.common.ConsumerException;
 import it.smartcommunitylab.resourcemanager.model.Consumer;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 import it.smartcommunitylab.resourcemanager.model.Resource;
-import it.smartcommunitylab.resourcemanager.provider.mongodb.MongoDBProvider;
-import it.smartcommunitylab.resourcemanager.util.SqlUtil;
+import it.smartcommunitylab.resourcemanager.provider.dremio.DremioODBCProvider;
+import it.smartcommunitylab.resourcemanager.util.OdbcUtil;
 
-public class DSSNoSqlConsumer extends Consumer {
+public class DSSODBCConsumer extends Consumer {
 
-    private final static Logger _log = LoggerFactory.getLogger(DSSNoSqlConsumer.class);
+    private final static Logger _log = LoggerFactory.getLogger(DSSODBCConsumer.class);
+    private static final String VALID_CHARS = "[^a-zA-Z0-9-_]+";
 
-    public static final String TYPE = SystemKeys.TYPE_NOSQL;
-    public static final String ID = "dssnosql";
+    public static final String TYPE = SystemKeys.TYPE_ODBC;
+    public static final String ID = "dssodbc";
 
     // DSS connection
     private String endpoint;
@@ -41,7 +42,7 @@ public class DSSNoSqlConsumer extends Consumer {
 
     private DSSRestClient _client;
 
-    public DSSNoSqlConsumer() {
+    public DSSODBCConsumer() {
         endpoint = "";
         username = "";
         password = "";
@@ -50,12 +51,12 @@ public class DSSNoSqlConsumer extends Consumer {
         tags = new ArrayList<>();
     }
 
-    public DSSNoSqlConsumer(Map<String, Serializable> properties) {
+    public DSSODBCConsumer(Map<String, Serializable> properties) {
         this();
         _properties = properties;
     }
 
-    public DSSNoSqlConsumer(Registration reg) {
+    public DSSODBCConsumer(Registration reg) {
         this();
         registration = reg;
         _properties = reg.getPropertiesMap();
@@ -141,14 +142,27 @@ public class DSSNoSqlConsumer extends Consumer {
                 if (!type.isEmpty()) {
                     // supported
                     String uri = resource.getUri();
-                    String host = SqlUtil.getHost(uri);
-                    int port = SqlUtil.getPort(uri);
-                    String uname = SqlUtil.getUsername(uri);
-                    String passw = SqlUtil.getPassword(uri);
-                    String database = SqlUtil.getDatabase(uri);
-                    String name = type.toLowerCase() + "_" + database;
+                    String host = OdbcUtil.getHost(uri);
+                    int port = OdbcUtil.getPort(uri);
+                    String uname = OdbcUtil.getUsername(uri);
+                    String passw = OdbcUtil.getPassword(uri);
+                    String database = OdbcUtil.getDatabase(uri);
+                    String schema = OdbcUtil.getSchema(uri);
+                    String table = OdbcUtil.getTable(uri);
 
-                    name = _client.addSource(type, name, host, port, database, uname, passw);
+                    StringBuilder dest = new StringBuilder();
+                    dest.append(database);
+                    if (!schema.isEmpty()) {
+                        dest.append("/").append(schema);
+                    }
+                    if (!table.isEmpty()) {
+                        dest.append(".\"").append(table).append("\"");
+                    }
+
+                    String destination = dest.toString();
+                    String name = type.toLowerCase() + "_" + destination.replaceAll(VALID_CHARS, "");
+
+                    name = _client.addSource(type, name, host, port, destination, uname, passw);
                     _log.debug("created source " + name);
                 }
             } catch (DSSException e) {
@@ -168,22 +182,35 @@ public class DSSNoSqlConsumer extends Consumer {
                 if (!type.isEmpty()) {
                     // supported
                     String uri = resource.getUri();
-                    String host = SqlUtil.getHost(uri);
-                    int port = SqlUtil.getPort(uri);
-                    String uname = SqlUtil.getUsername(uri);
-                    String passw = SqlUtil.getPassword(uri);
-                    String database = SqlUtil.getDatabase(uri);
-                    String name = type.toLowerCase() + "_" + database;
+                    String host = OdbcUtil.getHost(uri);
+                    int port = OdbcUtil.getPort(uri);
+                    String uname = OdbcUtil.getUsername(uri);
+                    String passw = OdbcUtil.getPassword(uri);
+                    String database = OdbcUtil.getDatabase(uri);
+                    String schema = OdbcUtil.getSchema(uri);
+                    String table = OdbcUtil.getTable(uri);
+
+                    StringBuilder dest = new StringBuilder();
+                    dest.append(database);
+                    if (!schema.isEmpty()) {
+                        dest.append("/").append(schema);
+                    }
+                    if (!table.isEmpty()) {
+                        dest.append(".\"").append(table).append("\"");
+                    }
+
+                    String destination = dest.toString();
+                    String name = type.toLowerCase() + "_" + destination.replaceAll(VALID_CHARS, "");
 
                     if (checkTags(resource.getTags())) {
                         // matches, update or create via client
                         if (_client.hasSource(name)) {
                             // exists, update
-                            name = _client.updateSource(type, name, host, port, database, uname, passw);
+                            name = _client.updateSource(type, name, host, port, destination, uname, passw);
                             _log.debug("updated source " + name);
                         } else {
                             // create as new
-                            name = _client.addSource(type, name, host, port, database, uname, passw);
+                            name = _client.addSource(type, name, host, port, destination, uname, passw);
                             _log.debug("created source " + name);
                         }
                     } else {
@@ -211,8 +238,21 @@ public class DSSNoSqlConsumer extends Consumer {
                 if (!type.isEmpty()) {
                     // supported
                     String uri = resource.getUri();
-                    String database = SqlUtil.getDatabase(uri);
-                    String name = type.toLowerCase() + "_" + database;
+                    String database = OdbcUtil.getDatabase(uri);
+                    String schema = OdbcUtil.getSchema(uri);
+                    String table = OdbcUtil.getTable(uri);
+
+                    StringBuilder dest = new StringBuilder();
+                    dest.append(database);
+                    if (!schema.isEmpty()) {
+                        dest.append("/").append(schema);
+                    }
+                    if (!table.isEmpty()) {
+                        dest.append(".\"").append(table).append("\"");
+                    }
+
+                    String destination = dest.toString();
+                    String name = type.toLowerCase() + "_" + destination.replaceAll(VALID_CHARS, "");
 
                     _client.deleteSource(name);
                     _log.debug("deleted if existing source " + name);
@@ -235,8 +275,21 @@ public class DSSNoSqlConsumer extends Consumer {
                 if (!type.isEmpty()) {
                     // supported
                     String uri = resource.getUri();
-                    String database = SqlUtil.getDatabase(uri);
-                    String name = type.toLowerCase() + "_" + database;
+                    String database = OdbcUtil.getDatabase(uri);
+                    String schema = OdbcUtil.getSchema(uri);
+                    String table = OdbcUtil.getTable(uri);
+
+                    StringBuilder dest = new StringBuilder();
+                    dest.append(database);
+                    if (!schema.isEmpty()) {
+                        dest.append("/").append(schema);
+                    }
+                    if (!table.isEmpty()) {
+                        dest.append(".\"").append(table).append("\"");
+                    }
+
+                    String destination = dest.toString();
+                    String name = type.toLowerCase() + "_" + destination.replaceAll(VALID_CHARS, "");
 
                     boolean exists = _client.hasSource(name);
 
@@ -257,8 +310,8 @@ public class DSSNoSqlConsumer extends Consumer {
     public String getType(String provider) {
         String type = "";
         switch (provider) {
-        case MongoDBProvider.ID:
-            type = "MONGODB";
+        case DremioODBCProvider.ID:
+            type = "DREMIO";
             break;
         }
         return type;
