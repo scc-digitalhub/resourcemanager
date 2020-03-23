@@ -51,25 +51,25 @@ public class LogNoSqlConsumer extends Consumer {
     }
 
     @Override
-    public void addResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+    public void addResource(String spaceId, String userId, Resource resource) throws ConsumerException {
         _log.debug("add resource " + resource.toString());
 
     }
 
     @Override
-    public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+    public void updateResource(String spaceId, String userId, Resource resource) throws ConsumerException {
         _log.debug("update resource " + resource.toString());
 
     }
 
     @Override
-    public void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+    public void deleteResource(String spaceId, String userId, Resource resource) throws ConsumerException {
         _log.debug("delete resource " + resource.toString());
 
     }
 
     @Override
-    public void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+    public void checkResource(String spaceId, String userId, Resource resource) throws ConsumerException {
         _log.debug("check resource " + resource.toString());
 
     }

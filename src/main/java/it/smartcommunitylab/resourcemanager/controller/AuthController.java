@@ -42,7 +42,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.model.UserSession;
-import it.smartcommunitylab.resourcemanager.security.ScopePermissionEvaluator;
+import it.smartcommunitylab.resourcemanager.security.SpacePermissionEvaluator;
 import it.smartcommunitylab.resourcemanager.util.ControllerUtil;
 
 @Controller
@@ -63,11 +63,11 @@ public class AuthController {
     @Value("${security.oauth2.client.client-secret}")
     private String clientSecret;
 
-    @Value("${security.oauth2.client.scopes}")
-    private String oauthScopes;
+    @Value("${security.oauth2.client.spaces}")
+    private String oauthSpaces;
 
-    @Value("${scopes.default}")
-    private String defaultScope;
+    @Value("${spaces.default}")
+    private String defaultSpace;
 
     @Value("${application.url}")
     private String applicationURL;
@@ -76,7 +76,7 @@ public class AuthController {
     private boolean permissionsEnabled;
 
     @Autowired
-    private ScopePermissionEvaluator permissionEvaluator;
+    private SpacePermissionEvaluator permissionEvaluator;
 
     /*
      * Login
@@ -97,7 +97,7 @@ public class AuthController {
         // build authorization parameters
         attributes.addAttribute("response_type", "code");
         attributes.addAttribute("client_id", clientId);
-        attributes.addAttribute("scope", oauthScopes);
+        attributes.addAttribute("space", oauthSpaces);
         attributes.addAttribute("redirect_uri", callbackURL);
 
         _log.debug("send redirect to oauth at " + authorizationURL);
@@ -107,7 +107,7 @@ public class AuthController {
     }
 
     @GetMapping(value = "/api/auth/callback", produces = "application/json")
-    @ApiOperation(value = "Login calback via OAuth")
+    @ApiOperation(value = "Login callback via OAuth")
     public void callback(RedirectAttributes attributes,
             HttpServletRequest request, HttpServletResponse response) throws LoginException {
 
@@ -220,7 +220,7 @@ public class AuthController {
 
         String userId = ControllerUtil.getUserId(request);
         Set<String> permissions = new HashSet<>();
-        List<String> roles = permissionEvaluator.getScopeRoles(defaultScope, auth);
+        List<String> roles = permissionEvaluator.getSpaceRoles(defaultSpace, auth);
 
         if (permissionsEnabled) {
             for (String role : roles) {

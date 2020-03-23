@@ -49,8 +49,8 @@ public class Resource {
     private String uri;
 
     private String userId;
-    // example scope=tenant/project/user
-    private String scopeId;
+    // example space=tenant/project/user
+    private String spaceId;
     private String properties;
 
     // flag if managed by resourcemanager
@@ -139,12 +139,12 @@ public class Resource {
         this.userId = userId;
     }
 
-    public String getScopeId() {
-        return scopeId;
+    public String getSpaceId() {
+        return spaceId;
     }
 
-    public void setScopeId(String scopeId) {
-        this.scopeId = scopeId;
+    public void setSpaceId(String spaceId) {
+        this.spaceId = spaceId;
     }
 
     public String getProperties() {
@@ -214,7 +214,7 @@ public class Resource {
     @Override
     public String toString() {
         return "Resource [id=" + id + ", type=" + type + ", provider=" + provider + ", name=" + name + ", uri=" + uri
-                + ", userId=" + userId + ", scopeId=" + scopeId + ", properties=" + properties + ", managed=" + managed
+                + ", userId=" + userId + ", spaceId=" + spaceId + ", properties=" + properties + ", managed=" + managed
                 + ", subscribed=" + subscribed + ", tags=" + tags + ", createdDate=" + createdDate + ", modifiedDate="
                 + modifiedDate + ", createdBy=" + createdBy + ", lastModifiedBy=" + lastModifiedBy + ", map=" + map
                 + "]";
@@ -308,7 +308,7 @@ public class Resource {
         res.uri = source.uri;
 
         res.userId = source.userId;
-        res.scopeId = source.scopeId;
+        res.spaceId = source.spaceId;
 
         res.properties = source.properties;
         res.managed = source.managed;

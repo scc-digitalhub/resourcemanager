@@ -242,7 +242,7 @@ public class ConsumerLocalService {
      * Data
      */
 
-    public Registration add(String scopeId, String userId, String type, String consumer,
+    public Registration add(String spaceId, String userId, String type, String consumer,
             Map<String, Serializable> properties, List<String> tags)
             throws NoSuchConsumerException, ConsumerException {
 
@@ -252,22 +252,22 @@ public class ConsumerLocalService {
         }
 
         // build registration
-        Registration reg = registrationService.add(scopeId, userId, type, consumer, properties, tags);
+        Registration reg = registrationService.add(spaceId, userId, type, consumer, properties, tags);
 
         // build consumer
         Consumer c = buildConsumer(reg);
         _consumers.get(type).add(c);
 
         // trigger create on new consumer for all existing resources
-        List<Resource> resources = resourceLocalService.listByTypeAndScopeId(type, scopeId);
+        List<Resource> resources = resourceLocalService.listByTypeAndSpaceId(type, spaceId);
 
         for (Resource res : resources) {
             try {
                 // fetch full resource definition (ie unencrypted)
                 Resource r = resourceLocalService.get(res.getId());
-//                c.addResource(scopeId, userId, r);
+//                c.addResource(spaceId, userId, r);
                 // use UPDATE to create IF MISSING
-                c.updateResource(scopeId, userId, r);
+                c.updateResource(spaceId, userId, r);
             } catch (Exception ex) {
                 _log.error("error registering resource " + res.getId() + ": " + ex.getMessage());
             }
@@ -300,14 +300,14 @@ public class ConsumerLocalService {
 
             // trigger update on consumer for all existing resources
             // TODO rework
-            List<Resource> resources = resourceLocalService.listByTypeAndScopeId(type, reg.getScopeId());
+            List<Resource> resources = resourceLocalService.listByTypeAndSpaceId(type, reg.getSpaceId());
 
             for (Resource res : resources) {
                 try {
                     // fetch full resource definition (ie unencrypted)
                     Resource r = resourceLocalService.get(res.getId());
                     // use UPDATE to create IF MISSING
-                    c.updateResource(reg.getScopeId(), reg.getUserId(), r);
+                    c.updateResource(reg.getSpaceId(), reg.getUserId(), r);
                 } catch (Exception ex) {
                     _log.error("error registering resource " + res.getId() + ": " + ex.getMessage());
                 }
@@ -392,7 +392,7 @@ public class ConsumerLocalService {
             if (res.isSubscribed()) {
                 String type = event.getType();
                 String action = event.getAction();
-                String scopeId = event.getScopeId();
+                String spaceId = event.getSpaceId();
                 String userId = event.getUserId();
 
                 // notify all active consumers
@@ -405,16 +405,16 @@ public class ConsumerLocalService {
 
                             switch (action) {
                             case SystemKeys.ACTION_CREATE:
-                                c.addResource(scopeId, userId, res);
+                                c.addResource(spaceId, userId, res);
                                 break;
                             case SystemKeys.ACTION_UPDATE:
-                                c.updateResource(scopeId, userId, res);
+                                c.updateResource(spaceId, userId, res);
                                 break;
                             case SystemKeys.ACTION_DELETE:
-                                c.deleteResource(scopeId, userId, res);
+                                c.deleteResource(spaceId, userId, res);
                                 break;
                             case SystemKeys.ACTION_CHECK:
-                                c.checkResource(scopeId, userId, res);
+                                c.checkResource(spaceId, userId, res);
                                 break;
                             }
 

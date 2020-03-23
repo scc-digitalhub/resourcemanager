@@ -22,14 +22,16 @@ public class DremioClient {
     private String ENDPOINT;
     private String USERNAME;
     private String PASSWORD;
+    private boolean VERSION_4;
 
     private final static String API = "/apiv2/";
 
-    public DremioClient(String endpoint, String username, String password) {
+    public DremioClient(String endpoint, String username, String password, boolean version4) {
         super();
         ENDPOINT = endpoint;
         USERNAME = username;
         PASSWORD = password;
+        VERSION_4 = version4;
     }
 
     public boolean ping() throws DremioException {
@@ -106,7 +108,7 @@ public class DremioClient {
     public String addSource(
             String type,
             String name,
-            String host, int port,
+            String host, int port, boolean ssl,
             String database,
             String username, String password)
             throws DremioException {
@@ -115,7 +117,7 @@ public class DremioClient {
             json.put("name", name);
             json.put("type", type);
 
-            JSONObject config = getClientConfiguration(type, host, port, database, username, password);
+            JSONObject config = getClientConfiguration(type, host, port, ssl, database, username, password);
             if (config == null) {
                 throw new DremioException("error generating client configuration");
             }
@@ -149,6 +151,7 @@ public class DremioClient {
             String type,
             String name,
             String host, int port,
+            boolean ssl,
             String database,
             String username, String password)
             throws DremioException {
@@ -192,7 +195,7 @@ public class DremioClient {
      */
 
     private JSONObject getClientConfiguration(String type,
-            String host, int port,
+            String host, int port, boolean ssl,
             String database,
             String username, String password) {
 
@@ -207,7 +210,7 @@ public class DremioClient {
 
         if (type.equals("S3")) {
             // requires forked dremio to disable per bucket region lookup
-            return getS3Configuration(host, port, database, username, password);
+            return getS3Configuration(host, port, ssl, database, username, password);
         }
 
         if (type.equals("MONGO")) {
@@ -251,7 +254,7 @@ public class DremioClient {
     }
 
     private JSONObject getS3Configuration(
-            String host, int port,
+            String host, int port, boolean ssl,
             String bucket,
             String accessKey, String secretKey) {
         JSONObject json = new JSONObject();
@@ -259,17 +262,30 @@ public class DremioClient {
         json.put("credentialType", "ACCESS_KEY");
         json.put("accessKey", accessKey);
         json.put("accessSecret", secretKey);
-        json.put("secure", false);
         json.put("externalBucketList", new JSONArray());
         json.put("enableAsync", true);
         json.put("allowCreateDrop", false);
+        if (VERSION_4) {
+            // requires dremio 4+
+            json.put("compatibilityMode", true);
+        }
+        json.put("secure", ssl);
         json.put("rootPath", "/" + bucket);
 
         // custom properties for hadoop.s3a
         JSONArray properties = new JSONArray();
         JSONObject endpoint = new JSONObject();
         endpoint.put("name", "fs.s3a.endpoint");
-        endpoint.put("value", "http://" + host + ":" + Integer.toString(port));
+
+        if (VERSION_4) {
+            // dremio > 4 need NO protocol and the secure flag
+            endpoint.put("value", host + ":" + Integer.toString(port));
+        } else {
+            // dremio version < 3.2 need protocol in endpoint
+            endpoint.put("value", "http://" + host + ":" + Integer.toString(port));
+        }
+
+
         properties.put(endpoint);
 
         JSONObject pathStyle = new JSONObject();

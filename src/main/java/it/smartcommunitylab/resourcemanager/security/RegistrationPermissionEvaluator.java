@@ -17,7 +17,7 @@ public class RegistrationPermissionEvaluator implements PermissionEvaluator {
 	private final static Logger _log = LoggerFactory.getLogger(RegistrationPermissionEvaluator.class);
 
 	@Autowired
-	ScopePermissionEvaluator scopePermission;
+	SpacePermissionEvaluator spacePermission;
 
 	@Autowired
 	RegistrationLocalService registrationService;
@@ -29,8 +29,8 @@ public class RegistrationPermissionEvaluator implements PermissionEvaluator {
 
 			_log.debug("hasPermission for registration " + reg.getId() + ":" + permission);
 
-			// delegate to ScopePermission
-			return scopePermission.hasPermission(authentication, reg.getScopeId(), "scope", permission);
+			// delegate to SpacePermission
+			return spacePermission.hasPermission(authentication, reg.getSpaceId(), "space", permission);
 		}
 
 		return false;

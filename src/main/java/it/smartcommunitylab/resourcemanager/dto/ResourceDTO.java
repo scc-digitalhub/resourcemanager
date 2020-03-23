@@ -34,8 +34,8 @@ public class ResourceDTO {
     @ApiModelProperty(notes = "Resource owner Id", example = "admin@local")
     public String userId;
 
-    @ApiModelProperty(notes = "Resource scope Id", example = "default")
-    public String scopeId;
+    @ApiModelProperty(notes = "Resource space Id", example = "default")
+    public String spaceId;
 
     @ApiModelProperty(notes = "Resource properties map - class specific", example = "{}")
     public String properties;
@@ -52,7 +52,7 @@ public class ResourceDTO {
     public ResourceDTO() {
         id = 0;
         userId = "";
-        scopeId = "";
+        spaceId = "";
 
         type = "";
         provider = "";
@@ -107,12 +107,12 @@ public class ResourceDTO {
         this.uri = uri;
     }
 
-    public String getScopeId() {
-        return scopeId;
+    public String getSpaceId() {
+        return spaceId;
     }
 
-    public void setScopeId(String scopeId) {
-        this.scopeId = scopeId;
+    public void setSpaceId(String spaceId) {
+        this.spaceId = spaceId;
     }
 
     public String getUserId() {
@@ -158,7 +158,7 @@ public class ResourceDTO {
     @Override
     public String toString() {
         return "ResourceDTO [id=" + id + ", type=" + type + ", provider=" + provider + ", name=" + name + ", userId="
-                + userId + ", scopeId=" + scopeId + ", managed=" + managed + ", subscribed=" + subscribed + ", tags="
+                + userId + ", spaceId=" + spaceId + ", managed=" + managed + ", subscribed=" + subscribed + ", tags="
                 + Arrays.toString(tags) + "]";
     }
 
@@ -166,7 +166,7 @@ public class ResourceDTO {
         ResourceDTO dto = new ResourceDTO();
         dto.id = res.getId();
         dto.userId = res.getUserId();
-        dto.scopeId = res.getScopeId();
+        dto.spaceId = res.getSpaceId();
 
         dto.type = res.getType();
         dto.provider = res.getProvider();

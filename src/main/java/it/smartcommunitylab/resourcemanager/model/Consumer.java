@@ -20,12 +20,12 @@ public abstract class Consumer {
 	/*
 	 * Resources
 	 */
-	public abstract void addResource(String scopeId, String userId, Resource resource) throws ConsumerException;
+	public abstract void addResource(String spaceId, String userId, Resource resource) throws ConsumerException;
 
-	public abstract void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException;
+	public abstract void checkResource(String spaceId, String userId, Resource resource) throws ConsumerException;
 
-	public abstract void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException;
+	public abstract void updateResource(String spaceId, String userId, Resource resource) throws ConsumerException;
 
-	public abstract void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException;
+	public abstract void deleteResource(String spaceId, String userId, Resource resource) throws ConsumerException;
 
 }

@@ -50,60 +50,74 @@ public class ResourceController {
 
     private final static Logger _log = LoggerFactory.getLogger(ResourceController.class);
 
-    @Value("${scopes.default}")
-    private String defaultScope;
+    @Value("${spaces.default}")
+    private String defaultSpace;
 
     @Autowired
     private ResourceService resourceService;
 
     /*
-     * Resource w/scope
+     * Resource w/space
      */
-    @GetMapping(value = "/api/c/{scope}/resources/{id}", produces = "application/json")
+    @GetMapping(value = {
+            "/api/resources/{id}",
+            "/api/-/{space}/resources/{id}"
+    }, produces = "application/json")
     @ApiOperation(value = "Fetch a specific resource by id")
-    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+            @ApiImplicitParam(name = "X-Space", value = "Space", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+    })
     @ResponseBody
     public ResourceDTO get(
-            @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+            @ApiParam(value = "Space", defaultValue = "default") @PathVariable("space") Optional<String> space,
             @ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
             HttpServletRequest request, HttpServletResponse response)
             throws NoSuchResourceException {
 
-        String scopeId = scope.orElse(defaultScope);
+        Optional<String> xSpace = Optional.ofNullable(ControllerUtil.getSpaceId(request));
+        String spaceId = xSpace.orElse(defaultSpace);
         String userId = ControllerUtil.getUserId(request);
 
-        _log.debug("get resource " + String.valueOf(id) + " by " + userId + " for scope " + scopeId);
+        _log.debug("get resource " + String.valueOf(id) + " by " + userId + " for space " + spaceId);
 
         // call exists to trigger 404, otherwise get() will
         // check permissions *before* checking existence
-        resourceService.exists(scopeId, userId, id);
+        resourceService.exists(spaceId, userId, id);
 
-        Resource resource = resourceService.get(scopeId, userId, id);
+        Resource resource = resourceService.get(spaceId, userId, id);
 
         // include private fields on detail view
         return ResourceDTO.fromResource(resource, true);
     }
 
-    @PostMapping(value = "/api/c/{scope}/resources", produces = "application/json")
+    @PostMapping(value = {
+            "/api/resources",
+            "/api/-/{space}/resources"
+    }, produces = "application/json")
     @ApiOperation(value = "Create a new resource")
-    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+            @ApiImplicitParam(name = "X-Space", value = "Space", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+    })
     @ResponseBody
     public ResourceDTO create(
-            @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+            @ApiParam(value = "Space", defaultValue = "default") @PathVariable("space") Optional<String> space,
             @ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
             HttpServletRequest request, HttpServletResponse response)
             throws NoSuchProviderException, ResourceProviderException, InvalidNameException, DuplicateNameException {
 
-        String scopeId = scope.orElse(defaultScope);
+        Optional<String> xSpace = Optional.ofNullable(ControllerUtil.getSpaceId(request));
+        String spaceId = xSpace.orElse(defaultSpace);
         String userId = ControllerUtil.getUserId(request);
 
         // parse fields from post
         Map<String, Serializable> propertiesMap = Resource.propertiesFromValue(resource.getProperties());
         List<String> tags = new ArrayList<>(Arrays.asList(resource.getTags()));
 
-        _log.debug("create resource by " + userId + " for scope " + scopeId);
+        _log.debug("create resource by " + userId + " for space " + spaceId);
 
-        Resource result = resourceService.create(scopeId, userId,
+        Resource result = resourceService.create(spaceId, userId,
                 resource.getType(), resource.getProvider(), resource.getName(),
                 propertiesMap, tags);
 
@@ -112,26 +126,34 @@ public class ResourceController {
 
     }
 
-    @PutMapping(value = "/api/c/{scope}/resources", produces = "application/json")
+    @PutMapping(value = {
+            "/api/resources",
+            "/api/-/{space}/resources"
+    }, produces = "application/json")
     @ApiOperation(value = "Add an existing resource")
-    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+            @ApiImplicitParam(name = "X-Space", value = "Space", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+    })
     @ResponseBody
     public ResourceDTO add(
-            @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+            @ApiParam(value = "Space", defaultValue = "default") @PathVariable("space") Optional<String> space,
             @ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
             HttpServletRequest request, HttpServletResponse response)
             throws NoSuchProviderException, ResourceProviderException {
 
-        String scopeId = scope.orElse(defaultScope);
+        Optional<String> xSpace = Optional.ofNullable(ControllerUtil.getSpaceId(request));
+        String spaceId = xSpace.orElse(defaultSpace);
         String userId = ControllerUtil.getUserId(request);
 
         // parse fields from post
         Map<String, Serializable> propertiesMap = Resource.propertiesFromValue(resource.getProperties());
         List<String> tags = new ArrayList<>(Arrays.asList(resource.getTags()));
 
-        _log.debug("add resource by " + userId + " for scope " + scopeId);
+        _log.debug("add resource by " + userId + " for space " + spaceId);
 
-        Resource result = resourceService.add(scopeId, userId, resource.getType(), resource.getProvider(),
+        Resource result = resourceService.add(spaceId, userId, resource.getType(), resource.getName(),
+                resource.getProvider(),
                 resource.getUri(),
                 propertiesMap, tags);
 
@@ -140,18 +162,25 @@ public class ResourceController {
 
     }
 
-    @PutMapping(value = "/api/c/{scope}/resources/{id}", produces = "application/json")
+    @PutMapping(value = {
+            "/api/resources/{id}",
+            "/api/-/{space}/resources/{id}"
+    }, produces = "application/json")
     @ApiOperation(value = "Update a specific resource")
-    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+            @ApiImplicitParam(name = "X-Space", value = "Space", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+    })
     @ResponseBody
     public ResourceDTO update(
-            @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+            @ApiParam(value = "Space", defaultValue = "default") @PathVariable("space") Optional<String> space,
             @ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
             @ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
             HttpServletRequest request, HttpServletResponse response)
             throws NoSuchProviderException, NoSuchResourceException, ResourceProviderException {
 
-        String scopeId = scope.orElse(defaultScope);
+        Optional<String> xSpace = Optional.ofNullable(ControllerUtil.getSpaceId(request));
+        String spaceId = xSpace.orElse(defaultSpace);
         String userId = ControllerUtil.getUserId(request);
 
         // parse fields from post
@@ -160,84 +189,98 @@ public class ResourceController {
 
         resource.id = id;
 
-        _log.debug("update resource " + String.valueOf(id) + " by " + userId + " for scope " + scopeId);
+        _log.debug("update resource " + String.valueOf(id) + " by " + userId + " for space " + spaceId);
 
         // call exists to trigger 404, otherwise update() will
         // check permissions *before* checking existence
-        resourceService.exists(scopeId, userId, id);
+        resourceService.exists(spaceId, userId, id);
 
-        Resource result = resourceService.update(scopeId, userId, id, propertiesMap, tags);
+        Resource result = resourceService.update(spaceId, userId, id, propertiesMap, tags);
 
         // include private fields on update view
         return ResourceDTO.fromResource(result, true);
 
     }
 
-    @DeleteMapping(value = "/api/c/{scope}/resources/{id}", produces = "application/json")
+    @DeleteMapping(value = {
+            "/api/resources/{id}",
+            "/api/-/{space}/resources/{id}"
+    }, produces = "application/json")
     @ApiOperation(value = "Delete a specific resource")
-    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+            @ApiImplicitParam(name = "X-Space", value = "Space", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+    })
     @ResponseBody
     public ResourceDTO delete(
-            @ApiParam(value = "Scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+            @ApiParam(value = "Space", defaultValue = "default") @PathVariable("space") Optional<String> space,
             @ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
             HttpServletRequest request, HttpServletResponse response)
             throws NoSuchProviderException, NoSuchResourceException, ResourceProviderException {
 
-        String scopeId = scope.orElse(defaultScope);
+        Optional<String> xSpace = Optional.ofNullable(ControllerUtil.getSpaceId(request));
+        String spaceId = xSpace.orElse(defaultSpace);
         String userId = ControllerUtil.getUserId(request);
 
-        _log.debug("delete resource " + String.valueOf(id) + " by " + userId + " for scope " + scopeId);
+        _log.debug("delete resource " + String.valueOf(id) + " by " + userId + " for space " + spaceId);
 
         // call exists to trigger 404, otherwise delete() will
         // check permissions *before* checking existence
-        resourceService.exists(scopeId, userId, id);
+        resourceService.exists(spaceId, userId, id);
 
         // fetch resource to provide as result on success
-        Resource resource = resourceService.get(scopeId, userId, id);
+        Resource resource = resourceService.get(spaceId, userId, id);
 
-        resourceService.delete(scopeId, userId, id);
+        resourceService.delete(spaceId, userId, id);
 
         return ResourceDTO.fromResource(resource, false);
 
     }
 
     /*
-     * List w/scope
+     * List w/space
      */
 
-    @GetMapping(value = "/api/c/{scope}/resources", produces = "application/json")
+    @GetMapping(value = {
+            "/api/resources",
+            "/api/-/{space}/resources"
+    }, produces = "application/json")
     @ApiOperation(value = "List resources with filters")
-    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+            @ApiImplicitParam(name = "X-Space", value = "Space", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+    })
     @ResponseBody
     public List<ResourceDTO> list(
-            @ApiParam(value = "Resource scope", defaultValue = "default") @PathVariable("scope") Optional<String> scope,
+            @ApiParam(value = "Resource space", defaultValue = "default") @PathVariable("space") Optional<String> space,
             @ApiParam(value = "Resource type") @RequestParam("type") Optional<String> type,
             @ApiParam(value = "Resource provider") @RequestParam("provider") Optional<String> provider,
             @ApiParam(value = "Resource owner") @RequestParam("user") Optional<String> ownerId,
             HttpServletRequest request, HttpServletResponse response,
             Pageable pageable) {
 
-        String scopeId = scope.orElse(defaultScope);
+        Optional<String> xSpace = Optional.ofNullable(ControllerUtil.getSpaceId(request));
+        String spaceId = xSpace.orElse(defaultSpace);
         String userId = ControllerUtil.getUserId(request);
 
-        _log.debug("list resources by " + userId + " for scope " + scopeId);
+        _log.debug("list resources by " + userId + " for space " + spaceId);
 
         long total = 0;
         List<Resource> resources = new ArrayList<>();
 
         // TODO refactor - ugly
         if (type.isPresent()) {
-            total = resourceService.countByType(scopeId, userId, type.get());
-            resources = resourceService.listByType(scopeId, userId, type.get());
+            total = resourceService.countByType(spaceId, userId, type.get());
+            resources = resourceService.listByType(spaceId, userId, type.get());
         } else if (provider.isPresent()) {
-            total = resourceService.countByProvider(scopeId, userId, provider.get());
-            resources = resourceService.listByProvider(scopeId, userId, provider.get());
+            total = resourceService.countByProvider(spaceId, userId, provider.get());
+            resources = resourceService.listByProvider(spaceId, userId, provider.get());
         } else if (ownerId.isPresent()) {
-            total = resourceService.countByUserId(scopeId, userId, ownerId.get());
-            resources = resourceService.listByUserId(scopeId, userId, ownerId.get());
+            total = resourceService.countByUserId(spaceId, userId, ownerId.get());
+            resources = resourceService.listByUserId(spaceId, userId, ownerId.get());
         } else {
-            total = resourceService.count(scopeId, userId);
-            resources = resourceService.list(scopeId, userId, pageable.getPageNumber(), pageable.getPageSize());
+            total = resourceService.count(spaceId, userId);
+            resources = resourceService.list(spaceId, userId, pageable.getPageNumber(), pageable.getPageSize());
         }
         List<ResourceDTO> results = resources.stream().map(r -> ResourceDTO.fromResource(r))
                 .collect(Collectors.toList());
@@ -245,113 +288,6 @@ public class ResourceController {
         response.setHeader("X-Total-Count", String.valueOf(total));
 
         return results;
-    }
-
-    /*
-     * Resource
-     */
-    @GetMapping(value = "/api/resources/{id}", produces = "application/json")
-    @ApiOperation(value = "Fetch a specific resource by id")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
-            @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
-    })
-    @ResponseBody
-    public ResourceDTO get(
-            @ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
-            HttpServletRequest request, HttpServletResponse response)
-            throws NoSuchResourceException {
-
-        Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
-        return get(scopeId, id, request, response);
-    }
-
-    @PostMapping(value = "/api/resources", produces = "application/json")
-    @ApiOperation(value = "Create a new resource")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
-            @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
-    })
-    @ResponseBody
-    public ResourceDTO create(
-            @ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
-            HttpServletRequest request, HttpServletResponse response)
-            throws NoSuchProviderException, ResourceProviderException, InvalidNameException, DuplicateNameException {
-
-        Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
-        return create(scopeId, resource, request, response);
-    }
-
-    @PutMapping(value = "/api/resources", produces = "application/json")
-    @ApiOperation(value = "Add an existing resource")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
-            @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
-    })
-    @ResponseBody
-    public ResourceDTO add(
-            @ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
-            HttpServletRequest request, HttpServletResponse response)
-            throws NoSuchProviderException, ResourceProviderException {
-
-        Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
-        return add(scopeId, resource, request, response);
-    }
-
-    @PutMapping(value = "/api/resources/{id}", produces = "application/json")
-    @ApiOperation(value = "Update a specific resource")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
-            @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
-    })
-    @ResponseBody
-    public ResourceDTO update(
-            @ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
-            @ApiParam(value = "Resource json", required = true) @RequestBody ResourceDTO resource,
-            HttpServletRequest request, HttpServletResponse response)
-            throws NoSuchProviderException, NoSuchResourceException, ResourceProviderException {
-
-        Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
-        return update(scopeId, id, resource, request, response);
-    }
-
-    @DeleteMapping(value = "/api/resources/{id}", produces = "application/json")
-    @ApiOperation(value = "Delete a specific resource")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
-            @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
-    })
-    @ResponseBody
-    public ResourceDTO delete(
-            @ApiParam(value = "Resource id", required = true) @PathVariable("id") long id,
-            HttpServletRequest request, HttpServletResponse response)
-            throws NoSuchProviderException, NoSuchResourceException, ResourceProviderException {
-
-        Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
-        return delete(scopeId, id, request, response);
-    }
-
-    /*
-     * List
-     */
-
-    @GetMapping(value = "/api/resources", produces = "application/json")
-    @ApiOperation(value = "List resources with filters")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
-            @ApiImplicitParam(name = "X-Scope", value = "Scope", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
-    })
-    @ResponseBody
-    public List<ResourceDTO> list(
-            @RequestParam("type") Optional<String> type,
-            @RequestParam("provider") Optional<String> provider,
-            @RequestParam("user") Optional<String> ownerId,
-            HttpServletRequest request, HttpServletResponse response,
-            Pageable pageable) {
-
-        Optional<String> scopeId = Optional.ofNullable(ControllerUtil.getScopeId(request));
-        return list(scopeId, type, provider, ownerId, request, response, pageable);
-
     }
 
     /*

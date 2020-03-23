@@ -31,13 +31,14 @@ public class DremioSqlConsumer extends Consumer {
     private String endpoint;
     private String username;
     private String password;
+    private boolean version4;
 
     private int STATUS;
 
     private Registration registration;
 
     // filters
-    private String scopeId;
+    private String spaceId;
     private List<String> tags;
 
     private DremioClient _client;
@@ -46,7 +47,7 @@ public class DremioSqlConsumer extends Consumer {
         endpoint = "";
         username = "";
         password = "";
-        scopeId = "";
+        spaceId = "";
         tags = new ArrayList<>();
     }
 
@@ -59,7 +60,7 @@ public class DremioSqlConsumer extends Consumer {
         this();
         registration = reg;
         _properties = reg.getPropertiesMap();
-        scopeId = reg.getScopeId();
+        spaceId = reg.getSpaceId();
         tags = reg.getTags();
     }
 
@@ -110,10 +111,16 @@ public class DremioSqlConsumer extends Consumer {
                 username = _properties.get("username").toString();
                 password = _properties.get("password").toString();
             }
+
+            if (_properties.containsKey("version4")) {
+                version4 = Boolean.parseBoolean(_properties.get("version4").toString());
+            } else {
+                version4 = true;
+            }
         }
 
         if (!endpoint.isEmpty() && !username.isEmpty() && !password.isEmpty()) {
-            _client = new DremioClient(endpoint, username, password);
+            _client = new DremioClient(endpoint, username, password, version4);
             // DISABLED check - TODO implement async check and recovery
 //            // test via ping
 //            try {
@@ -135,8 +142,8 @@ public class DremioSqlConsumer extends Consumer {
     }
 
     @Override
-    public void addResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
+    public void addResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId()) && checkTags(resource.getTags())) {
             _log.debug("add resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -147,12 +154,13 @@ public class DremioSqlConsumer extends Consumer {
                     String uri = resource.getUri();
                     String host = extractURI(provider, uri, "host");
                     int port = Integer.parseInt(extractURI(provider, uri, "port"));
+                    boolean ssl = Boolean.parseBoolean(extractURI(provider, uri, "ssl"));
                     String uname = extractURI(provider, uri, "username");
                     String passw = extractURI(provider, uri, "password");
                     String database = extractURI(provider, uri, "database");
                     String name = type.toLowerCase() + "_" + database;
 
-                    name = _client.addSource(type, name, host, port, database, uname, passw);
+                    name = _client.addSource(type, name, host, port, ssl, database, uname, passw);
                     _log.debug("created source " + name);
                 }
             } catch (DremioException e) {
@@ -163,8 +171,8 @@ public class DremioSqlConsumer extends Consumer {
     }
 
     @Override
-    public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId())) {
+    public void updateResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId())) {
             _log.debug("update resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -175,6 +183,7 @@ public class DremioSqlConsumer extends Consumer {
                     String uri = resource.getUri();
                     String host = extractURI(provider, uri, "host");
                     int port = Integer.parseInt(extractURI(provider, uri, "port"));
+                    boolean ssl = Boolean.parseBoolean(extractURI(provider, uri, "ssl"));
                     String uname = extractURI(provider, uri, "username");
                     String passw = extractURI(provider, uri, "password");
                     String database = extractURI(provider, uri, "database");
@@ -184,11 +193,11 @@ public class DremioSqlConsumer extends Consumer {
                         // matches, update or create via client
                         if (_client.hasSource(name)) {
                             // exists, update
-                            name = _client.updateSource(type, name, host, port, database, uname, passw);
+                            name = _client.updateSource(type, name, host, port, ssl, database, uname, passw);
                             _log.debug("updated source " + name);
                         } else {
                             // create as new
-                            name = _client.addSource(type, name, host, port, database, uname, passw);
+                            name = _client.addSource(type, name, host, port, ssl, database, uname, passw);
                             _log.debug("created source " + name);
                         }
                     } else {
@@ -207,8 +216,8 @@ public class DremioSqlConsumer extends Consumer {
     }
 
     @Override
-    public void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
+    public void deleteResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId()) && checkTags(resource.getTags())) {
             _log.debug("delete resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -232,8 +241,8 @@ public class DremioSqlConsumer extends Consumer {
     }
 
     @Override
-    public void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
+    public void checkResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId()) && checkTags(resource.getTags())) {
             _log.debug("check resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -293,11 +302,11 @@ public class DremioSqlConsumer extends Consumer {
         return ret;
     }
 
-    public boolean checkScope(String scope) {
-        if (!this.scopeId.isEmpty()) {
-            return scopeId.equals(scope);
+    public boolean checkSpace(String space) {
+        if (!this.spaceId.isEmpty()) {
+            return spaceId.equals(space);
         } else {
-            // if global scope
+            // if global space
             return true;
         }
     }
@@ -312,6 +321,9 @@ public class DremioSqlConsumer extends Consumer {
             break;
         case "port":
             value = Integer.toString(SqlUtil.getPort(uri));
+            break;
+        case "ssl":
+            value = "false"; // always disable SSL here
             break;
         case "username":
             value = SqlUtil.getUsername(uri);

@@ -73,7 +73,7 @@ public class NullProvider extends ResourceProvider {
     }
 
     @Override
-    public Resource createResource(String scopeId, String userId, String name, Map<String, Serializable> properties)
+    public Resource createResource(String spaceId, String userId, String name, Map<String, Serializable> properties)
             throws ResourceProviderException {
         Resource res = new Resource();
         res.setType(TYPE);

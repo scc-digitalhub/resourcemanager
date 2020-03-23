@@ -28,13 +28,13 @@ public class RegistrationLocalService {
      * Data
      */
 
-    public Registration add(String scopeId, String userId, String type, String consumer,
+    public Registration add(String spaceId, String userId, String type, String consumer,
             Map<String, Serializable> properties, List<String> tags)
             throws NoSuchConsumerException {
 
         // build registration
         Registration reg = new Registration();
-        reg.setScopeId(scopeId);
+        reg.setSpaceId(spaceId);
         reg.setUserId(userId);
         reg.setType(type);
         reg.setConsumer(consumer);
@@ -104,20 +104,20 @@ public class RegistrationLocalService {
         return registrationRepository.countByConsumer(provider);
     }
 
-    public long countByUserIdAndScopeId(String userId, String scopeId) {
-        return registrationRepository.countByUserIdAndScopeId(userId, scopeId);
+    public long countByUserIdAndSpaceId(String userId, String spaceId) {
+        return registrationRepository.countByUserIdAndSpaceId(userId, spaceId);
     }
 
-    public long countByScopeId(String scopeId) {
-        return registrationRepository.countByScopeId(scopeId);
+    public long countBySpaceId(String spaceId) {
+        return registrationRepository.countBySpaceId(spaceId);
     }
 
-    public long countByTypeAndScopeId(String type, String scopeId) {
-        return registrationRepository.countByTypeAndScopeId(type, scopeId);
+    public long countByTypeAndSpaceId(String type, String spaceId) {
+        return registrationRepository.countByTypeAndSpaceId(type, spaceId);
     }
 
-    public long countByConsumerAndScopeId(String provider, String scopeId) {
-        return registrationRepository.countByConsumerAndScopeId(provider, scopeId);
+    public long countByConsumerAndSpaceId(String provider, String spaceId) {
+        return registrationRepository.countByConsumerAndSpaceId(provider, spaceId);
     }
     /*
      * List
@@ -140,25 +140,25 @@ public class RegistrationLocalService {
         return registrationRepository.findByConsumer(provider);
     }
 
-    public List<Registration> listByUserIdAndScopeId(String userId, String scopeId) {
-        return registrationRepository.findByUserIdAndScopeId(userId, scopeId);
+    public List<Registration> listByUserIdAndSpaceId(String userId, String spaceId) {
+        return registrationRepository.findByUserIdAndSpaceId(userId, spaceId);
     }
 
-    public List<Registration> listByScopeId(String scopeId) {
-        return registrationRepository.findByScopeId(scopeId);
+    public List<Registration> listBySpaceId(String spaceId) {
+        return registrationRepository.findBySpaceId(spaceId);
     }
 
-    public List<Registration> listByScopeId(String scopeId, Pageable pageable) {
-        Page<Registration> result = registrationRepository.findByScopeId(scopeId, pageable);
+    public List<Registration> listBySpaceId(String spaceId, Pageable pageable) {
+        Page<Registration> result = registrationRepository.findBySpaceId(spaceId, pageable);
         return result.getContent();
     }
 
-    public List<Registration> listByTypeAndScopeId(String type, String scopeId) {
-        return registrationRepository.findByTypeAndScopeId(type, scopeId);
+    public List<Registration> listByTypeAndSpaceId(String type, String spaceId) {
+        return registrationRepository.findByTypeAndSpaceId(type, spaceId);
     }
 
-    public List<Registration> listByConsumerAndScopeId(String consumer, String scopeId) {
-        return registrationRepository.findByConsumerAndScopeId(consumer, scopeId);
+    public List<Registration> listByConsumerAndSpaceId(String consumer, String spaceId) {
+        return registrationRepository.findByConsumerAndSpaceId(consumer, spaceId);
     }
 
 }

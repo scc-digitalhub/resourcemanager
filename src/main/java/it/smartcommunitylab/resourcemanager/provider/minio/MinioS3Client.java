@@ -11,6 +11,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import org.json.JSONArray;
@@ -179,7 +180,7 @@ public class MinioS3Client {
     // direct api calls for user management and policies
     // NOTE: reverse engineering of minio admin API and DARE encryption schema
 
-    public String createPolicy(String bucketName, String type) throws MinioException {
+    public String createPolicy(String policyName, String bucketName, String type) throws MinioException {
         try {
             _log.debug("create policy " + type + " for bucket " + bucketName);
 
@@ -250,14 +251,14 @@ public class MinioS3Client {
 
             policy.put("Statement", statements);
 
-            String name = bucketName + "_" + type;
+//            String name = bucketName + "_" + type;
 
             // prepare signature
             DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
             dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));// server timezone
 
             String hostname = HOST + ":" + Integer.toString(PORT);
-            String url = ENDPOINT + "/minio/admin/v1/add-canned-policy?name=" + name;
+            String url = ENDPOINT + "/minio/admin/v1/add-canned-policy?name=" + policyName;
             String date = dateFormat.format(new Date());
             String content = policy.toString();
             String contentSha256 = MinioSha256.get(content, Charset.forName("UTF-8"));
@@ -294,7 +295,7 @@ public class MinioS3Client {
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 // no response expected from Minio
-                return name;
+                return policyName;
             } else {
                 _log.error("response error " + response.getStatusCode().toString());
                 throw new MinioException("response error " + response.getStatusCode().toString());
@@ -309,17 +310,146 @@ public class MinioS3Client {
 
     }
 
-    public void removePolicy(String bucketName, String type) throws MinioException {
+    public String createOrUpdatePolicy(String policyName, List<String> bucketNames, String type) throws MinioException {
         try {
-            _log.debug("remove policy " + type + " for bucket " + bucketName);
+            _log.debug("create policy " + type + " for buckets " + bucketNames.toString());
 
-            String name = bucketName + "_" + type;
+            // build json
+            JSONObject policy = new JSONObject();
+            // static version declaration
+            policy.put("Version", "2012-10-17");
+
+            JSONObject aws = new JSONObject("{'AWS': ['*']}");
+            JSONArray statements = new JSONArray();
+
+            // root policy
+            JSONObject rootStatement = new JSONObject();
+            rootStatement.put("Effect", "Allow");
+            rootStatement.put("Principal", aws);
+
+            JSONArray rootActions = new JSONArray();
+            rootActions.put("s3:ListAllMyBuckets");
+            rootActions.put("s3:HeadBucket");
+            rootStatement.put("Action", rootActions);
+
+            JSONArray rootResource = new JSONArray();
+            rootResource.put("arn:aws:s3:::*");
+            rootStatement.put("Resource", rootResource);
+
+            statements.put(rootStatement);
+
+            // bucket policy
+            for (String bucketName : bucketNames) {
+                JSONObject bucketStatement = new JSONObject();
+                bucketStatement.put("Effect", "Allow");
+                bucketStatement.put("Principal", aws);
+
+                JSONArray bucketActions = new JSONArray();
+                bucketActions.put("s3:GetBucketLocation");
+                bucketActions.put("s3:ListBucket");
+                bucketActions.put("s3:ListBucketMultipartUploads");
+                bucketStatement.put("Action", bucketActions);
+
+                JSONArray bucketResource = new JSONArray();
+                bucketResource.put("arn:aws:s3:::" + bucketName);
+                bucketStatement.put("Resource", bucketResource);
+
+                statements.put(bucketStatement);
+
+                // object policy
+                JSONObject objectStatement = new JSONObject();
+                objectStatement.put("Effect", "Allow");
+                objectStatement.put("Principal", aws);
+
+                JSONArray objectActions = new JSONArray();
+                if (type.equals(POLICY_RW)) {
+                    objectActions.put("s3:AbortMultipartUpload");
+                    objectActions.put("s3:DeleteObject");
+                    objectActions.put("s3:GetObject");
+                    objectActions.put("s3:ListMultipartUploadParts");
+                    objectActions.put("s3:PutObject");
+                } else if (type.equals(POLICY_RO)) {
+                    objectActions.put("s3:GetObject");
+                }
+
+                objectStatement.put("Action", objectActions);
+
+                JSONArray objectResource = new JSONArray();
+                objectResource.put("arn:aws:s3:::" + bucketName + "/*");
+                objectStatement.put("Resource", objectResource);
+
+                statements.put(objectStatement);
+            }
+
+            policy.put("Statement", statements);
+
             // prepare signature
             DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
             dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));// server timezone
 
             String hostname = HOST + ":" + Integer.toString(PORT);
-            String url = ENDPOINT + "/minio/admin/v1/remove-canned-policy?name=" + name;
+            String url = ENDPOINT + "/minio/admin/v1/add-canned-policy?name=" + policyName;
+            String date = dateFormat.format(new Date());
+            String content = policy.toString();
+            String contentSha256 = MinioSha256.get(content, Charset.forName("UTF-8"));
+
+            _log.trace("policy json " + content);
+            _log.trace("content sha " + contentSha256);
+
+            HttpRequest request = new HttpRequest("PUT", new URI(url));
+            String signature = Signer.builder()
+                    .awsCredentials(new AwsCredentials(ACCESS_KEY, SECRET_KEY))
+                    .header("Host", hostname)
+                    .header("x-amz-date", date)
+                    .header("x-amz-content-sha256", contentSha256)
+                    .buildS3(request, contentSha256)
+                    .getSignature();
+
+            _log.trace("request url " + url);
+            _log.trace("request signature " + signature);
+
+            RestTemplate template = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+
+            headers.set("Authorization", signature);
+            headers.set("X-Amz-Content-Sha256", contentSha256);
+            headers.set("X-Amz-Date", date);
+
+            HttpEntity<String> entity = new HttpEntity<>(content, headers);
+
+            ResponseEntity<String> response = template.exchange(url, HttpMethod.PUT, entity,
+                    String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                // no response expected from Minio
+                return policyName;
+            } else {
+                _log.error("response error " + response.getStatusCode().toString());
+                throw new MinioException("response error " + response.getStatusCode().toString());
+            }
+
+        } catch (URISyntaxException uex) {
+            _log.error(uex.getMessage());
+            throw new MinioException(uex.getMessage());
+        } catch (RestClientException rex) {
+            throw new MinioException("rest error " + rex.getMessage());
+        }
+
+    }
+
+    public void removePolicy(String policyName) throws MinioException {
+        try {
+            _log.debug("remove policy " + policyName);
+
+            // prepare signature
+            DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
+            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));// server timezone
+
+            String hostname = HOST + ":" + Integer.toString(PORT);
+            String url = ENDPOINT + "/minio/admin/v1/remove-canned-policy?name=" + policyName;
             String date = dateFormat.format(new Date());
             String content = ""; // empty content needed for sha256
             String contentSha256 = MinioSha256.get(content, Charset.forName("UTF-8"));
@@ -365,9 +495,9 @@ public class MinioS3Client {
         }
     }
 
-    public void createUser(String bucket, String accessKey, String secretKey, String policy) throws MinioException {
+    public void createUser(String accessKey, String secretKey, String policyName) throws MinioException {
         try {
-            _log.debug("create user " + accessKey + " for bucket " + bucket);
+            _log.debug("create user " + accessKey + " with policy " + policyName);
 
             // build user info
             JSONObject userInfo = new JSONObject();
@@ -441,11 +571,13 @@ public class MinioS3Client {
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 // expect policy to exists
-                String policyName = bucket + "_" + policy;
 
                 _log.debug("set user " + accessKey + " policy " + policyName);
 
-                url = ENDPOINT + "/minio/admin/v1/set-user-policy?accessKey=" + accessKey + "&name=" + policyName;
+//                url = ENDPOINT + "/minio/admin/v1/set-user-policy?accessKey=" + accessKey + "&name=" + policyName;
+                url = ENDPOINT + "/minio/admin/v1/set-user-or-group-policy?isGroup=false&policyName=" + policyName
+                        + "&userOrGroup=" + accessKey;
+
                 content = new byte[0];
                 contentSha256 = MinioSha256.get(content);
 

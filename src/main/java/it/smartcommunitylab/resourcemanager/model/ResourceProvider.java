@@ -22,7 +22,7 @@ public abstract class ResourceProvider {
     /*
      * Resources
      */
-    public abstract Resource createResource(String scopeId, String userId, String name,
+    public abstract Resource createResource(String spaceId, String userId, String name,
             Map<String, Serializable> properties)
             throws ResourceProviderException, InvalidNameException, DuplicateNameException;
 

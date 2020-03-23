@@ -46,7 +46,7 @@ public class WebhookS3Consumer extends Consumer {
     private int STATUS;
 
     // filters
-    private String scopeId;
+    private String spaceId;
     private List<String> tags;
 
     private WebhookClient _client;
@@ -58,7 +58,7 @@ public class WebhookS3Consumer extends Consumer {
         token = "";
         secret = "";
 
-        scopeId = "";
+        spaceId = "";
         tags = new ArrayList<>();
     }
 
@@ -71,7 +71,7 @@ public class WebhookS3Consumer extends Consumer {
         this();
         registration = reg;
         _properties = reg.getPropertiesMap();
-        scopeId = reg.getScopeId();
+        spaceId = reg.getSpaceId();
         tags = reg.getTags();
     }
 
@@ -161,8 +161,8 @@ public class WebhookS3Consumer extends Consumer {
     }
 
     @Override
-    public void addResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
+    public void addResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId()) && checkTags(resource.getTags())) {
             _log.debug("add resource " + resource.toString());
             try {
                 if (resource.getProvider().equals(MinioProvider.ID)) {
@@ -182,7 +182,7 @@ public class WebhookS3Consumer extends Consumer {
                     }
 
                     // call endpoint via client
-                    _client.call("add", resource.getScopeId(), resource.getId(), "s3", host, port, bucket, accessKey,
+                    _client.call("add", resource.getSpaceId(), resource.getId(), "s3", host, port, bucket, accessKey,
                             secretKey);
 
                     _log.debug("resource added via endpoint " + endpoint);
@@ -196,8 +196,8 @@ public class WebhookS3Consumer extends Consumer {
     }
 
     @Override
-    public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId())) {
+    public void updateResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId())) {
             _log.debug("update resource " + resource.toString());
             try {
                 if (resource.getProvider().equals(MinioProvider.ID)) {
@@ -218,12 +218,12 @@ public class WebhookS3Consumer extends Consumer {
 
                     if (checkTags(resource.getTags())) {
                         // call endpoint via client
-                        _client.call("update", resource.getScopeId(), resource.getId(), "s3", host, port, bucket,
+                        _client.call("update", resource.getSpaceId(), resource.getId(), "s3", host, port, bucket,
                                 accessKey, secretKey);
                         _log.debug("resource updated via endpoint " + endpoint);
                     } else {
                         // call endpoint via client
-                        _client.call("delete", resource.getScopeId(), resource.getId(), "s3", host, port, bucket,
+                        _client.call("delete", resource.getSpaceId(), resource.getId(), "s3", host, port, bucket,
                                 accessKey,
                                 secretKey);
                         _log.debug("resource deleted via endpoint " + endpoint);
@@ -238,8 +238,8 @@ public class WebhookS3Consumer extends Consumer {
     }
 
     @Override
-    public void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
+    public void deleteResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId()) && checkTags(resource.getTags())) {
             _log.debug("delete resource " + resource.toString());
             try {
                 if (resource.getProvider().equals(MinioProvider.ID)) {
@@ -258,7 +258,7 @@ public class WebhookS3Consumer extends Consumer {
                         secretKey = MinioUtils.getSecretKey(uri);
                     }
 
-                    _client.call("delete", resource.getScopeId(), resource.getId(), "s3", host, port, bucket,
+                    _client.call("delete", resource.getSpaceId(), resource.getId(), "s3", host, port, bucket,
                             accessKey, secretKey);
                     _log.debug("resource deleted via endpoint " + endpoint);
                 }
@@ -270,7 +270,7 @@ public class WebhookS3Consumer extends Consumer {
     }
 
     @Override
-    public void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException {
+    public void checkResource(String spaceId, String userId, Resource resource) throws ConsumerException {
         // not supported
     }
 
@@ -294,11 +294,11 @@ public class WebhookS3Consumer extends Consumer {
         return ret;
     }
 
-    public boolean checkScope(String scope) {
-        if (!this.scopeId.isEmpty()) {
-            return scopeId.equals(scope);
+    public boolean checkSpace(String space) {
+        if (!this.spaceId.isEmpty()) {
+            return spaceId.equals(space);
         } else {
-            // if global scope
+            // if global space
             return true;
         }
     }

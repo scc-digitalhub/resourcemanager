@@ -30,7 +30,7 @@ public class Registration {
     private String consumer;
 
     private String userId;
-    private String scopeId;
+    private String spaceId;
 
     private String properties;
 
@@ -70,12 +70,12 @@ public class Registration {
         this.userId = userId;
     }
 
-    public String getScopeId() {
-        return scopeId;
+    public String getSpaceId() {
+        return spaceId;
     }
 
-    public void setScopeId(String scopeId) {
-        this.scopeId = scopeId;
+    public void setSpaceId(String spaceId) {
+        this.spaceId = spaceId;
     }
 
     public String getProperties() {
@@ -97,7 +97,7 @@ public class Registration {
     @Override
     public String toString() {
         return "Registration [id=" + id + ", type=" + type + ", consumer=" + consumer + ", userId=" + userId
-                + ", scopeId=" + scopeId + "]";
+                + ", spaceId=" + spaceId + "]";
     }
 
     @Override

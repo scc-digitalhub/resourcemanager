@@ -52,7 +52,7 @@ public class ResourceLocalService {
     /*
      * Data
      */
-    public Resource create(String scopeId, String userId,
+    public Resource create(String spaceId, String userId,
             String type, String providerId, String name,
             Map<String, Serializable> properties, List<String> tags)
             throws NoSuchProviderException, ResourceProviderException, InvalidNameException, DuplicateNameException {
@@ -65,10 +65,10 @@ public class ResourceLocalService {
             throw new NoSuchProviderException();
         }
         // sync call - should validate properties
-        Resource res = provider.createResource(scopeId, userId, name, properties);
+        Resource res = provider.createResource(spaceId, userId, name, properties);
 
         // update fields
-        res.setScopeId(scopeId);
+        res.setSpaceId(spaceId);
         res.setUserId(userId);
 
         // persist tags
@@ -92,8 +92,8 @@ public class ResourceLocalService {
     }
 
     @Transactional
-    public Resource add(String scopeId, String userId, String type, String providerId,
-            String uri,
+    public Resource add(String spaceId, String userId, String type, String providerId,
+            String name, String uri,
             Map<String, Serializable> properties, List<String> tags)
             throws NoSuchProviderException, ResourceProviderException {
         _log.info("add " + type + " resource with " + String.valueOf(providerId) + " by user " + userId);
@@ -110,9 +110,11 @@ public class ResourceLocalService {
         Resource res = new Resource();
         res.setType(type);
         res.setProvider(provider.getId());
+        res.setName(name);
+        
         res.setPropertiesMap(properties);
         // update fields
-        res.setScopeId(scopeId);
+        res.setSpaceId(spaceId);
         res.setUserId(userId);
 
         // persist tags
@@ -190,7 +192,7 @@ public class ResourceLocalService {
         // notify consumers *before* removal from db
         // since bus is async directly dispatch event to consumer
         ResourceEvent event = new ResourceEvent(res,
-                res.getScopeId(), res.getUserId(), res.getType(),
+                res.getSpaceId(), res.getUserId(), res.getType(),
                 res.getId(), SystemKeys.ACTION_DELETE);
         consumerLocalService.receiveResourceEvent(event);
 
@@ -261,20 +263,20 @@ public class ResourceLocalService {
         return resourceRepository.countByProvider(provider);
     }
 
-    public long countByScopeId(String scopeId) {
-        return resourceRepository.countByScopeId(scopeId);
+    public long countBySpaceId(String spaceId) {
+        return resourceRepository.countBySpaceId(spaceId);
     }
 
-    public long countByUserIdAndScopeId(String userId, String scopeId) {
-        return resourceRepository.countByUserIdAndScopeId(userId, scopeId);
+    public long countByUserIdAndSpaceId(String userId, String spaceId) {
+        return resourceRepository.countByUserIdAndSpaceId(userId, spaceId);
     }
 
-    public long countByTypeAndScopeId(String type, String scopeId) {
-        return resourceRepository.countByTypeAndScopeId(type, scopeId);
+    public long countByTypeAndSpaceId(String type, String spaceId) {
+        return resourceRepository.countByTypeAndSpaceId(type, spaceId);
     }
 
-    public long countByProviderAndScopeId(String provider, String scopeId) {
-        return resourceRepository.countByProviderAndScopeId(provider, scopeId);
+    public long countByProviderAndSpaceId(String provider, String spaceId) {
+        return resourceRepository.countByProviderAndSpaceId(provider, spaceId);
     }
     /*
      * List
@@ -297,30 +299,30 @@ public class ResourceLocalService {
         return resourceRepository.findByProvider(provider);
     }
 
-    public List<Resource> listByUserIdAndScopeId(String userId, String scopeId) {
-        return resourceRepository.findByUserIdAndScopeId(userId, scopeId);
+    public List<Resource> listByUserIdAndSpaceId(String userId, String spaceId) {
+        return resourceRepository.findByUserIdAndSpaceId(userId, spaceId);
     }
 
-    public List<Resource> listByScopeId(String scopeId) {
-        return resourceRepository.findByScopeId(scopeId);
+    public List<Resource> listBySpaceId(String spaceId) {
+        return resourceRepository.findBySpaceId(spaceId);
     }
 
-    public List<Resource> listByScopeId(String scopeId, Pageable pageable) {
-        Page<Resource> result = resourceRepository.findByScopeId(scopeId, pageable);
+    public List<Resource> listBySpaceId(String spaceId, Pageable pageable) {
+        Page<Resource> result = resourceRepository.findBySpaceId(spaceId, pageable);
         return result.getContent();
     }
 
-    public List<Resource> listByTypeAndScopeId(String type, String scopeId) {
-        return resourceRepository.findByTypeAndScopeId(type, scopeId);
+    public List<Resource> listByTypeAndSpaceId(String type, String spaceId) {
+        return resourceRepository.findByTypeAndSpaceId(type, spaceId);
     }
 
-    public List<Resource> listByTypeAndScopeId(String type, String scopeId, Pageable pageable) {
-        Page<Resource> result = resourceRepository.findByTypeAndScopeId(type, scopeId, pageable);
+    public List<Resource> listByTypeAndSpaceId(String type, String spaceId, Pageable pageable) {
+        Page<Resource> result = resourceRepository.findByTypeAndSpaceId(type, spaceId, pageable);
         return result.getContent();
     }
 
-    public List<Resource> listByProviderAndScopeId(String provider, String scopeId) {
-        return resourceRepository.findByProviderAndScopeId(provider, scopeId);
+    public List<Resource> listByProviderAndSpaceId(String provider, String spaceId) {
+        return resourceRepository.findByProviderAndSpaceId(provider, spaceId);
     }
 
     /*
@@ -339,7 +341,7 @@ public class ResourceLocalService {
         provider.checkResource(res);
 
         // notify all consumers via events
-        eventHandler.notifyAction(res.getScopeId(), res.getUserId(), res.getType(), id,
+        eventHandler.notifyAction(res.getSpaceId(), res.getUserId(), res.getType(), id,
                 SystemKeys.ACTION_CHECK);
     }
 

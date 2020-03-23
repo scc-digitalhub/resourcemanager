@@ -15,13 +15,13 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
 
 	Long countByConsumer(String consumer);
 
-	Long countByUserIdAndScopeId(String userId, String scopeId);
+	Long countByUserIdAndSpaceId(String userId, String spaceId);
 
-	Long countByScopeId(String scopeId);
+	Long countBySpaceId(String spaceId);
 
-	Long countByTypeAndScopeId(String type, String scopeId);
+	Long countByTypeAndSpaceId(String type, String spaceId);
 
-	Long countByConsumerAndScopeId(String consumer, String scopeId);
+	Long countByConsumerAndSpaceId(String consumer, String spaceId);
 
 	List<Registration> findByType(String type);
 
@@ -29,13 +29,13 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
 
 	Page<Registration> findByType(String type, Pageable pageable);
 
-	List<Registration> findByUserIdAndScopeId(String userId, String scopeId);
+	List<Registration> findByUserIdAndSpaceId(String userId, String spaceId);
 
-	List<Registration> findByScopeId(String scopeId);
+	List<Registration> findBySpaceId(String spaceId);
 
-	List<Registration> findByScopeId(String scopeId, Sort sort);
+	List<Registration> findBySpaceId(String spaceId, Sort sort);
 
-	Page<Registration> findByScopeId(String scopeId, Pageable pageable);
+	Page<Registration> findBySpaceId(String spaceId, Pageable pageable);
 
 	List<Registration> findByConsumer(String consumer);
 
@@ -43,15 +43,15 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
 
 	Page<Registration> findByConsumer(String consumer, Pageable pageable);
 
-	List<Registration> findByTypeAndScopeId(String type, String scopeId);
+	List<Registration> findByTypeAndSpaceId(String type, String spaceId);
 
-	List<Registration> findByTypeAndScopeId(String type, String scopeId, Sort sort);
+	List<Registration> findByTypeAndSpaceId(String type, String spaceId, Sort sort);
 
-	Page<Registration> findByTypeAndScopeId(String type, String scopeId, Pageable pageable);
+	Page<Registration> findByTypeAndSpaceId(String type, String spaceId, Pageable pageable);
 
-	List<Registration> findByConsumerAndScopeId(String consumer, String scopeId);
+	List<Registration> findByConsumerAndSpaceId(String consumer, String spaceId);
 
-	List<Registration> findByConsumerAndScopeId(String consumer, String scopeId, Sort sort);
+	List<Registration> findByConsumerAndSpaceId(String consumer, String spaceId, Sort sort);
 
-	Page<Registration> findByConsumerAndScopeId(String consumer, String scopeId, Pageable pageable);
+	Page<Registration> findByConsumerAndSpaceId(String consumer, String spaceId, Pageable pageable);
 }

@@ -77,10 +77,10 @@ public class DremioODBCProvider extends ResourceProvider {
     @Value("${providers.dremio.sync}")
     private boolean SYNC;
 
-    // all resources will end in default scope
-    // could maybe map dremioSpace -> scope?
-    @Value("${scopes.default}")
-    private String scopeId;
+    // all resources will end in default space
+    // could maybe map dremioSpace -> space?
+    @Value("${spaces.default}")
+    private String spaceId;
 
     private DremioClient _client;
 
@@ -130,7 +130,7 @@ public class DremioODBCProvider extends ResourceProvider {
     }
 
     @Override
-    public Resource createResource(String scopeId, String userId, String name, Map<String, Serializable> properties)
+    public Resource createResource(String spaceId, String userId, String name, Map<String, Serializable> properties)
             throws ResourceProviderException, InvalidNameException, DuplicateNameException {
         throw new ResourceProviderException("not supported");
     }
@@ -290,8 +290,9 @@ public class DremioODBCProvider extends ResourceProvider {
         // use our id as username
         // TODO replace
         String userId = ID;
+        String name = datasetId;
         // register an unmanaged resource
-        return resourceLocalService.add(scopeId, userId, TYPE, ID, uri, properties, tags);
+        return resourceLocalService.add(spaceId, userId, TYPE, ID, name, uri, properties, tags);
 
     }
 

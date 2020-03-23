@@ -106,7 +106,7 @@ public class CockroachDBProvider extends ResourceProvider {
     }
 
     @Override
-    public Resource createResource(String scopeId, String userId, String name, Map<String, Serializable> properties)
+    public Resource createResource(String spaceId, String userId, String name, Map<String, Serializable> properties)
             throws ResourceProviderException, InvalidNameException, DuplicateNameException {
         Resource res = new Resource();
         res.setType(TYPE);
@@ -120,25 +120,25 @@ public class CockroachDBProvider extends ResourceProvider {
                     throw new InvalidNameException();
                 }
 
-                // build scoped name
+                // build spaced name
                 StringBuilder sb = new StringBuilder();
-                sb.append(scopeId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+                sb.append(spaceId.replaceAll("[^A-Za-z0-9]", "")).append("_");
                 sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
                 sb.append(name);
 
                 name = sb.toString();
 
-                // check duplicate for scoped name
+                // check duplicate for spaced name
                 if (_client.hasDatabase(name)) {
                     throw new DuplicateNameException();
                 }
             } else {
                 // generate id with limited tries
-                name = generateId(scopeId, userId);
+                name = generateId(spaceId, userId);
                 int retry = 0;
                 boolean exists = _client.hasDatabase(name);
                 while (exists && retry < 8) {
-                    name = generateId(scopeId, userId);
+                    name = generateId(spaceId, userId);
                     exists = _client.hasDatabase(name);
                     retry++;
                 }
@@ -148,7 +148,7 @@ public class CockroachDBProvider extends ResourceProvider {
                 }
             }
 
-            _log.info("create database " + name + " with scope " + scopeId + " for user " + userId);
+            _log.info("create database " + name + " with space " + spaceId + " for user " + userId);
 
             // create database
             _client.createDatabase(name);
@@ -192,7 +192,7 @@ public class CockroachDBProvider extends ResourceProvider {
     public void deleteResource(Resource resource) throws ResourceProviderException {
 
         _log.info("delete resource " + String.valueOf(resource.getId())
-                + " with scope " + resource.getScopeId()
+                + " with space " + resource.getSpaceId()
                 + " for user " + resource.getUserId());
 
         // extract info from resource
@@ -227,12 +227,12 @@ public class CockroachDBProvider extends ResourceProvider {
     /*
      * Helpers
      */
-    private String generateId(String scopeId, String userId) {
+    private String generateId(String spaceId, String userId) {
         // build id from context plus random string
         StringBuilder sb = new StringBuilder();
-        // cleanup scope and userId to alphanum - will strip non ascii
+        // cleanup space and userId to alphanum - will strip non ascii
         // use only _ as separator otherwise postgres will complain
-        sb.append(scopeId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+        sb.append(spaceId.replaceAll("[^A-Za-z0-9]", "")).append("_");
         sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
 
         // random suffix length 5

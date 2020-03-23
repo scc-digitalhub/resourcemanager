@@ -17,7 +17,7 @@ public class ResourcePermissionEvaluator implements PermissionEvaluator {
 	private final static Logger _log = LoggerFactory.getLogger(ResourcePermissionEvaluator.class);
 
 	@Autowired
-	ScopePermissionEvaluator scopePermission;
+	SpacePermissionEvaluator spacePermission;
 
 	@Autowired
 	ResourceLocalService resourceService;
@@ -30,7 +30,7 @@ public class ResourcePermissionEvaluator implements PermissionEvaluator {
 			_log.debug("hasPermission for resource " + res.getId() + ":" + permission);
 
 			// delegate to ScopePermission
-			return scopePermission.hasPermission(authentication, res.getScopeId(), "scope", permission);
+			return spacePermission.hasPermission(authentication, res.getSpaceId(), "space", permission);
 		}
 
 		return false;

@@ -20,7 +20,8 @@ public class MinioUtils {
 
     public static String encodeURI(
             String endpoint, String bucket,
-            String accessKey, String secretKey) {
+            String accessKey, String secretKey,
+            boolean ssl) {
 
         // pack connection details into URL
         // <provider>://<host>:<port>/<bucket>?accessKey=<accessKey>&secretKey=<secretKey>
@@ -33,6 +34,7 @@ public class MinioUtils {
             sb.append(URLEncoder.encode(bucket, "UTF-8"));
             sb.append("?accessKey=").append(URLEncoder.encode(accessKey, "UTF-8"));
             sb.append("&secretKey=").append(URLEncoder.encode(secretKey, "UTF-8"));
+            sb.append("&ssl=").append(URLEncoder.encode(Boolean.toString(ssl), "UTF-8"));
 
         } catch (UnsupportedEncodingException e) {
         }
@@ -118,6 +120,27 @@ public class MinioUtils {
             return u.getPort();
         } catch (Exception e) {
             return -1;
+        }
+    }
+
+    public static boolean getSsl(String uri) {
+        if (!isValid(uri)) {
+            return false;
+        }
+
+        try {
+            // replace minio with http for URL parsing
+            String url = uri.replace("minio://", "http://");
+            MultiValueMap<String, String> parameters = UriComponentsBuilder.fromUriString(url).build().getQueryParams();
+            List<String> values = parameters.get("ssl");
+            if (values != null && !values.isEmpty()) {
+                return Boolean.parseBoolean(URLDecoder.decode(values.get(0), "UTF-8"));
+            } else {
+                return false;
+            }
+
+        } catch (Exception e) {
+            return false;
         }
     }
 

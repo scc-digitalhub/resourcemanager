@@ -22,8 +22,8 @@ public class ConsumerDTO {
     @ApiModelProperty(notes = "Consumer owner Id", example = "admin@local")
     public String userId;
 
-    @ApiModelProperty(notes = "Consumer scope Id", example = "default")
-    public String scopeId;
+    @ApiModelProperty(notes = "Consumer space Id", example = "default")
+    public String spaceId;
 
     @ApiModelProperty(notes = "Consumer resource type", example = "sql")
     public String type;
@@ -65,12 +65,12 @@ public class ConsumerDTO {
         this.id = id;
     }
 
-    public String getScopeId() {
-        return scopeId;
+    public String getSpaceId() {
+        return spaceId;
     }
 
-    public void setScopeId(String scopeId) {
-        this.scopeId = scopeId;
+    public void setSpaceId(String spaceId) {
+        this.spaceId = spaceId;
     }
 
     public String getUserId() {
@@ -139,7 +139,7 @@ public class ConsumerDTO {
         ConsumerDTO dto = new ConsumerDTO();
         dto.id = reg.getId();
         dto.userId = reg.getUserId();
-        dto.scopeId = reg.getScopeId();
+        dto.spaceId = reg.getSpaceId();
 
         dto.type = reg.getType();
         dto.consumer = reg.getConsumer();

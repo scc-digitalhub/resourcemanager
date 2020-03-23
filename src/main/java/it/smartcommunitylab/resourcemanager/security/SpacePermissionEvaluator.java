@@ -20,49 +20,49 @@ import org.springframework.stereotype.Component;
 import it.smartcommunitylab.resourcemanager.SystemKeys;
 
 @Component
-public class ScopePermissionEvaluator implements PermissionEvaluator {
-    private final static Logger _log = LoggerFactory.getLogger(ScopePermissionEvaluator.class);
+public class SpacePermissionEvaluator implements PermissionEvaluator {
+    private final static Logger _log = LoggerFactory.getLogger(SpacePermissionEvaluator.class);
 
-    @Value("${scopes.enabled}")
+    @Value("${spaces.enabled}")
     private boolean enabled;
 
-    @Value("${scopes.list}")
-    private List<String> scopes;
+    @Value("${spaces.list}")
+    private List<String> spaces;
 
-    @Value("${scopes.default}")
-    private String defaultScope;
+    @Value("${spaces.default}")
+    private String defaultSpace;
 
-    @Value("${scopes.roles.mapping.admin}")
+    @Value("${spaces.roles.mapping.admin}")
     private String roleAdminMapping;
 
-    @Value("${scopes.roles.mapping.resourceAdmin}")
+    @Value("${spaces.roles.mapping.resourceAdmin}")
     private String roleResourceAdminMapping;
 
-    @Value("${scopes.roles.mapping.consumerAdmin}")
+    @Value("${spaces.roles.mapping.consumerAdmin}")
     private String roleConsumerAdminMapping;
 
-    @Value("${scopes.roles.mapping.user}")
+    @Value("${spaces.roles.mapping.user}")
     private String roleUserMapping;
 
     @PostConstruct
     public void init() {
-        _log.debug("scopePermission enabled? " + enabled);
+        _log.debug("spacePermission enabled? " + enabled);
 
-        if (scopes == null) {
-            scopes = new ArrayList<>();
+        if (spaces == null) {
+            spaces = new ArrayList<>();
         }
 
-        // add placeholder to scopes if empty
-        if (scopes.isEmpty()) {
-            scopes.add("*");
+        // add placeholder to spaces if empty
+        if (spaces.isEmpty()) {
+            spaces.add("*");
         }
 
-        // always add default scope if defined
-        if (!defaultScope.isEmpty() && !scopes.contains(defaultScope)) {
-            scopes.add(defaultScope);
+        // always add default space if defined
+        if (!defaultSpace.isEmpty() && !spaces.contains(defaultSpace)) {
+            spaces.add(defaultSpace);
         }
 
-        _log.debug("scopes: " + scopes.toString());
+        _log.debug("spaces: " + spaces.toString());
 
         // set default mappings
         if (roleAdminMapping.isEmpty()) {
@@ -87,7 +87,7 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
 
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-        // no scope object to check
+        // no space object to check
         return false;
     }
 
@@ -95,27 +95,27 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
     public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType,
             Object permission) {
 
-        String scopeId = targetId.toString();
+        String spaceId = targetId.toString();
         String userId = authentication.getName();
         String action = permission.toString();
 
         for (GrantedAuthority ga : authentication.getAuthorities()) {
-            _log.debug("user " + userId + " authority " + ga.toString());
+            _log.trace("user " + userId + " authority " + ga.toString());
         }
 
-        boolean isPermitted = isScopePermitted(scopeId);
-        _log.debug("user " + userId + " hasPermission scope " + scopeId + " permitted " + isPermitted);
+        boolean isPermitted = isSpacePermitted(spaceId);
+        _log.trace("user " + userId + " hasPermission space " + spaceId + " permitted " + isPermitted);
 
         // check in Auth
         boolean hasPermission = false;
 
-        // fetch ONLY scope roles
+        // fetch ONLY space roles
         List<GrantedAuthority> authorities = new ArrayList<>(authentication.getAuthorities());
-        _log.debug("user " + userId + " authorities " + authorities.toString());
+        _log.trace("user " + userId + " authorities " + authorities.toString());
 
         
         Set<String> roles = new HashSet<>();
-        roles.addAll(getScopeRoles(scopeId, authorities));
+        roles.addAll(getSpaceRoles(spaceId, authorities));
 
         // fetch all permissions related to any assigned role
         Set<String> permissions = new HashSet<>();
@@ -123,11 +123,11 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
             permissions.addAll(roleToPermissions(role));
         }
 
-        _log.debug("user " + userId + " permissions " + permissions.toString());
+        _log.trace("user " + userId + " permissions " + permissions.toString());
 
         hasPermission = permissions.contains(action);
 
-        _log.debug("user " + userId + " hasPermission for scope " + scopeId + ":" + action + " " + hasPermission);
+        _log.debug("user " + userId + " hasPermission for space " + spaceId + ":" + action + " " + hasPermission);
 
         return (isPermitted && hasPermission);
     }
@@ -135,46 +135,46 @@ public class ScopePermissionEvaluator implements PermissionEvaluator {
     /*
      * Helpers
      */
-    public List<String> getScopeRoles(String scopeId, Authentication authentication) {
+    public List<String> getSpaceRoles(String spaceId, Authentication authentication) {
         List<GrantedAuthority> authorities = new ArrayList<>(authentication.getAuthorities());
-        return getScopeRoles(scopeId, authorities);
+        return getSpaceRoles(spaceId, authorities);
     }
 
-    public boolean isScopePermitted(String scopeId) {
+    public boolean isSpacePermitted(String spaceId) {
 
-        if (!defaultScope.isEmpty() && scopeId.equals(defaultScope)) {
-            // default scope always enabled if defined
+        if (!defaultSpace.isEmpty() && spaceId.equals(defaultSpace)) {
+            // default space always enabled if defined
             return true;
         }
 
         if (enabled) {
-            if (scopes.contains("*")) {
+            if (spaces.contains("*")) {
                 return true;
             }
-            return scopes.contains(scopeId);
+            return spaces.contains(spaceId);
         }
 
         return false;
     }
 
-    private List<String> getScopeRoles(String scopeId, List<GrantedAuthority> authorities) {
+    private List<String> getSpaceRoles(String spaceId, List<GrantedAuthority> authorities) {
         List<String> roles = new ArrayList<>();
 
         for (GrantedAuthority ga : authorities) {
-            // support variable substitution with placeholder <scope>
+            // support variable substitution with placeholder <space>
             String auth = ga.getAuthority();
             if (auth != null) {
                 // check against mappings
-                if (auth.equals(roleAdminMapping.replace("<scope>", scopeId))) {
+                if (auth.equals(roleAdminMapping.replace("<space>", spaceId))) {
                     roles.add(SystemKeys.ROLE_ADMIN);
                 }
-                if (auth.equals(roleResourceAdminMapping.replace("<scope>", scopeId))) {
+                if (auth.equals(roleResourceAdminMapping.replace("<space>", spaceId))) {
                     roles.add(SystemKeys.ROLE_RESOURCE_ADMIN);
                 }
-                if (auth.equals(roleConsumerAdminMapping.replace("<scope>", scopeId))) {
+                if (auth.equals(roleConsumerAdminMapping.replace("<space>", spaceId))) {
                     roles.add(SystemKeys.ROLE_CONSUMER_ADMIN);
                 }
-                if (auth.equals(roleUserMapping.replace("<scope>", scopeId))) {
+                if (auth.equals(roleUserMapping.replace("<space>", spaceId))) {
                     roles.add(SystemKeys.ROLE_USER);
                 }
 

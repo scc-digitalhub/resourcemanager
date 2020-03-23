@@ -21,18 +21,18 @@ public class ControllerUtil {
 		return SecurityUtil.getUserName();
 	}
 
-	public static String getScopeId(final HttpServletRequest request) {
-		String scopeId = null;
+	public static String getSpaceId(final HttpServletRequest request) {
+		String spaceId = null;
 
 		Map<?, ?> pathVariables = (Map<?, ?>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-		if (pathVariables.containsKey("scope")) {
-			scopeId = (String) pathVariables.get("scope");
+		if (pathVariables.containsKey("space")) {
+		    spaceId = (String) pathVariables.get("space");
 		}
 
-		if (request.getHeader("X-Scope") != null) {
-			scopeId = request.getHeader("X-Scope");
+		if (request.getHeader("X-Space") != null) {
+		    spaceId = request.getHeader("X-Space");
 		}
 
-		return scopeId;
+		return spaceId;
 	}
 }

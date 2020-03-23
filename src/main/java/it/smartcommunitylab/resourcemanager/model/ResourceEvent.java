@@ -14,13 +14,13 @@ public class ResourceEvent extends ApplicationEvent {
 	private String type;
 	// userId of the OWNER, not of the user performing the request
 	private String userId;
-	// scope as defined in resource
-	private String scopeId;
+	// space as defined in resource
+	private String spaceId;
 
-	public ResourceEvent(Object source, String scopeId, String userId, String type, long id, String action) {
+	public ResourceEvent(Object source, String spaceId, String userId, String type, long id, String action) {
 		super(source);
 
-		this.scopeId = scopeId;
+		this.spaceId = spaceId;
 		this.userId = userId;
 		this.type = type;
 		this.id = id;
@@ -44,7 +44,7 @@ public class ResourceEvent extends ApplicationEvent {
 		return userId;
 	}
 
-	public String getScopeId() {
-		return scopeId;
+	public String getSpaceId() {
+		return spaceId;
 	}
 }

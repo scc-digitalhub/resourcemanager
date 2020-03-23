@@ -37,7 +37,7 @@ public class DSSODBCConsumer extends Consumer {
     private Registration registration;
 
     // filters
-    private String scopeId;
+    private String spaceId;
     private List<String> tags;
 
     private DSSRestClient _client;
@@ -47,7 +47,7 @@ public class DSSODBCConsumer extends Consumer {
         username = "";
         password = "";
         tenant = "carbon.super"; // default tenant
-        scopeId = "";
+        spaceId = "";
         tags = new ArrayList<>();
     }
 
@@ -60,7 +60,7 @@ public class DSSODBCConsumer extends Consumer {
         this();
         registration = reg;
         _properties = reg.getPropertiesMap();
-        scopeId = reg.getScopeId();
+        spaceId = reg.getSpaceId();
         tags = reg.getTags();
     }
 
@@ -133,8 +133,8 @@ public class DSSODBCConsumer extends Consumer {
     }
 
     @Override
-    public void addResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
+    public void addResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId()) && checkTags(resource.getTags())) {
             _log.debug("add resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -173,8 +173,8 @@ public class DSSODBCConsumer extends Consumer {
     }
 
     @Override
-    public void updateResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId())) {
+    public void updateResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId())) {
             _log.debug("update resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -229,8 +229,8 @@ public class DSSODBCConsumer extends Consumer {
     }
 
     @Override
-    public void deleteResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
+    public void deleteResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId()) && checkTags(resource.getTags())) {
             _log.debug("delete resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -266,8 +266,8 @@ public class DSSODBCConsumer extends Consumer {
     }
 
     @Override
-    public void checkResource(String scopeId, String userId, Resource resource) throws ConsumerException {
-        if (checkScope(resource.getScopeId()) && checkTags(resource.getTags())) {
+    public void checkResource(String spaceId, String userId, Resource resource) throws ConsumerException {
+        if (checkSpace(resource.getSpaceId()) && checkTags(resource.getTags())) {
             _log.debug("check resource " + resource.toString());
             try {
                 // fetch type from supported
@@ -333,11 +333,11 @@ public class DSSODBCConsumer extends Consumer {
         return ret;
     }
 
-    public boolean checkScope(String scope) {
-        if (!this.scopeId.isEmpty()) {
-            return scopeId.equals(scope);
+    public boolean checkSpace(String space) {
+        if (!this.spaceId.isEmpty()) {
+            return spaceId.equals(space);
         } else {
-            // if global scope
+            // if global space
             return true;
         }
     }

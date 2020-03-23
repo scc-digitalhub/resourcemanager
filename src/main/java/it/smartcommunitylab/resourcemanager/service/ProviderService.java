@@ -18,28 +18,28 @@ public class ProviderService {
     @Autowired
     private ProviderLocalService providerService;
 
-    public Map<String, List<ResourceProvider>> list(String scopeId, String userId) {
+    public Map<String, List<ResourceProvider>> list(String spaceId, String userId) {
         // TODO check auth
         //
         // call local service
         return providerService.listProviders();
     }
 
-    public List<ResourceProvider> list(String scopeId, String userId, String type) {
+    public List<ResourceProvider> list(String spaceId, String userId, String type) {
         // TODO check auth
         //
         // call local service
         return providerService.listProviders(type);
     }
 
-    public List<String> listTypes(String scopeId, String userId) {
+    public List<String> listTypes(String spaceId, String userId) {
         // TODO check auth
         //
         // call local service
         return providerService.listTypes();
     }
 
-    public ResourceProvider get(String scopeId, String userId, String id) throws NoSuchProviderException {
+    public ResourceProvider get(String spaceId, String userId, String id) throws NoSuchProviderException {
         // TODO check auth
         //
         // call local service
