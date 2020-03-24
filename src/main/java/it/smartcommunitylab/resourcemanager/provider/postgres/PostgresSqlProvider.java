@@ -59,7 +59,7 @@ public class PostgresSqlProvider extends ResourceProvider {
 
     //TODO implement
 //    @Value("${providers.postgressql.useSpacePolicy}")
-//    private boolean SCOPE_POLICIES;
+//    private boolean SPACE_POLICIES;
 
     private PostgresSqlClient _client;
 

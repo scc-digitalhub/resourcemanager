@@ -29,7 +29,7 @@ public class ResourcePermissionEvaluator implements PermissionEvaluator {
 
 			_log.debug("hasPermission for resource " + res.getId() + ":" + permission);
 
-			// delegate to ScopePermission
+			// delegate to SpacePermission
 			return spacePermission.hasPermission(authentication, res.getSpaceId(), "space", permission);
 		}
 

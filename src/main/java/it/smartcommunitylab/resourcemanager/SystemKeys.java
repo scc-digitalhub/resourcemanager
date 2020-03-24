@@ -4,7 +4,7 @@ public class SystemKeys {
 
     public final static String ENTITY_RESOURCE = "RESOURCE";
     public final static String ENTITY_REGISTRATION = "REGISTRATION";
-    public final static String SCOPE = "SCOPE";
+    public final static String SPACE = "SPACE";
 
     public final static String TYPE_SQL = "sql";
     public final static String TYPE_NOSQL = "nosql";

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.security.auth.login.LoginException;
@@ -11,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -25,6 +27,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.jwt.Jwt;
+import org.springframework.security.jwt.JwtHelper;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -63,8 +67,8 @@ public class AuthController {
     @Value("${security.oauth2.client.client-secret}")
     private String clientSecret;
 
-    @Value("${security.oauth2.client.spaces}")
-    private String oauthSpaces;
+    @Value("${security.oauth2.client.scopes}")
+    private String oauthScopes;
 
     @Value("${spaces.default}")
     private String defaultSpace;
@@ -77,6 +81,8 @@ public class AuthController {
 
     @Autowired
     private SpacePermissionEvaluator permissionEvaluator;
+    
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     /*
      * Login
@@ -97,7 +103,7 @@ public class AuthController {
         // build authorization parameters
         attributes.addAttribute("response_type", "code");
         attributes.addAttribute("client_id", clientId);
-        attributes.addAttribute("space", oauthSpaces);
+        attributes.addAttribute("space", oauthScopes);
         attributes.addAttribute("redirect_uri", callbackURL);
 
         _log.debug("send redirect to oauth at " + authorizationURL);
@@ -185,8 +191,18 @@ public class AuthController {
 
 //            attributes.addAttribute("token", accessToken);
 
+            //extract space claim or set default
+            //hardcoded jwt  - TODO rewrite and move to lib
+            Jwt jwt = JwtHelper.decode(accessToken);
+            Map<String, Object> claims = objectMapper.readValue(jwt.getClaims(), Map.class);
+
+            String space = defaultSpace;
+            if(claims.containsKey("space")) {
+                space = (String)claims.get("space");
+            }
+            
             // append token - should be already urlencoded
-            redirectURL = redirectURL.concat("?token=" + accessToken);
+            redirectURL = redirectURL.concat("?space="+space+"&token=" + accessToken);
 
             _log.debug("send redirect to " + redirectURL);
             response.sendRedirect(redirectURL);

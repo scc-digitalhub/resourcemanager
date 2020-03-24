@@ -34,8 +34,8 @@ public class ConsumerDeserializer extends StdDeserializer<ConsumerDTO> {
         if (node.has("id")) {
             dto.id = node.get("id").asLong();
         }
-        if (node.has("scopeId")) {
-            dto.scopeId = node.get("scopeId").asText();
+        if (node.has("spaceId")) {
+            dto.spaceId = node.get("spaceId").asText();
         }
         if (node.has("userId")) {
             dto.userId = node.get("userId").asText();

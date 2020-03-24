@@ -32,7 +32,7 @@ public class ConsumerSerializer extends StdSerializer<ConsumerDTO> {
         jgen.writeStringField("type", consumer.getType());
         jgen.writeStringField("consumer", consumer.getConsumer());
 
-        jgen.writeStringField("scopeId", consumer.getScopeId());
+        jgen.writeStringField("spaceId", consumer.getSpaceId());
         jgen.writeStringField("userId", consumer.getUserId());
 
         jgen.writeStringField("url", consumer.getUrl());

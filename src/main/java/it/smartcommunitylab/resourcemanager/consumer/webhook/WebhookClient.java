@@ -67,7 +67,7 @@ public class WebhookClient {
      */
     public void call(
             String event,
-            String scopeId, long resourceId,
+            String spaceId, long resourceId,
             String type,
             String host, int port,
             String name,
@@ -79,8 +79,8 @@ public class WebhookClient {
             json.put("type", type);
 
             json.put("resourceId", resourceId);
-            if (!scopeId.isEmpty()) {
-                json.put("scope", scopeId);
+            if (!spaceId.isEmpty()) {
+                json.put("space", spaceId);
             }
             json.put("name", name);
             json.put("host", host);
@@ -99,7 +99,7 @@ public class WebhookClient {
 
             HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
 
-            _log.debug("call " + event + " on " + ENDPOINT + " for " + scopeId + ":" + String.valueOf(resourceId));
+            _log.debug("call " + event + " on " + ENDPOINT + " for " + spaceId + ":" + String.valueOf(resourceId));
             _log.trace("call headers " + headers.toString());
             _log.trace("call payload " + json.toString());
 

@@ -36,7 +36,7 @@ public class ConsumerService {
     /*
      * Data
      */
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '"
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '"
             + SystemKeys.PERMISSION_CONSUMER_CREATE + "')")
     public Registration add(String spaceId, String userId, String type, String consumer,
             Map<String, Serializable> properties,
@@ -47,7 +47,7 @@ public class ConsumerService {
         return consumerService.add(spaceId, userId, type, consumer, properties, tags);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '"
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '"
             + SystemKeys.PERMISSION_CONSUMER_UPDATE + "')")
     public Registration update(String spaceId, String userId, long id,
             Map<String, Serializable> properties, List<String> tags)
@@ -84,7 +84,7 @@ public class ConsumerService {
         return consumerService.lookup(id);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE +
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE +
             "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public boolean exists(String spaceId, String userId, long id) throws NoSuchConsumerException {
         _log.info("exists registration " + String.valueOf(id) + " by user " + userId);
@@ -109,28 +109,28 @@ public class ConsumerService {
 //		return consumerService.hasBuilder(id);
 //	}
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public Map<String, List<ConsumerBuilder>> listBuilders(String spaceId, String userId) {
 
         // call local service
         return consumerService.listBuilders();
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public List<ConsumerBuilder> listBuilders(String spaceId, String userId, String type) {
 
         // call local service
         return consumerService.listBuilders(type);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public ConsumerBuilder getBuilder(String spaceId, String userId, String id) throws NoSuchConsumerException {
 
         // call local service
         return consumerService.getBuilder(id);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public List<String> listTypes(String spaceId, String userId) {
 
         // call local service
@@ -141,28 +141,28 @@ public class ConsumerService {
      * Count
      */
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public long count(String spaceId, String userId) {
 
         // call local service with space
         return registrationService.countBySpaceId(spaceId);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public long countByType(String spaceId, String userId, String type) {
 
         // call local service
         return registrationService.countByTypeAndSpaceId(type, spaceId);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public long countByConsumer(String spaceId, String userId, String provider) {
 
         // call local service
         return registrationService.countByConsumerAndSpaceId(provider, spaceId);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public long countByUserId(String spaceId, String userId, String ownerId) {
 
         // call local service
@@ -172,7 +172,7 @@ public class ConsumerService {
     /*
      * List
      */
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public List<Registration> list(String spaceId, String userId) {
 
@@ -188,7 +188,7 @@ public class ConsumerService {
         return list(spaceId, userId, page, pageSize, "id", SystemKeys.ORDER_ASC);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public List<Registration> list(String spaceId, String userId, int page, int pageSize, String orderBy,
             String order) {
@@ -201,7 +201,7 @@ public class ConsumerService {
         return new ArrayList<>(registrationService.listBySpaceId(spaceId, pageable));
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public List<Registration> listByType(String spaceId, String userId, String type) {
 
@@ -211,7 +211,7 @@ public class ConsumerService {
         return new ArrayList<>(registrationService.listByTypeAndSpaceId(type, spaceId));
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public List<Registration> listByConsumer(String spaceId, String userId, String provider) {
 
@@ -221,7 +221,7 @@ public class ConsumerService {
         return new ArrayList<>(registrationService.listByConsumerAndSpaceId(provider, spaceId));
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_CONSUMER_VIEW + "')")
     public List<Registration> listByUserId(String spaceId, String userId, String ownerId) {
 

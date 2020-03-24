@@ -34,7 +34,7 @@ public class ResourceService {
     /*
      * Data
      */
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '"
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '"
             + SystemKeys.PERMISSION_RESOURCE_CREATE + "')")
     public Resource create(String spaceId, String userId,
             String type, String providerId, String name,
@@ -47,7 +47,7 @@ public class ResourceService {
 
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '"
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '"
             + SystemKeys.PERMISSION_RESOURCE_CREATE + "')")
     public Resource add(String spaceId, String userId, String type, String providerId,
             String name, String uri,
@@ -91,7 +91,7 @@ public class ResourceService {
         return resourceLocalService.get(id);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE +
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE +
             "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public boolean exists(String spaceId, String userId, long id) throws NoSuchResourceException {
         _log.info("exists resource " + String.valueOf(id) + " by user " + userId);
@@ -108,7 +108,7 @@ public class ResourceService {
      * Count
      */
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE +
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE +
             "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public long count(String spaceId, String userId) {
 
@@ -116,7 +116,7 @@ public class ResourceService {
         return resourceLocalService.countBySpaceId(spaceId);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE
             + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public long countByType(String spaceId, String userId, String type) {
 
@@ -124,7 +124,7 @@ public class ResourceService {
         return resourceLocalService.countByTypeAndSpaceId(type, spaceId);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE
             + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public long countByProvider(String spaceId, String userId, String provider) {
 
@@ -133,7 +133,7 @@ public class ResourceService {
     }
 
     @PreAuthorize("hasPermission(#spaceId, '"
-            + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+            + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public long countByUserId(String spaceId, String userId, String ownerId) {
 
         // call local service
@@ -144,7 +144,7 @@ public class ResourceService {
      * List
      */
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public List<Resource> list(String spaceId, String userId) {
 
@@ -160,7 +160,7 @@ public class ResourceService {
         return list(spaceId, userId, page, pageSize, "id", SystemKeys.ORDER_ASC);
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public List<Resource> list(String spaceId, String userId, int page, int pageSize, String orderBy, String order) {
 
@@ -172,7 +172,7 @@ public class ResourceService {
         return new ArrayList<>(resourceLocalService.listBySpaceId(spaceId, pageable));
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public List<Resource> listByType(String spaceId, String userId, String type) {
 
@@ -182,7 +182,7 @@ public class ResourceService {
         return new ArrayList<>(resourceLocalService.listByTypeAndSpaceId(type, spaceId));
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public List<Resource> listByProvider(String spaceId, String userId, String provider) {
 
@@ -192,7 +192,7 @@ public class ResourceService {
         return new ArrayList<>(resourceLocalService.listByProviderAndSpaceId(provider, spaceId));
     }
 
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     @PostFilter("hasPermission(filterObject, '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public List<Resource> listByUserId(String spaceId, String userId, String ownerId) {
 
@@ -205,7 +205,7 @@ public class ResourceService {
     /*
      * Check
      */
-    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SCOPE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
+    @PreAuthorize("hasPermission(#spaceId, '" + SystemKeys.SPACE + "', '" + SystemKeys.PERMISSION_RESOURCE_VIEW + "')")
     public void check(String spaceId, String userId, long id)
             throws NoSuchResourceException, NoSuchProviderException, ResourceProviderException {
         _log.info("check resource " + String.valueOf(id) + " by user " + userId);

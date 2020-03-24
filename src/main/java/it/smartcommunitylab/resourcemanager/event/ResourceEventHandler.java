@@ -15,12 +15,12 @@ public class ResourceEventHandler {
 	@Autowired
 	private ApplicationEventPublisher applicationEventPublisher;
 
-	public void notifyAction(String scopeId, String userId, String type, long id, String action) {
+	public void notifyAction(String spaceId, String userId, String type, long id, String action) {
 
 		_log.debug("create message for " + type + " with payload " + action + ":" + String.valueOf(id));
 
 		// create message
-		ResourceEvent event = new ResourceEvent(this, scopeId, userId, type, id, action);
+		ResourceEvent event = new ResourceEvent(this, spaceId, userId, type, id, action);
 		applicationEventPublisher.publishEvent(event);
 
 	}

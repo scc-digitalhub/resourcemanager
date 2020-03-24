@@ -73,7 +73,7 @@ public class MinioProvider extends ResourceProvider {
     private boolean CLEAR_ON_DELETE;
 
     @Value("${providers.minio.useSpacePolicy}")
-    private boolean SCOPE_POLICIES;
+    private boolean SPACE_POLICIES;
 
     private MinioS3Client _client;
 
@@ -190,7 +190,7 @@ public class MinioProvider extends ResourceProvider {
                     name + "_" + MinioS3Client.POLICY_RO,
                     name, MinioS3Client.POLICY_RO);
 
-            if (SCOPE_POLICIES) {
+            if (SPACE_POLICIES) {
                 _log.info("update policies for space " + spaceId);
 
                 // update rw policy for space
@@ -280,7 +280,7 @@ public class MinioProvider extends ResourceProvider {
                 _log.error("remove policy " + bucket + "_" + MinioS3Client.POLICY_RO + " error " + mex.getMessage());
             }
 
-            if (SCOPE_POLICIES) {
+            if (SPACE_POLICIES) {
                 String spaceId = resource.getSpaceId();
                 _log.info("update policies for space " + spaceId);
 
