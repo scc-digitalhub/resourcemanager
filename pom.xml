@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>it.smartcommunitylab</groupId>
 	<artifactId>resourcemanager</artifactId>
-	<version>1.0</version>
+	<version>2.0</version>
 	<name>resourcemanager</name>
 	<description>ResourceManager</description>
 
