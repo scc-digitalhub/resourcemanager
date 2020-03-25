@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.1.4.RELEASE</version>
+		<version>2.2.4.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>it.smartcommunitylab</groupId>
@@ -43,17 +43,23 @@
 			</exclusions>
 		</dependency>
 
+		<!-- Use Jetty instead -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jetty</artifactId>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
-		<!-- Use Jetty instead -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-jetty</artifactId>
-		</dependency>
+      <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-devtools</artifactId>
+         <scope>runtime</scope>
+      </dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -70,19 +76,32 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>org.springframework.security.oauth.boot</groupId>
-			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
-			<version>2.1.4.RELEASE</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-oauth2-client</artifactId>
-		</dependency>
+      <dependency>
+         <groupId>org.springframework.security</groupId>
+         <artifactId>spring-security-oauth2-resource-server</artifactId>
+      </dependency>
+      
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.springframework.security.oauth.boot</groupId> -->
+<!-- 			<artifactId>spring-security-oauth2-autoconfigure</artifactId> -->
+<!-- 			<version>2.1.4.RELEASE</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.springframework.security</groupId> -->
+<!-- 			<artifactId>spring-security-oauth2-client</artifactId> -->
+<!-- 		</dependency> -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-oauth2-jose</artifactId>
 		</dependency>
+
+
+      <dependency>
+         <groupId>it.smartcommunitylab</groupId>
+         <artifactId>aac.spring-security</artifactId>
+         <version>1.2.0</version>
+      </dependency>
+
 
 		<!-- explicit define swagger version to overcome bug in ApiModel example -->
 		<!-- https://github.com/springfox/springfox/issues/2265 -->
@@ -128,7 +147,6 @@
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
 
-
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
@@ -147,23 +165,23 @@
 			<version>6.0.7</version>
 		</dependency>
 
-      <dependency>
-         <groupId>uk.co.lucasweb</groupId>
-         <artifactId>aws-v4-signer-java</artifactId>
-         <version>1.3</version>
-      </dependency>
+		<dependency>
+			<groupId>uk.co.lucasweb</groupId>
+			<artifactId>aws-v4-signer-java</artifactId>
+			<version>1.3</version>
+		</dependency>
 
-      <dependency>
-         <groupId>com.kosprov.jargon2</groupId>
-         <artifactId>jargon2-api</artifactId>
-         <version>1.1.1</version>
-      </dependency>
-      <dependency>
-         <groupId>com.kosprov.jargon2</groupId>
-         <artifactId>jargon2-native-ri-backend</artifactId>
-         <version>1.1.1</version>
-         <scope>runtime</scope>
-      </dependency>
+		<dependency>
+			<groupId>com.kosprov.jargon2</groupId>
+			<artifactId>jargon2-api</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.kosprov.jargon2</groupId>
+			<artifactId>jargon2-native-ri-backend</artifactId>
+			<version>1.1.1</version>
+			<scope>runtime</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.mongodb</groupId>
