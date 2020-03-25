@@ -291,7 +291,9 @@ public class WebhookSqlConsumer extends Consumer {
     }
 
     public boolean checkSpace(String space) {
-        if (!this.spaceId.isEmpty()) {
+        if (spaceId == null) {
+            return false;
+        } else if (!this.spaceId.isEmpty()) {
             return spaceId.equals(space);
         } else {
             // if global space
