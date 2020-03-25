@@ -23,11 +23,11 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import it.smartcommunitylab.resourcemanager.security.SpacePermissionEvaluator;
+import it.smartcommunitylab.resourcemanager.security.InternalSpacePermissionEvaluator;
 import it.smartcommunitylab.resourcemanager.util.ControllerUtil;
 
-@RestController
-@Api(value = "/permissions")
+//@RestController
+//@Api(value = "/permissions")
 public class PermissionController {
 
     private final static Logger _log = LoggerFactory.getLogger(PermissionController.class);
@@ -39,114 +39,114 @@ public class PermissionController {
     private List<String> spaces;
 
     @Autowired
-    private SpacePermissionEvaluator permissionEvaluator;
+    private InternalSpacePermissionEvaluator permissionEvaluator;
 
-    /*
-     * Permission list w/space
-     */
-    @GetMapping(value = "/api/c/{space}/permissions", produces = "application/json")
-    @ApiOperation(value = "Fetch all permissions for the space")
-    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
-    @ResponseBody
-    public List<String> permissions(
-            @ApiParam(value = "Space", defaultValue = "default") @PathVariable("space") Optional<String> space,
-            HttpServletRequest request, HttpServletResponse response) {
-
-        String spaceId = space.orElse(defaultSpace);
-        String userId = ControllerUtil.getUserId(request);
-
-        _log.debug("get permissions for user " + userId + " for space " + spaceId);
-
-        List<String> permissions = new ArrayList<>();
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null) {
-            if (permissionEvaluator.isSpacePermitted(spaceId)) {
-                List<String> roles = permissionEvaluator.getSpaceRoles(spaceId, auth);
-                for (String role : roles) {
-                    permissions.addAll(permissionEvaluator.roleToPermissions(role));
-                }
-            }
-        }
-
-        return permissions;
-    }
-
-    /*
-     * Roles list w/space
-     */
-    @GetMapping(value = "/api/c/{space}/roles", produces = "application/json")
-    @ApiOperation(value = "Fetch all roles for the space")
-    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
-    @ResponseBody
-    public List<String> roles(
-            @ApiParam(value = "Space", defaultValue = "default") @PathVariable("space") Optional<String> space,
-            HttpServletRequest request, HttpServletResponse response) {
-
-        String spaceId = space.orElse(defaultSpace);
-        String userId = ControllerUtil.getUserId(request);
-
-        _log.debug("get roles for user " + userId + " for space " + spaceId);
-
-        List<String> roles = new ArrayList<>();
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null) {
-            if (permissionEvaluator.isSpacePermitted(spaceId)) {
-                roles.addAll(permissionEvaluator.getSpaceRoles(spaceId, auth));
-            }
-        }
-
-        return roles;
-    }
-
-    /*
-     * Spaces list
-     */
-    @GetMapping(value = "/api/spaces", produces = "application/json")
-    @ApiOperation(value = "Fetch all spaces")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
-    })
-    @ResponseBody
-    public List<String> spaces(
-            HttpServletRequest request, HttpServletResponse response) {
-
-        if (spaces.isEmpty()) {
-            spaces.add(defaultSpace);
-        }
-        return spaces;
-    }
-
-    /*
-     * Permissions list
-     */
-    @GetMapping(value = "/api/permissions", produces = "application/json")
-    @ApiOperation(value = "Fetch all permissions for the space")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
-            @ApiImplicitParam(name = "X-Space", value = "Space", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
-    })
-    @ResponseBody
-    public List<String> permissions(
-            HttpServletRequest request, HttpServletResponse response) {
-
-        Optional<String> spaceId = Optional.ofNullable(ControllerUtil.getSpaceId(request));
-        return permissions(spaceId, request, response);
-    }
-
-    /*
-     * Roles list
-     */
-    @GetMapping(value = "/api/roles", produces = "application/json")
-    @ApiOperation(value = "Fetch all roles for the space")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
-            @ApiImplicitParam(name = "X-Space", value = "Space", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
-    })
-    @ResponseBody
-    public List<String> roles(
-            HttpServletRequest request, HttpServletResponse response) {
-
-        Optional<String> spaceId = Optional.ofNullable(ControllerUtil.getSpaceId(request));
-        return roles(spaceId, request, response);
-    }
+//    /*
+//     * Permission list w/space
+//     */
+//    @GetMapping(value = "/api/c/{space}/permissions", produces = "application/json")
+//    @ApiOperation(value = "Fetch all permissions for the space")
+//    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+//    @ResponseBody
+//    public List<String> permissions(
+//            @ApiParam(value = "Space", defaultValue = "default") @PathVariable("space") Optional<String> space,
+//            HttpServletRequest request, HttpServletResponse response) {
+//
+//        String spaceId = space.orElse(defaultSpace);
+//        String userId = ControllerUtil.getUserId(request);
+//
+//        _log.debug("get permissions for user " + userId + " for space " + spaceId);
+//
+//        List<String> permissions = new ArrayList<>();
+//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//        if (auth != null) {
+//            if (permissionEvaluator.isSpacePermitted(spaceId)) {
+//                List<String> roles = permissionEvaluator.getSpaceRoles(spaceId, auth);
+//                for (String role : roles) {
+//                    permissions.addAll(permissionEvaluator.roleToPermissions(role));
+//                }
+//            }
+//        }
+//
+//        return permissions;
+//    }
+//
+//    /*
+//     * Roles list w/space
+//     */
+//    @GetMapping(value = "/api/c/{space}/roles", produces = "application/json")
+//    @ApiOperation(value = "Fetch all roles for the space")
+//    @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+//    @ResponseBody
+//    public List<String> roles(
+//            @ApiParam(value = "Space", defaultValue = "default") @PathVariable("space") Optional<String> space,
+//            HttpServletRequest request, HttpServletResponse response) {
+//
+//        String spaceId = space.orElse(defaultSpace);
+//        String userId = ControllerUtil.getUserId(request);
+//
+//        _log.debug("get roles for user " + userId + " for space " + spaceId);
+//
+//        List<String> roles = new ArrayList<>();
+//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//        if (auth != null) {
+//            if (permissionEvaluator.isSpacePermitted(spaceId)) {
+//                roles.addAll(permissionEvaluator.getSpaceRoles(spaceId, auth));
+//            }
+//        }
+//
+//        return roles;
+//    }
+//
+//    /*
+//     * Spaces list
+//     */
+//    @GetMapping(value = "/api/spaces", produces = "application/json")
+//    @ApiOperation(value = "Fetch all spaces")
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+//    })
+//    @ResponseBody
+//    public List<String> spaces(
+//            HttpServletRequest request, HttpServletResponse response) {
+//
+//        if (spaces.isEmpty()) {
+//            spaces.add(defaultSpace);
+//        }
+//        return spaces;
+//    }
+//
+//    /*
+//     * Permissions list
+//     */
+//    @GetMapping(value = "/api/permissions", produces = "application/json")
+//    @ApiOperation(value = "Fetch all permissions for the space")
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+//            @ApiImplicitParam(name = "X-Space", value = "Space", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+//    })
+//    @ResponseBody
+//    public List<String> permissions(
+//            HttpServletRequest request, HttpServletResponse response) {
+//
+//        Optional<String> spaceId = Optional.ofNullable(ControllerUtil.getSpaceId(request));
+//        return permissions(spaceId, request, response);
+//    }
+//
+//    /*
+//     * Roles list
+//     */
+//    @GetMapping(value = "/api/roles", produces = "application/json")
+//    @ApiOperation(value = "Fetch all roles for the space")
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token"),
+//            @ApiImplicitParam(name = "X-Space", value = "Space", required = false, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "default", defaultValue = "default")
+//    })
+//    @ResponseBody
+//    public List<String> roles(
+//            HttpServletRequest request, HttpServletResponse response) {
+//
+//        Optional<String> spaceId = Optional.ofNullable(ControllerUtil.getSpaceId(request));
+//        return roles(spaceId, request, response);
+//    }
 }

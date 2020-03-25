@@ -2,22 +2,23 @@ package it.smartcommunitylab.resourcemanager.controller;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.text.ParseException;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.codec.binary.Base64;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -27,8 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.jwt.Jwt;
-import org.springframework.security.jwt.JwtHelper;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -40,13 +40,17 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jwt.SignedJWT;
+
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import it.smartcommunitylab.aac.security.permission.Space;
+import it.smartcommunitylab.aac.security.roles.RoleActionConverter;
 import it.smartcommunitylab.resourcemanager.SystemKeys;
 import it.smartcommunitylab.resourcemanager.model.UserSession;
-import it.smartcommunitylab.resourcemanager.security.SpacePermissionEvaluator;
+import it.smartcommunitylab.resourcemanager.security.ExtSpacePermissionEvaluator;
+import it.smartcommunitylab.resourcemanager.security.ResourceRoleActionConverter;
 import it.smartcommunitylab.resourcemanager.util.ControllerUtil;
 
 @Controller
@@ -55,19 +59,19 @@ public class AuthController {
 
     private final static Logger _log = LoggerFactory.getLogger(AuthController.class);
 
-    @Value("${security.oauth2.client.user-authorization-uri}")
+    @Value("${spring.security.oauth2.client.user-authorization-uri}")
     private String authorizationURL;
 
-    @Value("${security.oauth2.client.access-token-uri}")
+    @Value("${spring.security.oauth2.client.access-token-uri}")
     private String tokenURL;
 
-    @Value("${security.oauth2.client.client-id}")
+    @Value("${spring.security.oauth2.client.client-id}")
     private String clientId;
 
-    @Value("${security.oauth2.client.client-secret}")
+    @Value("${spring.security.oauth2.client.client-secret}")
     private String clientSecret;
 
-    @Value("${security.oauth2.client.scopes}")
+    @Value("${spring.security.oauth2.client.scopes}")
     private String oauthScopes;
 
     @Value("${spaces.default}")
@@ -79,17 +83,31 @@ public class AuthController {
     @Value("${permissions.enabled}")
     private boolean permissionsEnabled;
 
-    @Autowired
-    private SpacePermissionEvaluator permissionEvaluator;
-    
-    private ObjectMapper objectMapper = new ObjectMapper();
+    @Value("${auth.component}")
+    private String component;
+
+//
+//    @Autowired
+//    private SpacePermissionEvaluator permissionEvaluator;
+//    
+//    private ObjectMapper objectMapper = new ObjectMapper();
+
+    private RoleActionConverter<Space> roleConverter;
+    private ExtSpacePermissionEvaluator permissionEvaluator;
+
+    @PostConstruct
+    private void init() {
+        roleConverter = new ResourceRoleActionConverter<>(component);
+        permissionEvaluator = new ExtSpacePermissionEvaluator();
+        permissionEvaluator.setRoleActionConverter(roleConverter);
+    }
 
     /*
      * Login
      */
 
     @GetMapping(value = "/api/auth/login", produces = "application/json")
-    @ApiOperation(value = "Login users via OAuth")
+//    @ApiOperation(value = "Login users via OAuth")
     public RedirectView login(RedirectAttributes attributes,
             HttpServletRequest request, HttpServletResponse response) {
 
@@ -143,7 +161,7 @@ public class AuthController {
 
         // buid auth header as basic
         String auth = clientId + ":" + clientSecret;
-        byte[] encodedAuth = Base64.encodeBase64(
+        byte[] encodedAuth = Base64.getEncoder().encode(
                 auth.getBytes(Charset.forName("UTF-8")));
         String authHeader = "Basic " + new String(encodedAuth);
         headers.set("Authorization", authHeader);
@@ -191,23 +209,22 @@ public class AuthController {
 
 //            attributes.addAttribute("token", accessToken);
 
-            //extract space claim or set default
-            //hardcoded jwt  - TODO rewrite and move to lib
-            Jwt jwt = JwtHelper.decode(accessToken);
-            Map<String, Object> claims = objectMapper.readValue(jwt.getClaims(), Map.class);
+            // extract space claim or set default
+            // hardcoded jwt - TODO rewrite and move to lib
+            SignedJWT jwt = SignedJWT.parse(accessToken);
 
             String space = defaultSpace;
-            if(claims.containsKey("space")) {
-                space = (String)claims.get("space");
+            if (jwt.getJWTClaimsSet().getClaim("space") != null) {
+                space = jwt.getJWTClaimsSet().getClaim("space").toString();
             }
-            
+
             // append token - should be already urlencoded
-            redirectURL = redirectURL.concat("?space="+space+"&token=" + accessToken);
+            redirectURL = redirectURL.concat("?space=" + space + "&token=" + accessToken);
 
             _log.debug("send redirect to " + redirectURL);
             response.sendRedirect(redirectURL);
 
-        } catch (JSONException jex) {
+        } catch (JSONException | ParseException jex) {
             _log.error("json parsing error " + jex.getMessage());
             throw new LoginException("response error");
         } catch (IOException iex) {
@@ -221,10 +238,10 @@ public class AuthController {
      */
 
     @GetMapping(value = "/api/auth/user", produces = "application/json")
-    @ApiOperation(value = "Get user info")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
-    })
+//    @ApiOperation(value = "Get user info")
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name = "Authorization", value = "Access Token", required = true, allowEmptyValue = false, paramType = "header", dataTypeClass = String.class, example = "Bearer access_token")
+//    })
     @ResponseBody
     public UserSession user(
             HttpServletRequest request, HttpServletResponse response) throws LoginException {
@@ -235,16 +252,19 @@ public class AuthController {
         }
 
         String userId = ControllerUtil.getUserId(request);
+        Optional<String> xSpace = Optional.ofNullable(ControllerUtil.getSpaceId(request));
+        String spaceId = xSpace.orElse(defaultSpace);
+
         Set<String> permissions = new HashSet<>();
-        List<String> roles = permissionEvaluator.getSpaceRoles(defaultSpace, auth);
+        List<String> roles = permissionEvaluator.extractSpaceRoles(auth, spaceId);
 
         if (permissionsEnabled) {
             for (String role : roles) {
-                permissions.addAll(permissionEvaluator.roleToPermissions(role));
+                permissions.addAll(roleConverter.grantsActions(role));
             }
         } else {
             roles.add(SystemKeys.ROLE_ADMIN);
-            permissions.addAll(permissionEvaluator.roleToPermissions(SystemKeys.ROLE_ADMIN));
+            permissions.addAll(roleConverter.grantsActions(SystemKeys.ROLE_ADMIN));
         }
 
         UserSession session = new UserSession();

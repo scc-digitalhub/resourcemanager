@@ -84,8 +84,10 @@ public class ResourceController {
         // call exists to trigger 404, otherwise get() will
         // check permissions *before* checking existence
         resourceService.exists(spaceId, userId, id);
+        _log.debug("exists resource " + String.valueOf(id) + " by " + userId + " for space " + spaceId);
 
         Resource resource = resourceService.get(spaceId, userId, id);
+        _log.debug("fetched resource " + String.valueOf(id) + " by " + userId + " for space " + spaceId);
 
         // include private fields on detail view
         return ResourceDTO.fromResource(resource, true);
