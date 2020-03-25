@@ -4,51 +4,60 @@ import java.io.Serializable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
 
+import it.smartcommunitylab.aac.security.permission.NamedPermissionEvaluator;
+import it.smartcommunitylab.aac.security.permission.SpacePermissionEvaluator;
 import it.smartcommunitylab.resourcemanager.model.Registration;
 import it.smartcommunitylab.resourcemanager.service.RegistrationLocalService;
 
-@Component
-public class RegistrationPermissionEvaluator implements PermissionEvaluator {
-	private final static Logger _log = LoggerFactory.getLogger(RegistrationPermissionEvaluator.class);
+//@Component
+public class RegistrationPermissionEvaluator implements NamedPermissionEvaluator {
+    private final static Logger _log = LoggerFactory.getLogger(RegistrationPermissionEvaluator.class);
 
-	@Autowired
-	SpacePermissionEvaluator spacePermission;
+    public final static String TARGET = Registration.class.getSimpleName().toUpperCase();
 
-	@Autowired
-	RegistrationLocalService registrationService;
+    SpacePermissionEvaluator spacePermission;
 
-	@Override
-	public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-		if (targetDomainObject != null && Registration.class.isAssignableFrom(targetDomainObject.getClass())) {
-			Registration reg = (Registration) targetDomainObject;
+    RegistrationLocalService service;
 
-			_log.debug("hasPermission for registration " + reg.getId() + ":" + permission);
+    public RegistrationPermissionEvaluator(RegistrationLocalService registrationService,
+            SpacePermissionEvaluator spacePermissionEvaluator) {
+        this.service = registrationService;
+        this.spacePermission = spacePermissionEvaluator;
+    }
 
-			// delegate to SpacePermission
-			return spacePermission.hasPermission(authentication, reg.getSpaceId(), "space", permission);
-		}
+    @Override
+    public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
+        if (targetDomainObject != null && Registration.class.isAssignableFrom(targetDomainObject.getClass())) {
+            Registration reg = (Registration) targetDomainObject;
 
-		return false;
-	}
+            _log.debug("hasPermission for registration " + reg.getId() + ":" + permission);
 
-	@Override
-	public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType,
-			Object permission) {
-		try {
-			long id = Long.parseLong(targetId.toString());
-			Registration res = registrationService.fetch(id);
+            // delegate to SpacePermission
+            return spacePermission.hasPermission(authentication, reg.getSpaceId(), spacePermission.TARGET, permission);
+        }
 
-			return hasPermission(authentication, res, permission);
+        return false;
+    }
 
-		} catch (Exception ex) {
-			_log.error(ex.getMessage());
-			return false;
-		}
-	}
+    @Override
+    public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType,
+            Object permission) {
+        try {
+            long id = Long.parseLong(targetId.toString());
+            Registration res = service.fetch(id);
 
+            return hasPermission(authentication, res, permission);
+
+        } catch (Exception ex) {
+            _log.error(ex.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public String getName() {
+        return TARGET;
+    }
 }

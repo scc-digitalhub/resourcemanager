@@ -4,52 +4,65 @@ import java.io.Serializable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
-
+import it.smartcommunitylab.aac.security.permission.NamedPermissionEvaluator;
+import it.smartcommunitylab.aac.security.permission.SpacePermissionEvaluator;
 import it.smartcommunitylab.resourcemanager.model.Resource;
 import it.smartcommunitylab.resourcemanager.service.ResourceLocalService;
 
-@Component
-public class ResourcePermissionEvaluator implements PermissionEvaluator {
-	private final static Logger _log = LoggerFactory.getLogger(ResourcePermissionEvaluator.class);
+//@Component
+public class ResourcePermissionEvaluator implements NamedPermissionEvaluator {
+    private final static Logger _log = LoggerFactory.getLogger(ResourcePermissionEvaluator.class);
 
-	@Autowired
-	SpacePermissionEvaluator spacePermission;
+    public final static String TARGET = Resource.class.getSimpleName().toUpperCase();
 
-	@Autowired
-	ResourceLocalService resourceService;
+    SpacePermissionEvaluator spacePermission;
 
-	@Override
-	public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-		if (targetDomainObject != null && Resource.class.isAssignableFrom(targetDomainObject.getClass())) {
-			Resource res = (Resource) targetDomainObject;
+    ResourceLocalService service;
 
-			_log.debug("hasPermission for resource " + res.getId() + ":" + permission);
+    public ResourcePermissionEvaluator(ResourceLocalService resourceService,
+            SpacePermissionEvaluator spacePermissionEvaluator) {
+        this.service = resourceService;
+        this.spacePermission = spacePermissionEvaluator;
+    }
 
-			// delegate to SpacePermission
-			return spacePermission.hasPermission(authentication, res.getSpaceId(), "space", permission);
-		}
+    @Override
+    public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
+        if (targetDomainObject != null && Resource.class.isAssignableFrom(targetDomainObject.getClass())) {
+            Resource res = (Resource) targetDomainObject;
 
-		return false;
-	}
+            _log.debug("hasPermission for resource " + res.getId() + ":" + permission);
 
-	@Override
-	public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType,
-			Object permission) {
-		try {
-			long id = Long.parseLong(targetId.toString());
-			Resource res = resourceService.fetch(id);
+            // delegate to SpacePermission
+            return spacePermission.hasPermission(authentication, res.getSpaceId(), spacePermission.TARGET, permission);
+        }
 
-			return hasPermission(authentication, res, permission);
+        return false;
+    }
 
-		} catch (Exception ex) {
-			_log.error(ex.getMessage());
-			return false;
-		}
+    @Override
+    public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType,
+            Object permission) {
+        try {
+            long id = Long.parseLong(targetId.toString());
+            _log.debug("hasPermission for resource " + String.valueOf(id) + ":" + permission);
 
-	}
+            Resource res = service.fetch(id);
+            _log.debug("hasPermission resource " + String.valueOf(res));
+
+            return hasPermission(authentication, res, permission);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            _log.error(ex.getMessage());
+            return false;
+        }
+
+    }
+
+    @Override
+    public String getName() {
+        return TARGET;
+    }
 
 }

@@ -1,14 +1,16 @@
 package it.smartcommunitylab.resourcemanager.security;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.DenyAllPermissionEvaluator;
 import org.springframework.security.core.Authentication;
+
+import it.smartcommunitylab.aac.security.permission.NamedPermissionEvaluator;
 
 public class PermissionEvaluatorManager implements PermissionEvaluator {
 
@@ -16,14 +18,15 @@ public class PermissionEvaluatorManager implements PermissionEvaluator {
 
     private final static PermissionEvaluator denyAll = new DenyAllPermissionEvaluator();
 
-    // store permission evaluators map with [ENTITY] key
-    private final Map<String, PermissionEvaluator> permissionEvaluators;
+    // store permission evaluators map with className key
+    private final Map<String, NamedPermissionEvaluator> permissionEvaluators;
 
-    @Value("${permissions.enabled}")
-    private boolean enabled;
+    public PermissionEvaluatorManager(NamedPermissionEvaluator... evaluators) {
+        permissionEvaluators = new HashMap<>();
 
-    public PermissionEvaluatorManager(Map<String, PermissionEvaluator> permissionEvaluators) {
-        this.permissionEvaluators = permissionEvaluators;
+        for (NamedPermissionEvaluator e : evaluators) {
+            permissionEvaluators.put(e.getName(), e);
+        }
 
         _log.debug("available evaluators for " + this.permissionEvaluators.keySet().toString());
 
@@ -32,11 +35,6 @@ public class PermissionEvaluatorManager implements PermissionEvaluator {
     @Override
     public boolean hasPermission(
             Authentication authentication, Object targetDomainObject, Object permission) {
-
-        if (!enabled) {
-            // permission system disabled, permit all
-            return true;
-        }
 
         // fetch specific permissionEvaluator by looking object class
         String className = targetDomainObject.getClass().getSimpleName().toUpperCase();
@@ -56,11 +54,6 @@ public class PermissionEvaluatorManager implements PermissionEvaluator {
     public boolean hasPermission(
             Authentication authentication, Serializable targetId, String targetType,
             Object permission) {
-
-        if (!enabled) {
-            // permission system disabled, permit all
-            return true;
-        }
 
         // fetch specific permissionEvaluator by looking object class
         String className = targetType.toUpperCase();

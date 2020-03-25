@@ -30,17 +30,17 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 public class SwaggerConfiguration {
 
-	@Value("${security.oauth2.client.client-id}")
+	@Value("${spring.security.oauth2.resourceserver.client-id}")
 	private String CLIENT_ID;
 
-	@Value("${security.oauth2.client.client-secret}")
-	private String CLIENT_SECRET;
-
-	@Value("${security.oauth2.client.access-token-uri}")
-	private String TOKEN_URL;
-
-	@Value("${security.oauth2.client.user-authorization-uri}")
-	private String AUTH_URL;
+//	@Value("${security.oauth2.client.client-secret}")
+//	private String CLIENT_SECRET;
+//
+//	@Value("${security.oauth2.client.access-token-uri}")
+//	private String TOKEN_URL;
+//
+//	@Value("${security.oauth2.client.user-authorization-uri}")
+//	private String AUTH_URL;
 
 	@Bean
 	public Docket api() {
@@ -50,7 +50,7 @@ public class SwaggerConfiguration {
 				.paths(PathSelectors.any())
 				.build()
 				.apiInfo(metadata())
-				.securitySchemes(Arrays.asList(securityScheme()))
+//				.securitySchemes(Arrays.asList(securityScheme()))
 				.securityContexts(Arrays.asList(securityContext()));
 	}
 
@@ -64,28 +64,28 @@ public class SwaggerConfiguration {
 				.build();
 	}
 
-	@Bean
-	public SecurityConfiguration security() {
-		return SecurityConfigurationBuilder.builder()
-				.clientId(CLIENT_ID)
-				.clientSecret(CLIENT_SECRET)
-				.scopeSeparator(" ")
-				.useBasicAuthenticationWithAccessCodeGrant(true)
-				.build();
-	}
-
-	private SecurityScheme securityScheme() {
-		GrantType grantType = new AuthorizationCodeGrantBuilder()
-				.tokenEndpoint(new TokenEndpoint(TOKEN_URL, "oauthtoken"))
-				.tokenRequestEndpoint(new TokenRequestEndpoint(AUTH_URL, CLIENT_ID, CLIENT_SECRET))
-				.build();
-
-		SecurityScheme oauth = new OAuthBuilder().name("spring_oauth")
-				.grantTypes(Arrays.asList(grantType))
-				.scopes(Arrays.asList(scopes()))
-				.build();
-		return oauth;
-	}
+//	@Bean
+//	public SecurityConfiguration security() {
+//		return SecurityConfigurationBuilder.builder()
+//				.clientId(CLIENT_ID)
+//				.clientSecret(CLIENT_SECRET)
+//				.scopeSeparator(" ")
+//				.useBasicAuthenticationWithAccessCodeGrant(true)
+//				.build();
+//	}
+//
+//	private SecurityScheme securityScheme() {
+//		GrantType grantType = new AuthorizationCodeGrantBuilder()
+//				.tokenEndpoint(new TokenEndpoint(TOKEN_URL, "oauthtoken"))
+//				.tokenRequestEndpoint(new TokenRequestEndpoint(AUTH_URL, CLIENT_ID, CLIENT_SECRET))
+//				.build();
+//
+//		SecurityScheme oauth = new OAuthBuilder().name("spring_oauth")
+//				.grantTypes(Arrays.asList(grantType))
+//				.scopes(Arrays.asList(scopes()))
+//				.build();
+//		return oauth;
+//	}
 
 	private AuthorizationScope[] scopes() {
 		AuthorizationScope[] scopes = {

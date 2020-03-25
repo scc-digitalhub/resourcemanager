@@ -19,9 +19,9 @@ import org.springframework.stereotype.Component;
 
 import it.smartcommunitylab.resourcemanager.SystemKeys;
 
-@Component
-public class SpacePermissionEvaluator implements PermissionEvaluator {
-    private final static Logger _log = LoggerFactory.getLogger(SpacePermissionEvaluator.class);
+//@Component
+public class InternalSpacePermissionEvaluator implements PermissionEvaluator {
+    private final static Logger _log = LoggerFactory.getLogger(InternalSpacePermissionEvaluator.class);
 
     @Value("${spaces.enabled}")
     private boolean enabled;
