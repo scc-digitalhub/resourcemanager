@@ -2,10 +2,11 @@ package it.smartcommunitylab.resourcemanager.consumer.webhook;
 
 import java.nio.charset.Charset;
 import java.security.SignatureException;
+import java.util.Base64;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.commons.codec.binary.Base64;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -129,7 +130,7 @@ public class WebhookClient {
 
         if (authMode == AUTH_BASIC) {
             String auth = USERNAME + ":" + PASSWORD;
-            byte[] encodedAuth = Base64.encodeBase64(
+            byte[] encodedAuth = Base64.getEncoder().encode(
                     auth.getBytes(Charset.forName("UTF-8")));
             String authHeader = "Basic " + new String(encodedAuth);
 
@@ -158,7 +159,7 @@ public class WebhookClient {
             byte[] hmac = mac.doFinal(content.getBytes("UTF-8"));
 
             // encode as base64 result
-            return Base64.encodeBase64String(hmac);
+            return Base64.getUrlEncoder().encodeToString(hmac);
         } catch (Exception e) {
             throw new SignatureException("HMAC error: " + e.getMessage());
         }
