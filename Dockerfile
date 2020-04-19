@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:experimental
 
 FROM node:8 as front
-RUN git clone https://github.com/smartcommunitylab/resourcemanager-admin.git
+RUN git clone https://github.com/scc-digitalhub/resourcemanager-admin.git
 WORKDIR resourcemanager-admin
 RUN npm install && npm run dist
 
