@@ -325,10 +325,10 @@ public class MinioProvider extends ResourceProvider {
         // cleanup space and userId to alphanum - will strip non ascii
         // use only - as separator to obtain simpler urls
         sb.append(spaceId.replaceAll("[^A-Za-z0-9]", "")).append("-");
-        sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("-");
+//        sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("-");
 
         // random suffix length 5
-        sb.append(RandomStringUtils.randomAlphanumeric(5));
+        sb.append(RandomStringUtils.randomAlphanumeric(6));
 
         // ensure lowercase
         return sb.toString().toLowerCase();

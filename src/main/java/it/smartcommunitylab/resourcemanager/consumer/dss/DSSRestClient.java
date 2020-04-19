@@ -2,10 +2,8 @@ package it.smartcommunitylab.resourcemanager.consumer.dss;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Base64;
 
-import javax.servlet.http.HttpUtils;
-
-import org.apache.commons.codec.binary.Base64;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -194,7 +192,7 @@ public class DSSRestClient {
     private HttpHeaders headers(String username, String password) throws RestClientException {
 
         String auth = username + ":" + password;
-        byte[] encodedAuth = Base64.encodeBase64(
+        byte[] encodedAuth = Base64.getEncoder().encode(
                 auth.getBytes(Charset.forName("UTF-8")));
         String authHeader = "Basic " + new String(encodedAuth);
 

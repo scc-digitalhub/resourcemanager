@@ -233,10 +233,10 @@ public class CockroachDBProvider extends ResourceProvider {
         // cleanup space and userId to alphanum - will strip non ascii
         // use only _ as separator otherwise postgres will complain
         sb.append(spaceId.replaceAll("[^A-Za-z0-9]", "")).append("_");
-        sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
+//        sb.append(userId.replaceAll("[^A-Za-z0-9]", "")).append("_");
 
         // random suffix length 5
-        sb.append(RandomStringUtils.randomAlphanumeric(5));
+        sb.append(RandomStringUtils.randomAlphanumeric(6));
 
         // ensure lowercase
         return sb.toString().toLowerCase();

@@ -2,8 +2,8 @@ package it.smartcommunitylab.resourcemanager.consumer.sqlpad;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Base64;
 
-import org.apache.commons.codec.binary.Base64;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -215,7 +215,7 @@ public class SqlpadClient {
 		return new HttpHeaders() {
 			{
 				String auth = username + ":" + password;
-				byte[] encodedAuth = Base64.encodeBase64(
+				byte[] encodedAuth = Base64.getEncoder().encode(
 						auth.getBytes(Charset.forName("UTF-8")));
 				String authHeader = "Basic " + new String(encodedAuth);
 				set("Authorization", authHeader);

@@ -103,6 +103,13 @@
       </dependency>
 
 
+      <dependency>
+         <groupId>it.smartcommunitylab</groupId>
+         <artifactId>minio.crypto</artifactId>
+         <version>3.0.0</version>
+      </dependency>
+
+
 		<!-- explicit define swagger version to overcome bug in ApiModel example -->
 		<!-- https://github.com/springfox/springfox/issues/2265 -->
 		<dependency>
@@ -162,7 +169,7 @@
 		<dependency>
 			<groupId>io.minio</groupId>
 			<artifactId>minio</artifactId>
-			<version>6.0.7</version>
+			<version>7.0.0</version>
 		</dependency>
 
 		<dependency>

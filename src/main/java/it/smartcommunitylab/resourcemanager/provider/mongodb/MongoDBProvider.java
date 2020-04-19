@@ -217,9 +217,10 @@ public class MongoDBProvider extends ResourceProvider {
         StringBuilder sb = new StringBuilder();
         // cleanup space and userId to alphanum - will strip non ascii
         // use only _ as separator
-        sb.append(StringUtils.shorten(spaceId.replaceAll("[^A-Za-z0-9]", ""), 10).toLowerCase()).append("_");
-        sb.append(StringUtils.shorten(userId.replaceAll("[^A-Za-z0-9]", ""), 12).toLowerCase()).append("_");
+//        sb.append(StringUtils.shorten(spaceId.replaceAll("[^A-Za-z0-9]", ""), 10).toLowerCase()).append("_");
+//        sb.append(StringUtils.shorten(userId.replaceAll("[^A-Za-z0-9]", ""), 12).toLowerCase()).append("_");
 
+        sb.append(spaceId.replaceAll("[^A-Za-z0-9]", "")).append("_");
         // random suffix length 6
         sb.append(RandomStringUtils.randomAlphanumeric(6));
 

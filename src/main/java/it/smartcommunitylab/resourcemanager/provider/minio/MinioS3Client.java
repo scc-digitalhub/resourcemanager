@@ -1,7 +1,6 @@
 package it.smartcommunitylab.resourcemanager.provider.minio;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -26,19 +25,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import org.xmlpull.v1.XmlPullParserException;
-
 import io.minio.MinioClient;
 import io.minio.Result;
 import io.minio.errors.MinioException;
 import io.minio.messages.Item;
 import io.minio.messages.Upload;
-import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioCrypter;
-import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioCrypto;
-import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioCryptoException;
-import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioDecrypter;
-import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioPackage;
-import it.smartcommunitylab.resourcemanager.provider.minio.crypto.MinioSha256;
+import it.smartcommunitylab.minio.crypto.MinioCryptoException;
+import it.smartcommunitylab.minio.crypto.MinioSha256;
+import it.smartcommunitylab.minio.crypto.v3.MinioCrypto;
+import it.smartcommunitylab.minio.crypto.v3.MinioEncrypter;
 import uk.co.lucasweb.aws.v4.signer.HttpRequest;
 import uk.co.lucasweb.aws.v4.signer.Signer;
 import uk.co.lucasweb.aws.v4.signer.credentials.AwsCredentials;
@@ -101,7 +96,7 @@ public class MinioS3Client {
         } catch (MinioException mex) {
             _log.error(mex.getMessage());
             throw mex;
-        } catch (InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException ex) {
+        } catch (InvalidKeyException | NoSuchAlgorithmException | IOException ex) {
             _log.error(ex.getMessage());
             throw new MinioException(ex.getMessage());
         }
@@ -124,7 +119,7 @@ public class MinioS3Client {
         } catch (MinioException mex) {
             _log.error(mex.getMessage());
             throw mex;
-        } catch (InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException ex) {
+        } catch (InvalidKeyException | NoSuchAlgorithmException | IOException ex) {
             _log.error(ex.getMessage());
             throw new MinioException(ex.getMessage());
         }
@@ -171,7 +166,7 @@ public class MinioS3Client {
         } catch (MinioException mex) {
             _log.error(mex.getMessage());
             throw mex;
-        } catch (InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException ex) {
+        } catch (InvalidKeyException | NoSuchAlgorithmException | IOException ex) {
             _log.error(ex.getMessage());
             throw new MinioException(ex.getMessage());
         }
@@ -258,10 +253,10 @@ public class MinioS3Client {
             dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));// server timezone
 
             String hostname = HOST + ":" + Integer.toString(PORT);
-            String url = ENDPOINT + "/minio/admin/v1/add-canned-policy?name=" + policyName;
+            String url = ENDPOINT + "/minio/admin/v2/add-canned-policy?name=" + policyName;
             String date = dateFormat.format(new Date());
             String content = policy.toString();
-            String contentSha256 = MinioSha256.get(content, Charset.forName("UTF-8"));
+            String contentSha256 = MinioSha256.hash(content, Charset.forName("UTF-8"));
 
             _log.trace("policy json " + content);
             _log.trace("content sha " + contentSha256);
@@ -306,6 +301,8 @@ public class MinioS3Client {
             throw new MinioException(uex.getMessage());
         } catch (RestClientException rex) {
             throw new MinioException("rest error " + rex.getMessage());
+        } catch (MinioCryptoException cex) {
+            throw new MinioException("crypto error " + cex.getMessage());
         }
 
     }
@@ -388,10 +385,10 @@ public class MinioS3Client {
             dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));// server timezone
 
             String hostname = HOST + ":" + Integer.toString(PORT);
-            String url = ENDPOINT + "/minio/admin/v1/add-canned-policy?name=" + policyName;
+            String url = ENDPOINT + "/minio/admin/v2/add-canned-policy?name=" + policyName;
             String date = dateFormat.format(new Date());
             String content = policy.toString();
-            String contentSha256 = MinioSha256.get(content, Charset.forName("UTF-8"));
+            String contentSha256 = MinioSha256.hash(content, Charset.forName("UTF-8"));
 
             _log.trace("policy json " + content);
             _log.trace("content sha " + contentSha256);
@@ -436,6 +433,8 @@ public class MinioS3Client {
             throw new MinioException(uex.getMessage());
         } catch (RestClientException rex) {
             throw new MinioException("rest error " + rex.getMessage());
+        } catch (MinioCryptoException cex) {
+            throw new MinioException("crypto error " + cex.getMessage());
         }
 
     }
@@ -449,10 +448,10 @@ public class MinioS3Client {
             dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));// server timezone
 
             String hostname = HOST + ":" + Integer.toString(PORT);
-            String url = ENDPOINT + "/minio/admin/v1/remove-canned-policy?name=" + policyName;
+            String url = ENDPOINT + "/minio/admin/v2/remove-canned-policy?name=" + policyName;
             String date = dateFormat.format(new Date());
             String content = ""; // empty content needed for sha256
-            String contentSha256 = MinioSha256.get(content, Charset.forName("UTF-8"));
+            String contentSha256 = MinioSha256.hash(content, Charset.forName("UTF-8"));
 
             HttpRequest request = new HttpRequest("DELETE", new URI(url));
             String signature = Signer.builder()
@@ -492,6 +491,8 @@ public class MinioS3Client {
             throw new MinioException(uex.getMessage());
         } catch (RestClientException rex) {
             throw new MinioException("rest error " + rex.getMessage());
+        } catch (MinioCryptoException cex) {
+            throw new MinioException("crypto error " + cex.getMessage());
         }
     }
 
@@ -507,36 +508,18 @@ public class MinioS3Client {
             _log.trace("userInfo json " + userInfo.toString());
 
             // encrypt payload
-            MinioCrypter crypter = MinioCrypto.getCrypter(SECRET_KEY, userInfo.toString());
-            byte[] content = crypter.crypt();
-
-            MinioPackage pkg = crypter.inspect();
-            _log.trace("package version " + String.valueOf(pkg.header().getVersion()));
-            _log.trace("package cipher " + String.valueOf(pkg.header().getCipher()));
-            _log.trace("package nonce " + Arrays.toString(pkg.header().getNonce()));
-            _log.trace("package length " + String.valueOf(pkg.header().getLength()));
-            _log.trace("string length " + String.valueOf(userInfo.toString().getBytes().length));
-
-            MinioDecrypter decrypter = MinioCrypto.getDecrypter(SECRET_KEY, content);
-
-            pkg = decrypter.inspect();
-            String plainText = decrypter.decrypt();
-            _log.trace("decrypt plainText " + plainText);
-
-            decrypter.clear();
-
-            // clear
-            crypter.clear();
+            MinioEncrypter crypter = MinioCrypto.getEncrypter(SECRET_KEY);
+            byte[] content = crypter.encrypt(userInfo.toString().getBytes());
 
             // prepare signature
             DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
             dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));// server timezone
 
             String hostname = HOST + ":" + Integer.toString(PORT);
-            String url = ENDPOINT + "/minio/admin/v1/add-user?accessKey=" + accessKey;
+            String url = ENDPOINT + "/minio/admin/v2/add-user?accessKey=" + accessKey;
             String date = dateFormat.format(new Date());
 
-            String contentSha256 = MinioSha256.get(content);
+            String contentSha256 = MinioSha256.hash(content);
             _log.trace("content sha " + contentSha256);
 
             HttpRequest request = new HttpRequest("PUT", new URI(url));
@@ -574,12 +557,11 @@ public class MinioS3Client {
 
                 _log.debug("set user " + accessKey + " policy " + policyName);
 
-//                url = ENDPOINT + "/minio/admin/v1/set-user-policy?accessKey=" + accessKey + "&name=" + policyName;
-                url = ENDPOINT + "/minio/admin/v1/set-user-or-group-policy?isGroup=false&policyName=" + policyName
+                url = ENDPOINT + "/minio/admin/v2/set-user-or-group-policy?isGroup=false&policyName=" + policyName
                         + "&userOrGroup=" + accessKey;
 
                 content = new byte[0];
-                contentSha256 = MinioSha256.get(content);
+                contentSha256 = MinioSha256.hash(content);
 
                 request = new HttpRequest("PUT", new URI(url));
                 signature = Signer.builder()
@@ -642,10 +624,10 @@ public class MinioS3Client {
             dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));// server timezone
 
             String hostname = HOST + ":" + Integer.toString(PORT);
-            String url = ENDPOINT + "/minio/admin/v1/remove-user?accessKey=" + accessKey;
+            String url = ENDPOINT + "/minio/admin/v2/remove-user?accessKey=" + accessKey;
             String date = dateFormat.format(new Date());
             String content = ""; // empty content needed for sha256
-            String contentSha256 = MinioSha256.get(content, Charset.forName("UTF-8"));
+            String contentSha256 = MinioSha256.hash(content, Charset.forName("UTF-8"));
 
             HttpRequest request = new HttpRequest("DELETE", new URI(url));
             String signature = Signer.builder()
@@ -682,6 +664,8 @@ public class MinioS3Client {
             throw new MinioException(uex.getMessage());
         } catch (RestClientException rex) {
             throw new MinioException("rest error " + rex.getMessage());
+        } catch (MinioCryptoException cex) {
+            throw new MinioException("crypto error " + cex.getMessage());
         }
     }
 
