@@ -210,7 +210,7 @@
 	<repositories>
 		<repository>
 			<id>SmartCommunity</id>
-			<url>http://repository.smartcommunitylab.it/content/groups/public</url>
+			<url>https://repository.smartcommunitylab.it/content/groups/public</url>
 		</repository>
 	</repositories>
 </project>
