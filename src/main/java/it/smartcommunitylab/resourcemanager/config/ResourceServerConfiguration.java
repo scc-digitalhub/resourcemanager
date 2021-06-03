@@ -30,6 +30,9 @@ public class ResourceServerConfiguration extends WebSecurityConfigurerAdapter {
     @Value("${auth.component}")
     private String component;
 
+    @Value("${auth.rolesclaim}")
+    private String rolesClaimName;
+
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
 
@@ -76,8 +79,12 @@ public class ResourceServerConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     Converter<Jwt, AbstractAuthenticationToken> jwtTokenConverter() {
+        JwtComponentAwareAuthoritiesRoleConverter authoritiesConverter = new JwtComponentAwareAuthoritiesRoleConverter(
+                component);
+        authoritiesConverter.setAuthoritiesClaimName(rolesClaimName);
+
         return new JwtAuthenticationConverter(
-                new JwtComponentAwareAuthoritiesRoleConverter(component),
+                authoritiesConverter,
                 new JwtScopeAuthoritiesConverter());
         // example: assign any user a default role
 //        return new JwtAuthenticationConverter(
